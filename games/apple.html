@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>사과 게임 - Pro Version (Real Apple)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과 게임 | cheezetomato</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
@@ -137,9 +138,49 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
+
+        /* ---- 사이트 공통: 상단 바와 색 ---- */
+        .site-bar { position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 6000; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; box-sizing: border-box; background: rgba(9,9,11,0.9); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid #1d1c22; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; user-select: none; }
+        .site-bar a { color: #948e83; text-decoration: none; font-size: 14px; transition: color 0.2s ease; }
+        .site-bar a:hover { color: #ede8df; }
+        .site-bar .sb-path { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: #625d55; }
+        .site-bar .sb-word { color: #ede8df; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+        .site-bar .sb-here { color: #ede8df; }
+        .site-bar nav { display: flex; gap: 22px; }
+        .site-bar nav a[aria-current] { color: #ede8df; }
+        .site-bar a:focus-visible { outline: 2px solid #7b7fd4; outline-offset: 3px; border-radius: 2px; }
+        @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-sep, .site-bar .sb-path .sb-here { display: none; } }
+
+        /* ---- 사과 게임: 어두운 사이트 톤 ---- */
+        body.dark-mode { --bg-body: #09090b; --bg-overlay: #09090b; --text-main: #ede8df; --text-desc: #948e83; --canvas-bg: #111114; --canvas-border: #24232a; --pane-bg: #111114; --pane-border: #24232a; --record-border: #1e1d23; }
+        body { padding-top: 56px; box-sizing: border-box; }
+        .theme-switch-wrapper, .home-btn { display: none !important; }
+        .overlay { border-radius: 10px; }
+        .ag-title { margin: 0 0 8px; font-size: 44px; font-weight: 700; letter-spacing: -1.5px; color: #ede8df; }
+        .ag-sub { margin: 0 0 30px; color: #948e83; font-size: 16px; }
+        .btn { width: 240px; padding: 13px; margin: 5px; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: none !important; background: #17171b; color: #ede8df; border: 1px solid #2a2930; font-family: inherit; }
+        .btn:hover { border-color: #7b7fd4; }
+        .btn:active { transform: translateY(1px); }
+        .btn-start { background: #7b7fd4; border-color: #7b7fd4; color: #0b0e12; }
+        .btn-start:hover { background: #9fa2e2; border-color: #9fa2e2; }
+        .btn-info { background: none; border: none; width: auto; margin-top: 14px; font-size: 14px; font-weight: 500; color: #948e83; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: #3a3842; }
+        .btn-info:hover { color: #ede8df; }
+        input[type="text"] { border-width: 1px; border-radius: 8px; width: 260px; font-family: inherit; }
+        input[type="text"]:focus { border-color: #7b7fd4; }
+        canvas { border-width: 1px; border-radius: 10px; }
+        #timer-wrapper, body.dark-mode #timer-wrapper { height: 8px; border: none; border-radius: 4px; background: #1c1b21; }
+        #history-screen h2, #hall-screen h1, #result-screen h2 { color: #ede8df; font-size: 30px; font-weight: 700; letter-spacing: -0.8px; margin: 0 0 18px; }
+        .history-pane { border-width: 1px; border-radius: 10px; }
+        .history-pane h3 { font-size: 16px; font-weight: 700; }
+        #hall-of-fame-content { border: 1px solid #7b7fd4; border-radius: 10px; }
+        .game-header .player-info { font-size: 15px; }
+        .ag-score { font-size: 22px; font-weight: 700; color: #ede8df; font-variant-numeric: tabular-nums; }
+        .ag-score span { color: #9fa2e2; }
+        #countdown { color: #ede8df; }
     </style>
 </head>
-<body>
+<body class="dark-mode">
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="../">cheezetomato</a><span class="sb-sep">/</span><a href="./">Games</a><span class="sb-sep">/</span><span class="sb-here">사과 게임</span></div><nav aria-label="사이트 메뉴"><a href="../movie.html">Films</a><a href="./" aria-current="page">Games</a></nav></header>
 
 <div class="theme-switch-wrapper">
     <label class="theme-switch" for="checkbox">
@@ -152,43 +193,42 @@
 
 <div id="game-container">
     <div id="main-menu" class="overlay">
-        <h1 style="color: #ff6b6b; font-size: 48px; margin-bottom: 10px;">🍎 사과 게임</h1>
-        <p style="color: var(--text-desc); margin-bottom: 30px;">180개의 사과를 모두 찾아보세요!</p>
+        <h1 class="ag-title">사과 게임</h1>
+        <p class="ag-sub">합이 10이 되도록 사과를 묶어 120초 안에 180개를 모두 수확하세요.</p>
         
         <input type="text" id="nickname" placeholder="닉네임 입력 (최대 15자)" maxlength="15">
 
-        <button class="btn btn-start" onclick="window.prepareGame()">게임 시작!</button>
+        <button class="btn btn-start" onclick="window.prepareGame()">게임 시작</button>
         <button class="btn btn-history" onclick="window.showHistoryScreen()">기록 확인</button>
-        <button class="btn btn-info" onclick="window.showCreator()">게임 제작</button>
+        <button class="btn btn-info" onclick="window.showCreator()">만든 사람</button>
     </div>
 
     <div id="history-screen" class="overlay hidden">
-        <h2 style="color: #ff9f43;">📊 데이터 센터</h2>
+        <h2>기록</h2>
         <div id="history-layout">
             <div class="history-pane">
-                <h3>🏆 역대 TOP 10</h3>
+                <h3>역대 TOP 10</h3>
                 <div id="top-rank-list"></div>
             </div>
             <div class="history-pane">
-                <h3>🕒 최근 기록 10</h3>
+                <h3>최근 기록 10</h3>
                 <div id="recent-log-list"></div>
             </div>
         </div>
-        <button class="btn" style="background:#666; box-shadow:0 4px 0 #444;" onclick="window.showMain()">뒤로가기</button>
+        <button class="btn" onclick="window.showMain()">뒤로 가기</button>
     </div>
 
     <div id="hall-screen" class="overlay hidden">
-        <h1 style="color: #a55eea; font-size: 40px;">🏅 명예의 전당</h1>
+        <h1>명예의 전당</h1>
         <p style="font-size: 20px;">축하합니다! 모든 사과를 수확했습니다.</p>
         <div id="hall-of-fame-content"></div>
         <button class="btn btn-start" onclick="location.reload()">메인으로</button>
     </div>
 
     <div id="result-screen" class="overlay hidden">
-        <div class="result-apple">🍎</div>
-        <h2>GAME OVER</h2>
+        <h2>게임 종료</h2>
         <div style="font-size: 24px; margin-bottom: 20px;">
-            <b id="res-name"></b>님의 점수: <b id="res-score" style="color:#ff4757;">0</b> / 180
+            <b id="res-name"></b>님의 점수: <b id="res-score" style="color:#9fa2e2;">0</b> / 180
         </div>
         <button class="btn btn-start" onclick="location.reload()">다시 하기</button>
     </div>
@@ -197,7 +237,7 @@
 
     <div class="game-header">
         <div class="player-info">플레이어: <span id="display-name" style="font-weight:bold;">-</span></div>
-        <div style="font-size: 24px; font-weight: bold; color: #ff4757;">Score: <span id="score">0</span> / 180</div>
+        <div class="ag-score">점수 <span id="score">0</span> / 180</div>
     </div>
     <canvas id="gameCanvas" width="900" height="500"></canvas>
     <div id="timer-wrapper"><div id="timer-bar"></div></div>
@@ -257,7 +297,7 @@
     }
 
     window.showCreator = function() {
-        alert("🍎 사과 게임 제작\n------------------\n기획: 그린토마토\n개발 지원: Gemini");
+        alert("사과 게임\n\n기획: 그린토마토\n개발 지원: Gemini");
     }
 
     window.showHistoryScreen = async function() {

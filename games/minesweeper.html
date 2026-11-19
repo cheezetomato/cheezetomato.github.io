@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지뢰찾기 Pro - Modern Dark (Firestore)</title>
+    <title>지뢰찾기 | cheezetomato</title>
     <style>
         /* 폰트 로드 */
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -321,6 +321,40 @@
             background: rgba(255,255,255,0.1); 
         }
 
+
+        /* ---- 사이트 공통: 상단 바와 색 ---- */
+        .site-bar { position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 6000; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; box-sizing: border-box; background: rgba(9,9,11,0.9); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid #1d1c22; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; user-select: none; }
+        .site-bar a { color: #948e83; text-decoration: none; font-size: 14px; transition: color 0.2s ease; }
+        .site-bar a:hover { color: #ede8df; }
+        .site-bar .sb-path { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: #625d55; }
+        .site-bar .sb-word { color: #ede8df; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+        .site-bar .sb-here { color: #ede8df; }
+        .site-bar nav { display: flex; gap: 22px; }
+        .site-bar nav a[aria-current] { color: #ede8df; }
+        .site-bar a:focus-visible { outline: 2px solid #7b7fd4; outline-offset: 3px; border-radius: 2px; }
+        @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-sep, .site-bar .sb-path .sb-here { display: none; } }
+
+        /* ---- 지뢰찾기: 사이트 톤 ---- */
+        :root { --bg-body: #09090b; --bg-sidebar: #0d0d10; --bg-panel: #111114; --text-main: #948e83; --text-highlight: #9fa2e2; --grid-gap-color: #09090b; --cell-unrevealed: #2b2a31; --cell-unrevealed-hover: #36353d; --cell-revealed: #141418; --cell-highlight: #3d3c45; }
+        .top-header { display: none !important; }
+        .sidebar { width: 260px; padding-top: 84px; border-right: 1px solid #1d1c22; gap: 6px; }
+        .sidebar-section { padding: 0 18px; }
+        .sb-label { padding: 0 15px 6px; font-size: 12px; color: #625d55; }
+        .menu-btn { border-radius: 6px; padding: 10px 15px; font-family: inherit; }
+        .menu-btn.active { background: rgba(123,127,212,0.12); color: #ede8df; }
+        .mode-label { background: none; padding: 4px 15px 14px; color: #948e83; font-weight: 500; font-size: 13px; line-height: 1.55; border-radius: 0; }
+        .main-content { padding-top: 84px; }
+        .diff-nav { background: none; border: none; box-shadow: none; padding: 0; gap: 22px; border-radius: 0; margin-bottom: 18px; }
+        .diff-nav button { padding: 6px 0; border-radius: 0; border-bottom: 2px solid transparent; font-family: inherit; font-size: 15px; }
+        .diff-nav button.active { background: none; color: #ede8df; box-shadow: none; border-bottom-color: #7b7fd4; }
+        .panel-wrapper { border-radius: 10px; border-color: #1f1e24; box-shadow: none; }
+        .game-header { border-radius: 8px; background: #0b0b0e; }
+        #reset-btn { border-radius: 8px; background: #2b2a31; box-shadow: none; }
+        #board { border-radius: 4px; }
+        .cell.start-cell { background-color: rgba(123,127,212,0.18); color: #9fa2e2; box-shadow: inset 0 0 0 2px #7b7fd4; }
+        .record-header { font-size: 22px; font-weight: 700; color: #ede8df; }
+        th { color: #948e83; font-weight: 600; }
+        .btn-back-game { border-radius: 8px; font-family: inherit; font-weight: 600; }
     </style>
 
     <!-- 🟢 Firebase SDK 추가 (Firestore용) -->
@@ -329,6 +363,7 @@
 
 </head>
 <body>
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="../">cheezetomato</a><span class="sb-sep">/</span><a href="./">Games</a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../movie.html">Films</a><a href="./" aria-current="page">Games</a></nav></header>
 
     <!-- 상단 헤더 -->
     <div class="top-header">
@@ -338,16 +373,12 @@
     <!-- 좌측 사이드바 -->
     <div class="sidebar">
         <div class="sidebar-section">
-            <button class="menu-btn" onclick="location.href='../index.html'">🏠 메인으로 돌아가기</button>
-            <button class="menu-btn" onclick="location.href='index.html'">🎮 게임 목록으로</button>
+            <div class="sb-label">지뢰찾기</div>
+            <div class="mode-label">추측 없이 모드: 숫자만 보고 끝까지 풀 수 있는 판이 나옵니다. 처음엔 표시된 칸을 눌러 시작하세요.</div>
         </div>
         <div style="height:1px; background:rgba(255,255,255,0.05); margin: 5px 20px;"></div>
         <div class="sidebar-section">
-            <div class="mode-label">🎯 추측 없이 모드</div>
-        </div>
-        <div style="height:1px; background:rgba(255,255,255,0.05); margin: 5px 20px;"></div>
-        <div class="sidebar-section">
-            <button class="menu-btn" id="btn-menu-record" onclick="openRecords()">🏆 역대 순위 (클라우드)</button>
+            <button class="menu-btn" id="btn-menu-record" onclick="openRecords()">최고 기록</button>
         </div>
     </div>
 
@@ -377,7 +408,7 @@
         <!-- 기록실 화면 -->
         <div id="record-view">
             <div class="panel-wrapper">
-                <h2 class="record-header">🏆 글로벌 최고 기록 (추측 없이 모드)</h2>
+                <h2 class="record-header">최고 기록</h2>
                 <table>
                     <thead>
                         <tr>
@@ -387,7 +418,7 @@
                     </thead>
                     <tbody id="record-tbody"></tbody>
                 </table>
-                <button class="btn-back-game" onclick="closeRecords()">⬅️ 게임으로 돌아가기</button>
+                <button class="btn-back-game" onclick="closeRecords()">게임으로 돌아가기</button>
             </div>
         </div>
 
