@@ -770,7 +770,7 @@
         .detail-ott { flex-basis: 100%; }
 
         /* 첫 화면 리듬 */
-        .home-lede, .review-text, .about, .site-footer p, .diary-title { word-break: keep-all; overflow-wrap: anywhere; }
+        .home-lede, .review-text, .about, .diary-title { word-break: keep-all; overflow-wrap: anywhere; }
         .is-home > .section { padding-top: 34px; padding-bottom: 34px; }
         .home-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 18px 48px; padding-top: 40px !important; padding-bottom: 26px !important; }
         .home-lede { grid-column: 1; margin: 0; max-width: 32em; font-size: 1.32rem; line-height: 1.55; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
@@ -837,21 +837,18 @@
         .about-text { margin: 0; }
         @media (max-width: 600px) { .guide a { grid-template-columns: 84px minmax(0, 1fr) auto; gap: 12px; } .about-lede { font-size: 1.02rem; } }
 
-        /* 하단 */
-        .site-footer { text-align: left; padding: 54px 20px 30px; font-size: 0.86rem; line-height: 1.7; }
-        .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr; gap: 30px 56px; max-width: 1160px; margin: 0 auto; }
-        .footer-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
-        .footer-col h2 { margin: 0 0 4px; font-size: 0.86rem; font-weight: 700; color: var(--text); }
-        .footer-col p { margin: 0; color: var(--text-dim); max-width: 30em; }
-        .footer-col p a { color: var(--text); }
-        .site-footer .footer-logo { order: -1; font-size: 1.3rem; margin-bottom: 4px; }
-        .footer-link { color: var(--text-dim); }
-        .footer-link:hover, .footer-col p a:hover { color: var(--accent-light); }
-        .footer-fine { font-size: 0.74rem; color: var(--text-mute) !important; margin-top: 4px !important; }
-        .footer-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 1160px; margin: 40px auto 0; padding-top: 20px; border-top: 1px solid var(--border-soft, #1d1d22); font-size: 0.78rem; color: var(--text-mute); }
-        .footer-top { background: none; border: none; padding: 6px 0; color: var(--text-dim); font: inherit; cursor: pointer; }
-        .footer-top:hover { color: var(--text); }
-        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; } .site-footer { padding-top: 40px; } }
+        /* 하단: 열마다 짧은 단어만 */
+        .site-footer { text-align: left; padding: 52px 20px 28px; font-size: 0.88rem; line-height: 1.6; }
+        .footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 30px 40px; max-width: 1160px; margin: 0 auto; }
+        .footer-col { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
+        .footer-col h2 { margin: 0 0 5px; font-size: 0.78rem; font-weight: 600; color: var(--text-mute); letter-spacing: 0; }
+        .site-footer .footer-logo { order: 0; font-size: 1.45rem; margin: 0; }
+        .footer-tag { font-size: 0.84rem; color: var(--text-dim); }
+        .footer-link { padding: 0; background: none; border: none; font: inherit; color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: color 0.15s ease; }
+        .footer-link:hover { color: var(--text); }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 24px; flex-wrap: wrap; max-width: 1160px; margin: 40px auto 0; padding-top: 18px; border-top: 1px solid var(--border-soft, #1d1d22); font-size: 0.76rem; color: var(--text-mute); }
+        .footer-fine { color: var(--text-mute); }
+        @media (max-width: 760px) { .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 16px; } .footer-brand { grid-column: 1 / -1; flex-direction: row; align-items: baseline; gap: 12px; } .site-footer { padding-top: 40px; } }
 
         /* 평점 버튼 편수 */
         .chip .chip-n { margin-left: 4px; font-size: inherit; font-weight: 500; color: var(--text-dim); }
@@ -909,26 +906,30 @@
 
     <footer class="site-footer">
         <div class="footer-grid">
-            <div class="footer-col footer-about">
+            <div class="footer-col footer-brand">
                 <a class="logo footer-logo" href="#/">Films<span class="logo-dot">.</span></a>
-                <p>cheezetomato가 본 영화를 별점과 한줄평으로 남기는 개인 기록장입니다.</p>
-                <a class="footer-link" href="#/about">이 사이트에 대해</a>
+                <span class="footer-tag">영화 기록장</span>
             </div>
-            <div class="footer-col">
-                <h2>Contact</h2>
-                <a class="footer-link" href="https://github.com/cheezetomato" target="_blank" rel="noopener">GitHub @cheezetomato</a>
-                <a class="footer-link" href="https://github.com/cheezetomato/cheezetomato.github.io" target="_blank" rel="noopener">사이트 소스 코드</a>
+            <nav class="footer-col" aria-label="만든 사람">
+                <h2>만든 사람</h2>
+                <a class="footer-link" href="https://github.com/cheezetomato" target="_blank" rel="noopener">cheezetomato</a>
+                <a class="footer-link" href="https://github.com/cheezetomato/cheezetomato.github.io" target="_blank" rel="noopener">소스 코드</a>
+            </nav>
+            <nav class="footer-col" aria-label="데이터 출처">
+                <h2>데이터 출처</h2>
+                <a class="footer-link" href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
+                <a class="footer-link" href="https://www.justwatch.com/kr" target="_blank" rel="noopener">JustWatch</a>
+            </nav>
+            <nav class="footer-col" aria-label="바로가기">
+                <h2>바로가기</h2>
+                <a class="footer-link" href="#/about">About</a>
                 <a class="footer-link" href="../games/">Games</a>
-            </div>
-            <div class="footer-col">
-                <h2>Data</h2>
-                <p>영화 정보와 포스터는 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>에서, OTT 정보는 <a href="https://www.justwatch.com/kr" target="_blank" rel="noopener">JustWatch</a>에서 가져옵니다.</p>
-                <p class="footer-fine">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-            </div>
+                <button type="button" class="footer-link footer-top" data-action="to-top">맨 위로</button>
+            </nav>
         </div>
         <div class="footer-bottom">
-            <span>© <span id="footer-year">2026</span> cheezetomato. GitHub Pages로 운영합니다.</span>
-            <button type="button" class="footer-top" data-action="to-top">맨 위로</button>
+            <span>© <span id="footer-year">2026</span> cheezetomato</span>
+            <span class="footer-fine">This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
         </div>
     </footer>
 
@@ -1269,7 +1270,7 @@
         }
         const filmStrip = list => list.map(m => `<a class="dir-film" href="#/film/${enc(m.id)}"><img src="${esc(poster(m.poster_path, 'w185'))}" alt="" loading="lazy"><span class="dir-film-title">${esc(m.title)}</span><div class="dir-film-rate">★ ${fmt(m.rating)}</div></a>`).join('');
         const myDirectors = () => directorStats().filter(d => d.count >= 2).sort((a, b) => b.count - a.count || b.avg - a.avg);
-        let stackOpen = 0;
+        let stackOpen = -1;
         const dirMeta = d => `${d.count}편, 평균 <b>★ ${fmt(d.avg)}</b>`;
         const stackColumns = () => (matchMedia('(max-width: 800px)').matches ? 2 : 4);
         function dirsHTML() {
