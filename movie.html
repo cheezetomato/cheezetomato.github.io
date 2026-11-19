@@ -741,6 +741,33 @@
         .hbar-label img { width: 22px; height: 33px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
         .hbar { grid-template-columns: minmax(90px, 150px) 1fr 34px; min-height: 36px; }
 
+        /* 별점 입력 */
+        .star-pick { display: flex; align-items: center; gap: 2px; margin-top: 7px; min-height: 46px; }
+        .sp-star { position: relative; width: 34px; height: 34px; flex-shrink: 0; }
+        .sp-star > svg, .sp-fill svg { width: 34px; height: 34px; display: block; }
+        .sp-star > svg { fill: #2c2c34; }
+        .sp-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0; overflow: hidden; pointer-events: none; transition: width 0.08s ease; }
+        .sp-fill svg { fill: var(--accent-light); }
+        .sp-star button { position: absolute; top: 0; height: 100%; width: 50%; padding: 0; margin: 0; background: none; border: none; cursor: pointer; border-radius: 4px; }
+        .sp-star button[data-rate$=".5"] { left: 0; }
+        .sp-star button:not([data-rate$=".5"]) { right: 0; }
+        .sp-star button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .sp-val { margin-left: 12px; font-size: 1.05rem; font-weight: 700; color: var(--accent-light); font-variant-numeric: tabular-nums; min-width: 2.2em; }
+        .star-pick.empty .sp-val { color: var(--text-mute); font-weight: 500; font-size: 0.86rem; }
+        @media (max-width: 600px) { .sp-star, .sp-star > svg, .sp-fill svg { width: 40px; height: 40px; } }
+
+        /* OTT */
+        .card-ott { position: absolute; left: 8px; bottom: 8px; z-index: 3; display: flex; gap: 4px; pointer-events: none; }
+        .card-ott img { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+        .detail-ott dd { font-weight: 500; }
+        .ott-list { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; vertical-align: middle; }
+        .ott-item { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+        .ott-item img { width: 26px; height: 26px; border-radius: 6px; }
+        .ott-wait { color: var(--text-mute); font-weight: 500; }
+        .ott-source { margin-left: 8px; font-size: 0.74rem; font-weight: 500; color: var(--text-mute); }
+        .ott-source:hover { color: var(--text-dim); }
+        .detail-ott { flex-basis: 100%; }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
         }
@@ -772,7 +799,6 @@
                         <button type="button" class="dropdown-item" data-action="fix-posters">포스터 복구</button>
                         <button type="button" class="dropdown-item" data-action="match-ids">TMDB 연결</button>
                         <button type="button" class="dropdown-item" data-action="cleanup">데이터 정리</button>
-                        <button type="button" class="dropdown-item" data-action="export">백업 내려받기</button>
                         <button type="button" class="dropdown-item" data-action="logout">로그아웃</button>
                     </div>
                 </div>
@@ -868,7 +894,7 @@
             <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;"><label for="input-director">감독</label><input type="text" id="input-director"></div>
                 <div style="flex: 1;"><label for="input-year">연도</label><input type="number" id="input-year"></div>
-                <div style="flex: 1;" class="log-only"><label for="input-rating">평점</label><input type="number" id="input-rating" step="0.5" min="0.5" max="5"></div>
+                <div style="flex: 1;" class="log-only"><label id="input-rating-label">평점</label><input type="hidden" id="input-rating"><div class="star-pick" data-rate-for="input-rating" role="radiogroup" aria-labelledby="input-rating-label"></div></div>
             </div>
             <div class="log-only">
                 <label for="input-watchDate-btn">본 날짜</label><input type="hidden" id="input-watchDate"><button type="button" class="date-field" id="input-watchDate-btn" data-date-for="input-watchDate" aria-haspopup="dialog" aria-expanded="false"><span class="date-text"></span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></button>
@@ -887,7 +913,7 @@
         <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rewatch-title">
             <h2 id="rewatch-title">다시 본 기록</h2>
             <label for="rewatch-date-btn">다시 본 날짜</label><input type="hidden" id="rewatch-date"><button type="button" class="date-field" id="rewatch-date-btn" data-date-for="rewatch-date" aria-haspopup="dialog" aria-expanded="false"><span class="date-text"></span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></button>
-            <label for="rewatch-rating">이번 평점</label><input type="number" id="rewatch-rating" step="0.5" min="0.5" max="5">
+            <label id="rewatch-rating-label">이번 평점</label><input type="hidden" id="rewatch-rating"><div class="star-pick" data-rate-for="rewatch-rating" role="radiogroup" aria-labelledby="rewatch-rating-label"></div>
             <label for="rewatch-memo">이번 감상 (선택)</label>
             <textarea id="rewatch-memo" rows="3"></textarea>
             <label class="check-row"><input type="checkbox" id="rewatch-update" checked>대표 평점도 이 점수로 바꾸기</label>
@@ -998,6 +1024,7 @@
             return `<article class="movie-card">
                 <a class="card-link" href="#/film/${enc(m.id)}" aria-label="${esc(m.title)}${wish ? '' : `, 평점 ${fmt(m.rating)}`}">
                     ${!wish && times > 1 ? `<span class="card-badge">${times}회</span>` : ''}
+                    ${wish && m.tmdb_id ? `<span class="card-ott" data-ott-card="${esc(m.id)}"></span>` : ''}
                     <div class="poster-wrapper"><img src="${esc(poster(m.poster_path))}" alt="" class="tmdb-poster" loading="lazy"></div>
                     <div class="poster-overlay">
                         <div class="overlay-title">${esc(m.title || '제목 없음')}</div>
@@ -1376,7 +1403,7 @@
             });
             $('stats-total').textContent = films().length;
             document.title = name === 'director' ? `${r.seg[1]} | Films.` : TITLES[name] ? `${TITLES[name]} | Films.` : 'Films. | 나의 영화 기록';
-            initCarousels(); initHeroSwipe();
+            initCarousels(); initHeroSwipe(); fillOttCards();
         }
         function onRoute() {
             if (!dataReady) return;
@@ -1444,7 +1471,9 @@
                 facts.push([views.length > 1 ? '최근 관람' : '관람일', lastWatched(m) || '날짜 미상']);
                 if (views.length > 1) facts.push(['관람 횟수', `${views.length}회`]);
             }
-            $('detail-tags').innerHTML = facts.map(([k, v]) => `<div class="detail-fact"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+            $('detail-tags').innerHTML = facts.map(([k, v]) => `<div class="detail-fact"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')
+                + (wish && m.tmdb_id ? `<div class="detail-fact detail-ott"><dt>볼 수 있는 곳</dt><dd data-ott-detail="${esc(m.id)}"><span class="ott-wait">확인 중</span></dd></div>` : '');
+            if (wish && m.tmdb_id) fillOttDetail(m);
 
             const actions = isAdmin ? [`<button type="button" class="btn-ghost" data-action="copy-link">링크 복사</button>`] : [];
             if (isAdmin && wish) actions.unshift(`<button type="button" class="btn-ghost" data-action="convert">본 영화로 기록</button>`, `<button type="button" class="btn-ghost" data-edit="${esc(id)}">수정</button>`);
@@ -1630,6 +1659,80 @@
         window.addEventListener('resize', placeCal);
         document.addEventListener('scroll', placeCal, true);
 
+        /* ---------- 별점 입력 ---------- */
+        const STAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z"/></svg>';
+        function paintStars(pick, v) {
+            pick.querySelectorAll('.sp-star').forEach((el, i) => { el.querySelector('.sp-fill').style.width = `${v >= i + 1 ? 100 : v >= i + 0.5 ? 50 : 0}%`; });
+            pick.querySelector('.sp-val').textContent = v ? Number(v).toFixed(1) : '선택';
+            pick.classList.toggle('empty', !v);
+        }
+        function setRating(id, value) {
+            const v = parseFloat(value);
+            const ok = !Number.isNaN(v) && v >= 0.5 && v <= 5;
+            $(id).value = ok ? String(Math.round(v * 2) / 2) : '';
+            const pick = document.querySelector(`[data-rate-for="${id}"]`);
+            const cur = ok ? Math.round(v * 2) / 2 : 0;
+            pick.querySelectorAll('[data-rate]').forEach(b => {
+                const on = Number(b.dataset.rate) === cur;
+                b.setAttribute('aria-checked', on ? 'true' : 'false');
+                b.tabIndex = on || (!cur && b.dataset.rate === '0.5') ? 0 : -1;
+            });
+            paintStars(pick, cur);
+        }
+        document.querySelectorAll('.star-pick').forEach(pick => {
+            pick.innerHTML = [1, 2, 3, 4, 5].map(i => `<span class="sp-star">${STAR_SVG}<span class="sp-fill">${STAR_SVG}</span><button type="button" role="radio" data-rate="${i - 0.5}" aria-label="${i - 0.5}점"></button><button type="button" role="radio" data-rate="${i}" aria-label="${i}.0점"></button></span>`).join('') + '<span class="sp-val" aria-hidden="true"></span>';
+            const id = pick.dataset.rateFor;
+            pick.addEventListener('click', e => { const b = e.target.closest('[data-rate]'); if (b) { setRating(id, b.dataset.rate); b.focus(); } });
+            pick.addEventListener('pointerover', e => { const b = e.target.closest('[data-rate]'); if (b && e.pointerType === 'mouse') paintStars(pick, Number(b.dataset.rate)); });
+            pick.addEventListener('pointerleave', () => paintStars(pick, parseFloat($(id).value) || 0));
+            pick.addEventListener('keydown', e => {
+                const step = { ArrowRight: 0.5, ArrowUp: 0.5, ArrowLeft: -0.5, ArrowDown: -0.5 }[e.key];
+                if (!step && e.key !== 'Home' && e.key !== 'End') return;
+                e.preventDefault();
+                const cur = parseFloat($(id).value) || 0;
+                const next = e.key === 'Home' ? 0.5 : e.key === 'End' ? 5 : Math.min(5, Math.max(0.5, cur + step));
+                setRating(id, next);
+                pick.querySelector(`[data-rate="${next}"]`).focus();
+            });
+            setRating(id, '');
+        });
+
+        /* ---------- 볼 수 있는 OTT (TMDB, JustWatch 제공) ---------- */
+        const ottCache = new Map();
+        const OTT_TTL = 12 * 3600 * 1000;
+        function loadOtt(m) {
+            const type = m.media_type === 'tv' ? 'tv' : 'movie', key = `ott:${type}:${m.tmdb_id}`;
+            if (ottCache.has(key)) return ottCache.get(key);
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch { saved = null; }
+            const job = saved && Date.now() - saved.t < OTT_TTL ? Promise.resolve(saved.d)
+                : fetch(`https://api.themoviedb.org/3/${type}/${m.tmdb_id}/watch/providers?api_key=${TMDB_API_KEY}`).then(res => res.json()).then(j => {
+                    const kr = j?.results?.KR || {};
+                    const d = { link: kr.link || '', flat: (kr.flatrate || []).sort((a, b) => a.display_priority - b.display_priority).map(p => ({ name: p.provider_name, logo: p.logo_path })), other: !!((kr.rent || []).length || (kr.buy || []).length) };
+                    try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch { /* 저장 공간 없음 */ }
+                    return d;
+                }).catch(() => null);
+            ottCache.set(key, job);
+            return job;
+        }
+        const ottLogo = p => `<img src="https://image.tmdb.org/t/p/w92${esc(p.logo)}" alt="${esc(p.name)}" title="${esc(p.name)}" loading="lazy">`;
+        function fillOttCards() {
+            document.querySelectorAll('[data-ott-card]').forEach(async el => {
+                const m = findDoc(el.dataset.ottCard);
+                const d = m && await loadOtt(m);
+                if (d && d.flat.length) { el.innerHTML = d.flat.slice(0, 3).map(ottLogo).join(''); el.setAttribute('aria-label', `${d.flat.map(p => p.name).join(', ')}에서 볼 수 있음`); }
+            });
+        }
+        async function fillOttDetail(m) {
+            const d = await loadOtt(m);
+            const el = document.querySelector(`[data-ott-detail="${m.id}"]`);
+            if (!el) return;
+            if (!d) { el.textContent = '정보를 불러오지 못했습니다'; return; }
+            const body = d.flat.length ? `<span class="ott-list">${d.flat.map(p => `<span class="ott-item">${ottLogo(p)}${esc(p.name)}</span>`).join('')}</span>`
+                : (d.other ? '구독 서비스에는 없고 대여·구매만 가능' : '국내 서비스 없음');
+            el.innerHTML = `${body}${d.link ? ` <a class="ott-source" href="${esc(d.link)}" target="_blank" rel="noopener">JustWatch</a>` : ''}`;
+        }
+
         /* ---------- 관리자: 등록 · 수정 ---------- */
         function setFormMode(mode) {
             form.mode = mode;
@@ -1648,7 +1751,7 @@
             $('input-genre').value = m?.genre || '';
             $('input-director').value = m?.director || '';
             $('input-year').value = m?.year || '';
-            $('input-rating').value = m && !isWatchlist(m) ? (m.rating ?? '') : '';
+            setRating('input-rating', m && !isWatchlist(m) ? m.rating : '');
             setDate('input-watchDate', m?.watchDate || today());
             $('input-memo').value = m?.memo || '';
             $('btn-delete').hidden = !editing;
@@ -1681,7 +1784,7 @@
                 const rating = parseFloat($('input-rating').value);
                 const watchDate = $('input-watchDate').value;
                 if (Number.isNaN(year)) { toast('개봉 연도를 입력해주세요.'); return; }
-                if (Number.isNaN(rating) || rating < 0.5 || rating > 5 || rating * 2 !== Math.round(rating * 2)) { toast('평점은 0.5점 단위로 0.5~5.0 사이여야 합니다.'); return; }
+                if (Number.isNaN(rating) || rating < 0.5 || rating > 5 || rating * 2 !== Math.round(rating * 2)) { toast('평점을 골라주세요.'); return; }
                 if (!watchDate) { toast('본 날짜를 골라주세요.'); return; }
                 Object.assign(payload, { rating, watchDate, memo: $('input-memo').value });
                 if (form.mode === 'convert') payload.status = 'watched';
@@ -1729,10 +1832,10 @@
             const round = target ? views.indexOf(target) + 1 : 0;
             $('rewatch-title').textContent = target ? `${m.title} ${round}회차 수정` : `${m.title} 다시 본 기록`;
             document.querySelector('label[for=rewatch-date-btn]').textContent = target ? '관람 날짜' : '다시 본 날짜';
-            document.querySelector('label[for=rewatch-rating]').textContent = target ? '평점' : '이번 평점';
+            $('rewatch-rating-label').textContent = target ? '평점' : '이번 평점';
             document.querySelector('label[for=rewatch-memo]').textContent = target ? '감상 (선택)' : '이번 감상 (선택)';
             setDate('rewatch-date', target ? target.date : (preset.date || today()));
-            $('rewatch-rating').value = target ? target.rating : (preset.rating ?? m.rating ?? '');
+            setRating('rewatch-rating', target ? target.rating : (preset.rating ?? m.rating ?? ''));
             $('rewatch-memo').value = target ? target.memo : (preset.memo || '');
             $('rewatch-update').checked = target ? (round === views.length && target.rating === num(m.rating)) : true;
             showModal('rewatch-modal', true);
@@ -1741,7 +1844,7 @@
             const m = findDoc(rewatchId);
             const date = $('rewatch-date').value, rating = parseFloat($('rewatch-rating').value), memo = $('rewatch-memo').value.trim();
             if (!m || !date) { toast('날짜를 골라주세요.'); return; }
-            if (Number.isNaN(rating) || rating < 0.5 || rating > 5 || rating * 2 !== Math.round(rating * 2)) { toast('평점은 0.5점 단위로 0.5~5.0 사이여야 합니다.'); return; }
+            if (Number.isNaN(rating) || rating < 0.5 || rating > 5 || rating * 2 !== Math.round(rating * 2)) { toast('평점을 골라주세요.'); return; }
             const useAsMain = $('rewatch-update').checked;
             const payload = {};
             if (rewatchEdit === 'first') {
@@ -1889,20 +1992,12 @@
             }
             refresh(); toast(`${fixed}편을 정리했습니다.`);
         }
-        function exportData() {
-            if (!docs.length) { toast('내보낼 데이터가 없습니다.'); return; }
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(docs, null, 2)], { type: 'application/json' }));
-            a.download = `movies_backup_${today()}.json`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
 
         /* ---------- 이벤트 ---------- */
         const ACTIONS = {
             'log-film': () => openForm('log'),
             'add-watchlist': () => openForm('watchlist'),
-            'fill-cast': fillCast, 'fix-posters': autoFixPosters, 'match-ids': matchTmdbIds, cleanup: cleanupData, export: exportData,
+            'fill-cast': fillCast, 'fix-posters': autoFixPosters, 'match-ids': matchTmdbIds, cleanup: cleanupData,
             logout: async () => { if (confirm('로그아웃할까요?')) await signOut(auth); },
             'open-login': () => showModal('login-modal', true),
             'close-login': () => showModal('login-modal', false),
