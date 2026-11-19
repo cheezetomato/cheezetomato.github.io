@@ -769,6 +769,98 @@
         .ott-source:hover { color: var(--text-dim); }
         .detail-ott { flex-basis: 100%; }
 
+        /* 첫 화면 리듬 */
+        .home-lede, .review-text, .about, .site-footer p, .diary-title { word-break: keep-all; overflow-wrap: anywhere; }
+        .is-home > .section { padding-top: 34px; padding-bottom: 34px; }
+        .home-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 18px 48px; padding-top: 40px !important; padding-bottom: 26px !important; }
+        .home-lede { grid-column: 1; margin: 0; max-width: 32em; font-size: 1.32rem; line-height: 1.55; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+        .home-nums { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 34px; margin: 0; }
+        .home-nums dt { font-size: 0.76rem; color: var(--text-dim); margin-bottom: 4px; }
+        .home-nums dd { margin: 0; font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .home-about-link { grid-column: 1; width: fit-content; font-size: 0.86rem; color: var(--accent-light); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(165,166,246,0.4); }
+        .home-about-link:hover { text-decoration-color: currentColor; }
+        @media (max-width: 760px) {
+            .home-intro { grid-template-columns: 1fr; padding-top: 28px !important; }
+            .home-lede { font-size: 1.12rem; }
+            .home-nums { grid-column: 1; grid-row: auto; gap: 26px; }
+        }
+
+        .mini-stars { display: inline-flex; gap: 1px; font-size: 0.86rem; line-height: 1; letter-spacing: 0; white-space: nowrap; }
+        .mini-stars .st-full { color: var(--accent-light); }
+        .mini-stars .st-empty { color: #34343c; }
+        .mini-stars .st-half { background: linear-gradient(90deg, var(--accent-light) 50%, #34343c 50%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+        .review-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px; }
+        .review-row { display: flex; gap: 16px; color: inherit; min-width: 0; }
+        .review-row img { width: 74px; height: 111px; object-fit: cover; border-radius: 6px; flex-shrink: 0; box-shadow: 0 8px 22px rgba(0,0,0,0.45); }
+        .review-body { min-width: 0; }
+        .review-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .review-title { font-weight: 700; font-size: 1rem; transition: color 0.15s ease; }
+        .review-year { font-size: 0.8rem; color: var(--text-dim); }
+        .review-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: 0.78rem; color: var(--text-dim); }
+        .review-text { margin: 10px 0 0; font-size: 0.95rem; line-height: 1.65; color: #d6d6dc; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+        .review-row:hover .review-title { color: var(--accent-light); }
+        @media (max-width: 900px) { .review-list { grid-template-columns: 1fr; gap: 26px; } }
+
+        .diary { list-style: none; margin: 0; padding: 0; max-width: 860px; }
+        .diary li + li { border-top: 1px solid var(--border-soft, #1d1d22); }
+        .diary-row { display: grid; grid-template-columns: 44px 34px minmax(0, 1fr) auto auto; align-items: center; gap: 16px; padding: 10px 6px; color: inherit; border-radius: 6px; }
+        .diary-row:hover { background: rgba(255,255,255,0.035); }
+        .diary-day { font-size: 1.35rem; font-weight: 700; color: var(--text-dim); font-variant-numeric: tabular-nums; text-align: right; }
+        .diary-row img { width: 34px; height: 51px; object-fit: cover; border-radius: 3px; }
+        .diary-title { display: flex; flex-direction: column; min-width: 0; }
+        .diary-title b { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .diary-title small { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .diary-tag { font-size: 0.72rem; color: var(--accent-light); font-weight: 600; }
+        .diary-row:not(:has(.diary-tag)) .mini-stars { grid-column: 5; }
+        .diary-more { display: inline-block; margin-top: 12px; font-size: 0.86rem; color: var(--text-dim); }
+        .diary-more:hover { color: var(--text); }
+        @media (max-width: 600px) { .diary-row { grid-template-columns: 30px 30px minmax(0, 1fr) auto; gap: 11px; } .diary-day { font-size: 1.1rem; } .diary-tag { display: none; } .diary-row img { width: 30px; height: 45px; } .diary-row .mini-stars, .diary-row:not(:has(.diary-tag)) .mini-stars { grid-column: 4; font-size: 0.74rem; } }
+
+        /* About */
+        .about { max-width: 720px; }
+        .about-lede { font-size: 1.12rem; line-height: 1.75; color: #dcdce2; margin: 6px 0 0; }
+        .about-nums { display: flex; flex-wrap: wrap; gap: 18px 40px; margin: 30px 0 0; }
+        .about-nums dt { font-size: 0.76rem; color: var(--text-dim); margin-bottom: 3px; }
+        .about-nums dd { margin: 0; font-size: 1.12rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .about-h { margin: 52px 0 16px; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
+        .guide { list-style: none; margin: 0; padding: 0; }
+        .guide a { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 11px 4px; color: inherit; border-bottom: 1px solid var(--border-soft, #1d1d22); }
+        .guide a:hover .guide-text { color: var(--text); }
+        .guide .mini-stars { font-size: 1rem; }
+        .guide-text { font-size: 0.95rem; color: #cfcfd6; }
+        .guide-count { font-size: 0.82rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+        .about-note { margin: 10px 0 0; font-size: 0.78rem; color: var(--text-mute); }
+        .about-list { margin: 0; padding-left: 1.1em; line-height: 1.8; color: #cfcfd6; }
+        .about-list li + li { margin-top: 4px; }
+        .about a:not(.guide a), .about-text a { color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(165,166,246,0.35); }
+        .about-text { margin: 0; }
+        @media (max-width: 600px) { .guide a { grid-template-columns: 84px minmax(0, 1fr) auto; gap: 12px; } .about-lede { font-size: 1.02rem; } }
+
+        /* 하단 */
+        .site-footer { text-align: left; padding: 54px 20px 30px; font-size: 0.86rem; line-height: 1.7; }
+        .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr; gap: 30px 56px; max-width: 1160px; margin: 0 auto; }
+        .footer-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+        .footer-col h2 { margin: 0 0 4px; font-size: 0.86rem; font-weight: 700; color: var(--text); }
+        .footer-col p { margin: 0; color: var(--text-dim); max-width: 30em; }
+        .footer-col p a { color: var(--text); }
+        .site-footer .footer-logo { order: -1; font-size: 1.3rem; margin-bottom: 4px; }
+        .footer-link { color: var(--text-dim); }
+        .footer-link:hover, .footer-col p a:hover { color: var(--accent-light); }
+        .footer-fine { font-size: 0.74rem; color: var(--text-mute) !important; margin-top: 4px !important; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 1160px; margin: 40px auto 0; padding-top: 20px; border-top: 1px solid var(--border-soft, #1d1d22); font-size: 0.78rem; color: var(--text-mute); }
+        .footer-top { background: none; border: none; padding: 6px 0; color: var(--text-dim); font: inherit; cursor: pointer; }
+        .footer-top:hover { color: var(--text); }
+        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; } .site-footer { padding-top: 40px; } }
+
+        /* 평점 버튼 편수 */
+        .chip .chip-n { margin-left: 4px; font-size: inherit; font-weight: 500; color: var(--text-dim); }
+        .chip.active .chip-n { color: var(--text-dim); }
+        /* 전체 목록: 한 줄 7칸, 한 페이지 4줄 */
+        @media (min-width: 1000px) { .movie-grid-wrap { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+        @media (min-width: 769px) and (max-width: 999px) { .movie-grid-wrap { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        @media (max-width: 340px) { .movie-grid-wrap { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 8px; } }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
         }
@@ -810,12 +902,28 @@
 
     <main id="main-content"></main>
 
-    <footer>
-        <p>Letterboxd를 참고해 만든 개인 영화 기록입니다.</p>
-        <p>지금까지 <span id="stats-total">0</span>편을 봤습니다.</p>
-        <div class="footer-links">
-            <a href="https://letterboxd.com/" target="_blank" rel="noopener">Letterboxd</a>
-            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-col footer-about">
+                <a class="logo footer-logo" href="#/">Films<span class="logo-dot">.</span></a>
+                <p>cheezetomato가 본 영화를 별점과 한줄평으로 남기는 개인 기록장입니다.</p>
+                <a class="footer-link" href="#/about">이 사이트에 대해</a>
+            </div>
+            <div class="footer-col">
+                <h2>Contact</h2>
+                <a class="footer-link" href="https://github.com/cheezetomato" target="_blank" rel="noopener">GitHub @cheezetomato</a>
+                <a class="footer-link" href="https://github.com/cheezetomato/cheezetomzto.github.io" target="_blank" rel="noopener">사이트 소스 코드</a>
+                <a class="footer-link" href="index.html">PORTAL로 가기</a>
+            </div>
+            <div class="footer-col">
+                <h2>Data</h2>
+                <p>영화 정보와 포스터는 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>에서, OTT 정보는 <a href="https://www.justwatch.com/kr" target="_blank" rel="noopener">JustWatch</a>에서 가져옵니다.</p>
+                <p class="footer-fine">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© <span id="footer-year">2026</span> cheezetomato. GitHub Pages로 운영합니다.</span>
+            <button type="button" class="footer-top" data-action="to-top">맨 위로</button>
         </div>
     </footer>
 
@@ -952,7 +1060,7 @@
         const COLLECTION = 'myMoviesGallery';
         const ADMIN_UID = 'LjObLa6943Q1xyyVthX2aFA1zRQ2';
         const IMG = 'https://image.tmdb.org/t/p/';
-        const PAGE_SIZE = 24;
+        const pageSize = () => (matchMedia('(max-width: 768px)').matches ? 30 : 28);
         const NO_POSTER = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='300' height='450'><rect width='100%' height='100%' fill='#1e1e23'/><text x='50%' y='50%' fill='#625d55' font-family='sans-serif' font-size='22' text-anchor='middle'>No Poster</text></svg>");
 
         let docs = [];
@@ -1103,9 +1211,9 @@
             return `#/${base}${qs ? `?${qs}` : ''}`;
         }
         function pagedGrid(base, params, list, hintOf) {
-            const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+            const totalPages = Math.max(1, Math.ceil(list.length / pageSize()));
             const page = Math.min(totalPages, Math.max(1, parseInt(params.p, 10) || 1));
-            const items = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+            const items = list.slice((page - 1) * pageSize(), page * pageSize());
             return `<div class="movie-grid-wrap">${items.map(m => cardHTML(m, { hint: hintOf ? hintOf(m) : '' })).join('')}</div>${pagerHTML(base, params, page, totalPages)}`;
         }
         const pageHead = (title, desc) => `<h1 class="page-title">${title}</h1>${desc ? `<p class="page-desc">${esc(desc)}</p>` : ''}`;
@@ -1173,6 +1281,69 @@
             });
             return `<div class="stack-grid">${html}</div>`;
         }
+        const REPO_URL = 'https://github.com/cheezetomato/cheezetomzto.github.io';
+        const starsHTML = v => { let s = ''; for (let i = 1; i <= 5; i++) s += `<span class="${v >= i ? 'st-full' : v >= i - 0.5 ? 'st-half' : 'st-empty'}">★</span>`; return `<span class="mini-stars" aria-label="${fmt(v)}점">${s}</span>`; };
+        const allViewings = () => films().flatMap(m => viewingsOf(m).filter(v => v.date).map(v => ({ m, v }))).sort((a, b) => String(b.v.date).localeCompare(String(a.v.date)));
+        function reviewsHTML() {
+            const seen = new Set(), picks = [];
+            for (const e of allViewings()) { if (e.v.memo && !seen.has(e.m.id)) { seen.add(e.m.id); picks.push(e); } if (picks.length === 3) break; }
+            if (!picks.length) return '';
+            return section(`<div class="section-header"><div><div class="section-title">Recent reviews</div></div></div>
+                <div class="review-list">${picks.map(({ m, v }) => `<a class="review-row" href="#/film/${enc(m.id)}"><img src="${esc(poster(m.poster_path, 'w154'))}" alt="" loading="lazy">
+                    <div class="review-body"><div class="review-head"><span class="review-title">${esc(m.title)}</span><span class="review-year">${esc(m.year || '')}</span></div>
+                    <div class="review-meta">${starsHTML(v.rating)}<span>${esc(v.date.replace(/-/g, '.'))}${v.first ? '' : ' 재관람'}</span></div>
+                    <p class="review-text">${esc(v.memo)}</p></div></a>`).join('')}</div>`);
+        }
+        function diaryHTML() {
+            const views = allViewings();
+            if (!views.length) return '';
+            const ym = views[0].v.date.slice(0, 7), rows = views.filter(e => e.v.date.startsWith(ym));
+            const [y, mo] = ym.split('-');
+            return section(`<div class="section-header"><div><div class="section-title">Diary</div><p class="section-desc">${y}년 ${+mo}월에 본 영화 ${rows.length}편</p></div><a class="section-more" href="${esc(hashOf('stats', { y }))}">통계 보기</a></div>
+                <ol class="diary">${rows.slice(0, 12).map(({ m, v }) => `<li><a class="diary-row" href="#/film/${enc(m.id)}"><span class="diary-day">${+v.date.slice(8)}</span><img src="${esc(poster(m.poster_path, 'w92'))}" alt="" loading="lazy">
+                    <span class="diary-title"><b>${esc(m.title)}</b><small>${esc([m.year, directorsOf(m)[0]].filter(Boolean).join(', '))}</small></span>
+                    ${v.first ? '' : '<span class="diary-tag">재관람</span>'}${starsHTML(v.rating)}</a></li>`).join('')}</ol>
+                ${rows.length > 12 ? `<a class="diary-more" href="${esc(hashOf('stats', { y }))}">나머지 ${rows.length - 12}편 더 보기</a>` : ''}`);
+        }
+        const RATING_GUIDE = [[5, '인생 영화. 언제든 다시 보고 싶은 작품'], [4.5, '거의 완벽했고 오래 기억에 남는 작품'], [4, '확실히 좋았고 추천할 만한 작품'], [3.5, '좋았지만 아쉬운 부분이 있던 작품'], [3, '무난하게 볼 만했던 작품'], [2.5, '기대보다 아쉬웠던 작품'], [2, '다시 보지는 않을 것 같은 작품']];
+        function viewAbout() {
+            const list = films(), views = allViewings();
+            const first = views.length ? views[views.length - 1].v.date : '';
+            const dirCount = new Set(list.flatMap(directorsOf)).size;
+            const count = s => s === 2 ? list.filter(m => num(m.rating) <= 2).length : list.filter(m => num(m.rating) === s).length;
+            return section(`<div class="about">
+                ${pageHead('About')}
+                <p class="about-lede">cheezetomato의 영화 기록장입니다. 극장이나 집에서 본 영화를 별점과 한줄평으로 남기고, 다시 본 영화는 볼 때마다 따로 기록합니다. Letterboxd처럼 내 기록을 한곳에 모아 보고 싶어서 직접 만들었습니다.</p>
+                <dl class="about-nums">
+                    <div><dt>첫 기록</dt><dd>${first ? esc(first.replace(/-/g, '.')) : '-'}</dd></div>
+                    <div><dt>기록한 영화</dt><dd>${list.length}편</dd></div>
+                    <div><dt>관람 횟수</dt><dd>${views.length}번</dd></div>
+                    <div><dt>감독</dt><dd>${dirCount}명</dd></div>
+                </dl>
+
+                <h2 class="about-h">별점 기준</h2>
+                <ul class="guide">${RATING_GUIDE.map(([s, t]) => `<li><a href="${esc(hashOf('rating', { r: s.toFixed(1) }))}">${starsHTML(s)}<span class="guide-text">${esc(t)}</span><span class="guide-count">${count(s)}편</span></a></li>`).join('')}</ul>
+                <p class="about-note">2.0 칸에는 2.0 이하를 모두 셉니다.</p>
+
+                <h2 class="about-h">기록하는 방법</h2>
+                <ul class="about-list">
+                    <li>영화를 본 날짜를 기준으로 기록합니다.</li>
+                    <li>다시 본 영화는 회차마다 날짜, 별점, 한줄평을 따로 남깁니다. 대표 별점은 가장 최근 회차를 따릅니다.</li>
+                    <li>보고 싶은 영화는 <a href="#/watchlist">Watchlist</a>에 담아두고, 보고 나면 본 영화로 옮깁니다.</li>
+                    <li>한 해 기록은 <a href="#/stats">Stats</a>에서 월별, 평점별, 감독별로 볼 수 있습니다.</li>
+                </ul>
+
+                <h2 class="about-h">만든 방법</h2>
+                <ul class="about-list">
+                    <li>GitHub Pages에 올린 HTML 파일 하나로 운영합니다. <a href="${REPO_URL}" target="_blank" rel="noopener">소스 코드</a>는 공개되어 있습니다.</li>
+                    <li>기록은 Firebase에 저장하고, 매주 월요일 GitHub에 자동으로 백업합니다.</li>
+                    <li>영화 정보와 포스터는 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>, OTT 정보는 <a href="https://www.justwatch.com/kr" target="_blank" rel="noopener">JustWatch</a>에서 가져옵니다.</li>
+                </ul>
+
+                <h2 class="about-h">Contact</h2>
+                <p class="about-text"><a href="https://github.com/cheezetomato" target="_blank" rel="noopener">GitHub @cheezetomato</a></p>
+            </div>`);
+        }
         function viewHome() {
             const recent = [...films()].sort(byRecent);
             const perfect = recent.filter(m => num(m.rating) === 5);
@@ -1182,8 +1353,10 @@
             const myDirs = myDirectors();
             return heroHTML(heroList)
                 + carouselHTML('recent', 'Recently watched', null, recent.slice(0, 24), '#/all')
+                + reviewsHTML()
                 + carouselHTML('perfect', 'Perfect 5.0', null, restPerfect, '#/rating')
                 + (myDirs.length ? section(`<div class="section-header"><div><div class="section-title">My directors</div></div></div><div id="my-dirs">${dirsHTML()}</div>`) : '')
+                + diaryHTML()
                 + carouselHTML('wish', 'Watchlist', null, wishes().slice(0, 18), '#/watchlist');
         }
 
@@ -1220,9 +1393,9 @@
             const recent = [...films()].sort(byRecent);
             const groups = [...groupBy(recent, m => [fmt(m.rating)])].sort((a, b) => num(b[0]) - num(a[0]));
             const selected = groups.find(([k]) => k === r.params.r);
-            const chips = `<a class="chip ${selected ? '' : 'active'}" href="#/rating"${selected ? '' : ' aria-current="true"'}>전체 <small>${recent.length}</small></a>` + groups.map(([k, l]) => {
+            const chips = `<a class="chip ${selected ? '' : 'active'}" href="#/rating"${selected ? '' : ' aria-current="true"'}>전체 <span class="chip-n">${recent.length}편</span></a>` + groups.map(([k, l]) => {
                 const on = selected && selected[0] === k;
-                return `<a class="chip ${on ? 'active' : ''}" href="${esc(hashOf('rating', on ? {} : { r: k }))}"${on ? ' aria-current="true"' : ''}>★ ${k} <small>${l.length}</small></a>`;
+                return `<a class="chip ${on ? 'active' : ''}" href="${esc(hashOf('rating', on ? {} : { r: k }))}"${on ? ' aria-current="true"' : ''}>★ ${k} <span class="chip-n">${l.length}편</span></a>`;
             }).join('');
             const head = pageHead('By rating');
             if (selected) return section(`${head}<div class="rating-filter">${chips}</div>${pagedGrid('rating', { r: selected[0], p: r.params.p }, selected[1])}`);
@@ -1380,8 +1553,8 @@
         }
 
         /* ---------- 라우팅 ---------- */
-        const VIEWS = { home: viewHome, all: viewAll, rating: viewRating, director: viewDirector, stats: viewStats, watchlist: viewWatchlist, search: viewSearch };
-        const TITLES = { all: 'All Films', rating: 'By Rating', stats: 'Stats', watchlist: 'Watchlist', search: 'Search' };
+        const VIEWS = { home: viewHome, about: viewAbout, all: viewAll, rating: viewRating, director: viewDirector, stats: viewStats, watchlist: viewWatchlist, search: viewSearch };
+        const TITLES = { about: 'About', all: 'All Films', rating: 'By Rating', stats: 'Stats', watchlist: 'Watchlist', search: 'Search' };
         function parseRoute() {
             const raw = location.hash.replace(/^#\/?/, '');
             const i = raw.indexOf('?');
@@ -1396,13 +1569,14 @@
             const main = $('main-content');
             main.classList.toggle('is-home', view === viewHome);
             main.innerHTML = view(r);
+            main.dataset.view = VIEWS[name] ? name : 'home';
             const active = name;
             document.querySelectorAll('[data-nav]').forEach(a => {
                 const on = a.dataset.nav === active;
                 a.classList.toggle('active', on);
                 if (on) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } else a.removeAttribute('aria-current');
             });
-            $('stats-total').textContent = films().length;
+            $('footer-year').textContent = new Date().getFullYear();
             document.title = name === 'director' ? `${r.seg[1]} | Films.` : TITLES[name] ? `${TITLES[name]} | Films.` : 'Films. | 나의 영화 기록';
             initCarousels(); initHeroSwipe(); fillOttCards();
         }
@@ -1422,12 +1596,51 @@
                 const sameView = renderedKey !== null && renderedKey.split('?')[0] === key.split('?')[0];
                 renderView(r);
                 renderedKey = key;
-                if (!(r.seg[0] === 'search' && sameView)) window.scrollTo(0, 0);
-            }
+                viewEntry = entryKey();
+                const saved = scrollMemory[viewEntry];
+                if (saved) restoreScroll(saved);
+                else if (!(r.seg[0] === 'search' && sameView)) window.scrollTo(0, 0);
+            } else viewEntry = entryKey();
             const box = $('local-search-input');
             if (r.seg[0] !== 'search') box.value = '';
             else if (document.activeElement !== box) box.value = r.seg.slice(1).join('/');
         }
+        /* 뒤로 가기 하면 보던 위치로: 기록마다 세로 위치와 가로 줄 위치를 기억 */
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        let scrollMemory = {};
+        try { scrollMemory = JSON.parse(sessionStorage.getItem('films-scroll') || '{}'); } catch { scrollMemory = {}; }
+        let viewEntry = null, restoring = false, saveTimer = 0;
+        function entryKey() {
+            const st = history.state;
+            if (st && st.k) return st.k;
+            const k = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+            history.replaceState({ ...(st || {}), k }, '', location.href);
+            return k;
+        }
+        function rememberScroll() {
+            if (!viewEntry || restoring || currentDetailId) return;
+            const rows = {};
+            document.querySelectorAll('#main-content [data-view]').forEach(v => { if (v.scrollLeft > 0) rows[v.dataset.view] = Math.round(v.scrollLeft); });
+            scrollMemory[viewEntry] = { y: Math.round(scrollY), rows };
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                const keys = Object.keys(scrollMemory);
+                if (keys.length > 80) keys.slice(0, keys.length - 80).forEach(k => delete scrollMemory[k]);
+                try { sessionStorage.setItem('films-scroll', JSON.stringify(scrollMemory)); } catch { /* 저장 공간 없음 */ }
+            }, 250);
+        }
+        function restoreScroll(saved) {
+            restoring = true;
+            const apply = () => {
+                Object.entries(saved.rows || {}).forEach(([id, left]) => { const v = document.querySelector(`#main-content [data-view="${id}"]`); if (v) v.scrollLeft = left; });
+                window.scrollTo(0, saved.y || 0);
+            };
+            apply();
+            requestAnimationFrame(apply);
+            setTimeout(() => { apply(); restoring = false; }, 160);
+        }
+        document.addEventListener('scroll', rememberScroll, { capture: true, passive: true });
+
         function refresh() {
             renderedKey = null;
             const r = parseRoute();
@@ -1435,10 +1648,10 @@
             else onRoute();
         }
         function parseViewHash(hash) {
-            const saved = location.hash;
-            history.replaceState(null, '', hash);
+            const saved = location.hash, state = history.state;
+            history.replaceState(state, '', hash);
             const r = parseRoute();
-            history.replaceState(null, '', saved || '#/');
+            history.replaceState(state, '', saved || '#/');
             return r;
         }
 
@@ -1996,6 +2209,7 @@
 
         /* ---------- 이벤트 ---------- */
         const ACTIONS = {
+            'to-top': () => window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }),
             'log-film': () => openForm('log'),
             'add-watchlist': () => openForm('watchlist'),
             'fill-cast': fillCast, 'fix-posters': autoFixPosters, 'match-ids': matchTmdbIds, cleanup: cleanupData,
