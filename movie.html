@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Films. | 나의 영화 기록</title>
-    <meta name="description" content="직접 보고 평점과 한줄평을 남긴 영화 아카이브. 감독별 기록, 한줄평 모음, 관람 통계를 볼 수 있습니다.">
+    <meta name="description" content="직접 본 영화의 평점과 한줄평을 모아 둔 기록입니다.">
     <meta name="theme-color" content="#09090b">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Films.">
     <meta property="og:title" content="Films. | 나의 영화 기록">
-    <meta property="og:description" content="직접 보고 평점과 한줄평을 남긴 영화 아카이브">
+    <meta property="og:description" content="직접 본 영화의 평점과 한줄평을 모아 둔 기록입니다.">
     <meta property="og:url" content="https://cheezetomato.github.io/cheezetomzto.github.io/movie.html">
     <meta property="og:image" content="https://cheezetomato.github.io/cheezetomzto.github.io/og-films.png">
     <meta property="og:image:width" content="1200">
@@ -572,19 +572,105 @@
         #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
         /* 상세 화면 영화 정보 */
-        .detail-facts { display: flex; flex-wrap: wrap; gap: 12px 30px; margin: 0 0 20px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .detail-facts { display: flex; flex-wrap: wrap; gap: 12px 30px; margin: 0 0 20px; }
         .detail-fact { min-width: 0; }
-        .detail-fact dt { margin-bottom: 4px; font-size: 0.72rem; font-weight: 500; color: var(--text-dim); }
-        .detail-fact dd { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+        .detail-fact dt { margin-bottom: 3px; font-size: 0.76rem; font-weight: 500; color: var(--text-dim); }
+        .detail-fact dd { margin: 0; font-size: 0.92rem; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
         .detail-actions:empty { display: none; }
-        @media (max-width: 600px) { .detail-facts { justify-content: center; gap: 12px 24px; } }
+        #detail-year { margin-right: 10px; }
+        #detail-rating { display: flex; width: fit-content; background: none; border: none; padding: 0; border-radius: 0; margin-bottom: 18px; }
+        .detail-memo-box { background: none; border: none; border-radius: 0; padding: 0; margin-top: 30px; font-size: 1.02rem; }
+        .memo-label, .sec-label { font-size: 0.82rem; font-weight: 600; letter-spacing: 0; color: var(--text-dim); text-transform: none; margin-bottom: 8px; }
+        @media (max-width: 600px) { .detail-facts { justify-content: center; gap: 12px 24px; } #detail-rating { margin-left: auto; margin-right: auto; } }
 
-        /* 날짜 입력: 칸 어디를 눌러도 달력 열기 */
-        .modal-content input[type="date"] { position: relative; min-height: 46px; color-scheme: dark; accent-color: var(--accent); cursor: pointer; }
-        @supports selector(::-webkit-calendar-picker-indicator) {
-            .modal-content input[type="date"] { padding-right: 44px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a5a6f6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 19px; }
-            .modal-content input[type="date"]::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
-            .modal-content input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+        /* 제목과 라벨 */
+        .section-title { padding: 0; border: none; font-size: 1.22rem; font-weight: 700; letter-spacing: -0.2px; text-transform: none; }
+        .section-desc { padding-left: 0; }
+        .modal-content label { font-size: 0.8rem; letter-spacing: 0; text-transform: none; }
+        .modal-content h2 { margin-bottom: 20px; }
+        .hero-pagination { background: none; border: none; padding: 0; }
+        footer #stats-total { color: inherit; font-weight: 600; }
+
+        /* 모서리와 버튼 */
+        .modal-content { border-radius: 14px; }
+        .modal-content input, .modal-content select, .modal-content textarea, .tmdb-search-box { border-radius: 8px; }
+        .local-search-input { border-radius: 8px; }
+        .btn-save, .btn-cancel, .btn-ghost, .btn-danger { border-radius: 8px; }
+        .btn-save:hover { transform: none; box-shadow: none; }
+        .card-badge { border-radius: 4px; }
+        #toast { border-radius: 8px; }
+
+        .btn-save, .btn-cancel, .btn-danger { font-family: inherit; font-size: 0.88rem; }
+        .carousel-indicator { padding: 0; background: none; border: none; border-radius: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .detail-fact dd { line-height: 1.4; }
+        .user-short { display: none; }
+        @media (max-width: 480px) { .user-short { display: inline; } }
+
+        /* 필터는 글자로 */
+        .chip-list, .rating-filter { gap: 4px 18px; }
+        .chip { min-height: 36px; padding: 6px 0; border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; }
+        .chip small { margin-left: 3px; font-size: 0.78em; font-weight: 500; color: var(--text-mute); }
+        .chip:hover { border-color: transparent; color: var(--text); }
+        .chip.active { background: none; color: var(--text); border-bottom-color: var(--accent); font-weight: 700; }
+        .chip.active small { color: var(--text-dim); }
+        .toolbar { padding: 0; background: none; border: none; border-radius: 0; }
+
+        /* 통계는 상자 없이 */
+        .kpi-row { grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 18px 24px; margin: 26px 0 10px; }
+        .kpi { background: none; border: none; border-radius: 0; padding: 0; }
+        .kpi-label { font-size: 0.78rem; font-weight: 500; }
+        .recap { gap: 22px 28px; margin-top: 24px; }
+        .recap-card { background: none; border: none; border-radius: 0; padding: 0; }
+        .recap-card:hover { border: none; }
+        a.recap-card:hover .recap-value { color: var(--accent-light); }
+        .recap-label { color: var(--text-dim); font-weight: 500; font-size: 0.78rem; }
+        .chart-grid { gap: 40px 44px; margin-top: 38px; }
+        .chart-card { background: none; border: none; border-radius: 0; padding: 0; }
+        .chart-title { font-size: 1rem; margin-bottom: 16px; }
+        .chart-sub { margin-top: -12px; }
+        .chart-sub:empty { display: none; }
+
+        /* 날짜 칸 */
+        .date-field { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 46px; margin-top: 7px; padding: 11px 14px; box-sizing: border-box; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 0.95rem; text-align: left; cursor: pointer; transition: border-color 0.15s ease; }
+        .date-field svg { flex-shrink: 0; color: var(--text-dim); transition: color 0.15s ease; }
+        .date-field:hover, .date-field[aria-expanded="true"] { border-color: var(--accent); }
+        .date-field:hover svg, .date-field[aria-expanded="true"] svg { color: var(--accent-light); }
+
+        /* 달력 */
+        #cal-scrim { display: none; }
+        #cal { position: fixed; z-index: 3200; width: 316px; box-sizing: border-box; padding: 16px 14px 10px; background: #1c1c21; border: 1px solid #34343b; border-radius: 14px; box-shadow: 0 22px 48px rgba(0,0,0,0.6); animation: calIn 0.14s ease-out; }
+        @keyframes calIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        .cal-head { display: flex; align-items: center; gap: 2px; margin: 0 2px 12px 6px; }
+        .cal-title { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; padding: 5px 4px; background: none; border: none; border-radius: 6px; color: var(--text); font: inherit; font-size: 1.08rem; font-weight: 700; letter-spacing: -0.3px; cursor: pointer; }
+        .cal-title span { font-size: 0.66rem; color: var(--text-dim); }
+        .cal-title:hover { color: var(--accent-light); }
+        .cal-nav { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; background: none; border: none; border-radius: 50%; color: var(--text-dim); cursor: pointer; }
+        .cal-nav:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+        .cal-week, .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); justify-items: center; }
+        .cal-week span { padding-bottom: 6px; font-size: 0.74rem; font-weight: 500; color: var(--text-dim); }
+        .cal-days { min-height: 246px; align-content: start; }
+        .cal-day { position: relative; width: 40px; height: 40px; margin: 0.5px 0; padding: 0; background: none; border: none; border-radius: 50%; color: var(--text); font: inherit; font-size: 0.92rem; font-variant-numeric: tabular-nums; cursor: pointer; transition: background 0.12s ease; }
+        .cal-week .sun, .cal-day.sun { color: #e8928d; }
+        .cal-week .sat, .cal-day.sat { color: #92aee6; }
+        .cal-day:hover { background: rgba(255,255,255,0.08); }
+        .cal-day.today::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent-light); }
+        .cal-day.on, .cal-day.on:hover { background: var(--accent); color: var(--ink); font-weight: 700; }
+        .cal-day.on.today::after { background: var(--ink); }
+        .cal-foot { display: flex; justify-content: flex-end; margin-top: 2px; }
+        .cal-today { padding: 7px 10px; background: none; border: none; border-radius: 6px; color: var(--accent-light); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
+        .cal-today:hover { background: rgba(255,255,255,0.07); }
+        .cal-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 2px 10px; }
+        .cal-month { height: 56px; background: none; border: none; border-radius: 10px; color: var(--text); font: inherit; font-size: 0.95rem; cursor: pointer; }
+        .cal-month:hover { background: rgba(255,255,255,0.08); }
+        .cal-month.on { background: var(--accent); color: var(--ink); font-weight: 700; }
+        @media (max-width: 600px) {
+            #cal-scrim { display: block; position: fixed; inset: 0; z-index: 3100; background: rgba(0,0,0,0.5); }
+            #cal-scrim[hidden] { display: none; }
+            #cal { left: 0; right: 0; bottom: 0; width: 100%; padding: 20px 16px calc(14px + env(safe-area-inset-bottom)); border-width: 1px 0 0; border-radius: 18px 18px 0 0; animation: calUp 0.2s ease-out; }
+            @keyframes calUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+            .cal-day { width: 46px; height: 46px; }
+            .cal-days { min-height: 282px; }
+            .cal-month { height: 64px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -608,21 +694,21 @@
             </div>
 
             <div class="header-right">
-                <input type="search" class="local-search-input" id="local-search-input" placeholder="제목·감독·배우·한줄평" aria-label="내 영화 검색" autocomplete="off">
+                <input type="search" class="local-search-input" id="local-search-input" placeholder="영화, 감독, 배우 검색" aria-label="내 영화 검색" autocomplete="off">
                 <div class="user-menu no-dropdown" id="user-menu">
                     <button type="button" class="user-name" id="nav-user-name" style="background:none;border:none;font-family:inherit;" hidden></button>
                     <div class="dropdown-content">
                         <button type="button" class="dropdown-item" data-action="log-film">+ 영화 기록</button>
                         <button type="button" class="dropdown-item" data-action="add-watchlist">+ 보고 싶은 영화</button>
-                        <button type="button" class="dropdown-item" data-action="fill-cast">🎭 출연진 저장</button>
-                        <button type="button" class="dropdown-item" data-action="fix-posters">✨ Fix Posters</button>
-                        <button type="button" class="dropdown-item" data-action="match-ids">🔗 ID 매칭</button>
-                        <button type="button" class="dropdown-item" data-action="cleanup">🧹 데이터 정리</button>
-                        <button type="button" class="dropdown-item" data-action="export">📥 Back-up</button>
-                        <button type="button" class="dropdown-item" data-action="logout">Logout</button>
+                        <button type="button" class="dropdown-item" data-action="fill-cast">출연진 저장</button>
+                        <button type="button" class="dropdown-item" data-action="fix-posters">포스터 복구</button>
+                        <button type="button" class="dropdown-item" data-action="match-ids">TMDB 연결</button>
+                        <button type="button" class="dropdown-item" data-action="cleanup">데이터 정리</button>
+                        <button type="button" class="dropdown-item" data-action="export">백업 내려받기</button>
+                        <button type="button" class="dropdown-item" data-action="logout">로그아웃</button>
                     </div>
                 </div>
-                <button type="button" class="secret-login-btn" id="secret-login-btn" data-action="open-login">Sign In 🔒</button>
+                <button type="button" class="secret-login-btn" id="secret-login-btn" data-action="open-login">로그인</button>
             </div>
         </div>
     </header>
@@ -630,8 +716,8 @@
     <main id="main-content"></main>
 
     <footer>
-        <p>전설적인 영화 플랫폼 레터박스(Letterboxd)를 오마주하여 만든, 나만의 인생 영화 아카이빙 갤러리입니다.</p>
-        <p>총 <span id="stats-total" style="color:var(--accent-light); font-weight:bold;">0</span>편의 명작이 함께하고 있습니다.</p>
+        <p>Letterboxd를 참고해 만든 개인 영화 기록입니다.</p>
+        <p>지금까지 <span id="stats-total">0</span>편을 봤습니다.</p>
         <div class="footer-links">
             <a href="https://letterboxd.com/" target="_blank" rel="noopener">Letterboxd</a>
             <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>
@@ -649,23 +735,23 @@
                     </div>
                     <div class="detail-info">
                         <h2 id="detail-title">Title</h2>
-                        <div class="detail-meta"><span id="detail-year"></span> • <a id="detail-director" href="#/"></a></div>
+                        <div class="detail-meta"><span id="detail-year"></span><a id="detail-director" href="#/"></a></div>
                         <div id="detail-rating"></div>
                         <dl class="detail-facts" id="detail-tags"></dl>
                     </div>
                 </div>
                 <div class="detail-actions" id="detail-actions"></div>
-                <div class="detail-memo-box" id="detail-memo-box"><div class="memo-label">MY REVIEW</div><span id="detail-memo"></span></div>
+                <div class="detail-memo-box" id="detail-memo-box"><div class="memo-label">내 리뷰</div><span id="detail-memo"></span></div>
                 <div class="detail-sec" id="detail-history-sec" hidden>
-                    <div class="sec-label">VIEWING HISTORY</div>
+                    <div class="sec-label">관람 기록</div>
                     <ul class="timeline" id="detail-history"></ul>
                 </div>
                 <div class="detail-sec" id="detail-overview-sec" hidden>
-                    <div class="sec-label">STORY</div>
+                    <div class="sec-label">줄거리</div>
                     <p id="detail-overview"></p>
                 </div>
                 <div class="detail-sec" id="detail-cast-sec" hidden>
-                    <div class="sec-label">CAST</div>
+                    <div class="sec-label">출연</div>
                     <div class="cast-row" id="detail-cast"></div>
                 </div>
                 <div class="detail-sec" id="detail-more-sec" hidden>
@@ -678,14 +764,13 @@
 
     <div class="modal-overlay" id="login-modal">
         <div class="modal-content" style="max-width: 400px;" role="dialog" aria-modal="true" aria-labelledby="login-title">
-            <h2 id="login-title">Sign In</h2>
-            <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 25px;">관리자 권한에 접근하시겠습니까?</p>
+            <h2 id="login-title">관리자 로그인</h2>
             <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email Address" style="margin-bottom: 12px;" autocomplete="username">
-                <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+                <input type="email" id="login-email" placeholder="이메일" style="margin-bottom: 12px;" autocomplete="username">
+                <input type="password" id="login-password" placeholder="비밀번호" autocomplete="current-password">
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" data-action="close-login">Cancel</button>
-                    <button type="submit" class="btn-save">Sign In</button>
+                    <button type="button" class="btn-cancel" data-action="close-login">취소</button>
+                    <button type="submit" class="btn-save">로그인</button>
                 </div>
             </form>
         </div>
@@ -693,25 +778,24 @@
 
     <div class="modal-overlay" id="movie-modal">
         <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div class="modal-eyebrow" id="modal-eyebrow">NEW ENTRY</div>
-            <h2 id="modal-title">Log a Film</h2>
-            <label for="search-title-input">영화 자동 검색</label>
+            <h2 id="modal-title">영화 기록</h2>
+            <label for="search-title-input">영화 찾기</label>
             <div class="tmdb-search-box">
-                <input type="text" id="search-title-input" placeholder="영화 제목을 검색하세요" autocomplete="off">
-                <button type="button" class="tmdb-search-btn" data-action="tmdb-search">Search</button>
+                <input type="text" id="search-title-input" placeholder="제목을 입력하세요" autocomplete="off">
+                <button type="button" class="tmdb-search-btn" data-action="tmdb-search">검색</button>
             </div>
             <div class="search-result-overlay" id="search-result-overlay">
                 <div class="search-result-content">
                     <button type="button" class="close-search-btn" data-action="close-search" aria-label="닫기">&times;</button>
-                    <h3 style="color:white; margin-top:0; font-size:1.3rem;">Search Results</h3>
+                    <h3 style="color:white; margin-top:0; font-size:1.3rem;">검색 결과</h3>
                     <div id="tmdb-results-list"></div>
                 </div>
             </div>
-            <label for="input-title">선택된 영화</label>
+            <label for="input-title">제목</label>
             <input type="text" id="input-title" required>
             <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;"><label for="input-region">국가</label><select id="input-region"><option value="한국">한국</option><option value="서양">서양</option><option value="일본">일본</option><option value="홍콩">홍콩</option><option value="기타">기타</option></select></div>
-                <div style="flex: 1;"><label for="input-genre">장르</label><input type="text" id="input-genre" placeholder="ex: 스릴러/드라마"></div>
+                <div style="flex: 1;"><label for="input-genre">장르</label><input type="text" id="input-genre" placeholder="스릴러/드라마"></div>
             </div>
             <div style="display: flex; gap: 12px;">
                 <div style="flex: 1;"><label for="input-director">감독</label><input type="text" id="input-director"></div>
@@ -719,34 +803,35 @@
                 <div style="flex: 1;" class="log-only"><label for="input-rating">평점</label><input type="number" id="input-rating" step="0.5" min="0.5" max="5"></div>
             </div>
             <div class="log-only">
-                <label for="input-watchDate">시청 날짜</label><input type="date" id="input-watchDate">
-                <label for="input-memo">리뷰 (Memo)</label>
-                <textarea id="input-memo" rows="4" placeholder="영화에 대한 감상평을 자유롭게 적어주세요."></textarea>
+                <label for="input-watchDate-btn">본 날짜</label><input type="hidden" id="input-watchDate"><button type="button" class="date-field" id="input-watchDate-btn" data-date-for="input-watchDate" aria-haspopup="dialog" aria-expanded="false"><span class="date-text"></span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></button>
+                <label for="input-memo">리뷰</label>
+                <textarea id="input-memo" rows="4"></textarea>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-danger" id="btn-delete" data-action="delete-film" hidden>삭제</button>
-                <button type="button" class="btn-cancel" data-action="close-form">Cancel</button>
-                <button type="button" class="btn-save" id="btn-save" data-action="save-film">Save</button>
+                <button type="button" class="btn-cancel" data-action="close-form">취소</button>
+                <button type="button" class="btn-save" id="btn-save" data-action="save-film">저장</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="rewatch-modal">
         <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="rewatch-title">
-            <div class="modal-eyebrow" id="rewatch-eyebrow">REWATCH</div>
             <h2 id="rewatch-title">다시 본 기록</h2>
-            <label for="rewatch-date">다시 본 날짜</label><input type="date" id="rewatch-date">
+            <label for="rewatch-date-btn">다시 본 날짜</label><input type="hidden" id="rewatch-date"><button type="button" class="date-field" id="rewatch-date-btn" data-date-for="rewatch-date" aria-haspopup="dialog" aria-expanded="false"><span class="date-text"></span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></button>
             <label for="rewatch-rating">이번 평점</label><input type="number" id="rewatch-rating" step="0.5" min="0.5" max="5">
             <label for="rewatch-memo">이번 감상 (선택)</label>
-            <textarea id="rewatch-memo" rows="3" placeholder="다시 보니 어땠나요?"></textarea>
+            <textarea id="rewatch-memo" rows="3"></textarea>
             <label class="check-row"><input type="checkbox" id="rewatch-update" checked>대표 평점도 이 점수로 바꾸기</label>
             <div class="modal-actions">
-                <button type="button" class="btn-cancel" data-action="close-rewatch">Cancel</button>
-                <button type="button" class="btn-save" id="btn-rewatch-save" data-action="save-rewatch">Save</button>
+                <button type="button" class="btn-cancel" data-action="close-rewatch">취소</button>
+                <button type="button" class="btn-save" id="btn-rewatch-save" data-action="save-rewatch">저장</button>
             </div>
         </div>
     </div>
 
+    <div id="cal-scrim" hidden></div>
+    <div id="cal" role="dialog" aria-modal="true" aria-label="날짜 선택" hidden></div>
     <div id="chart-tip" role="status" hidden></div>
     <div id="toast" role="status" aria-live="polite"></div>
 
@@ -852,7 +937,7 @@
                         ${memo && !wish ? `<div class="overlay-memo">"${esc(memo)}"</div>` : ''}
                     </div>
                 </a>
-                ${isAdmin ? `<button type="button" class="edit-btn" data-edit="${esc(m.id)}" aria-label="${esc(m.title)} 수정">✏️</button>` : ''}
+                ${isAdmin ? `<button type="button" class="edit-btn" data-edit="${esc(m.id)}" aria-label="${esc(m.title)} 수정"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>` : ''}
                 <div class="card-caption"><div class="card-caption-title">${esc(m.title || '제목 없음')}</div>${rating ? `<div class="card-caption-rate">${rating}</div>` : ''}</div>
                 ${opts.hint ? `<div class="card-hint">${esc(opts.hint)}</div>` : ''}
             </article>`;
@@ -864,7 +949,7 @@
                 <div class="section-header">
                     <div><div class="section-title">${title}</div>${desc ? `<p class="section-desc">${esc(desc)}</p>` : ''}</div>
                     <div class="section-actions">
-                        ${more ? `<a class="section-more" href="${esc(more)}">전체 보기 →</a>` : ''}
+                        ${more ? `<a class="section-more" href="${esc(more)}">전체 보기</a>` : ''}
                         <div class="carousel-indicator" data-ind="${id}" hidden></div>
                     </div>
                 </div>
@@ -940,7 +1025,6 @@
                 <a class="hero-content" href="#/film/${enc(m.id)}">
                     <img src="${esc(poster(m.poster_path))}" class="hero-poster-img" alt="">
                     <div class="hero-info">
-                        <div class="hero-badge">BEST MOVIE</div>
                         <h2 class="hero-title">${esc(m.title)}</h2>
                         <div class="hero-meta"><span class="hero-rating">★ ${fmt(m.rating)}</span><span>${esc(m.year || '-')}</span><span>${esc(m.director || '-')} 감독</span><span>${esc(m.genre || '-')}</span></div>
                         ${cleanMemo(m.memo) ? `<div class="hero-desc">"${esc(cleanMemo(m.memo))}"</div>` : ''}
@@ -977,7 +1061,7 @@
         const filmStrip = list => list.map(m => `<a class="dir-film" href="#/film/${enc(m.id)}"><img src="${esc(poster(m.poster_path, 'w185'))}" alt="" loading="lazy"><span class="dir-film-title">${esc(m.title)}</span><div class="dir-film-rate">★ ${fmt(m.rating)}</div></a>`).join('');
         const myDirectors = () => directorStats().filter(d => d.count >= 2).sort((a, b) => b.count - a.count || b.avg - a.avg);
         let stackOpen = 0;
-        const dirMeta = d => `${d.count}편 · 평균 <b>★ ${fmt(d.avg)}</b>`;
+        const dirMeta = d => `${d.count}편, 평균 <b>★ ${fmt(d.avg)}</b>`;
         const stackColumns = () => (matchMedia('(max-width: 800px)').matches ? 2 : 4);
         function dirsHTML() {
             const list = myDirectors();
@@ -988,7 +1072,7 @@
                 const rowEnd = Math.min(list.length - 1, Math.floor(i / cols) * cols + cols - 1);
                 if (i === rowEnd && stackOpen >= 0 && Math.floor(stackOpen / cols) === Math.floor(i / cols) && list[stackOpen]) {
                     const o = list[stackOpen];
-                    html += `<div class="stack-panel"><div class="stack-panel-head"><span class="stack-panel-name">${esc(o.name)}</span><span class="stack-meta">${dirMeta(o)}</span><a class="dir-all" href="#/director/${enc(o.name)}">전체 보기 →</a></div><div class="dir-strip">${filmStrip(o.list)}</div></div>`;
+                    html += `<div class="stack-panel"><div class="stack-panel-head"><span class="stack-panel-name">${esc(o.name)}</span><span class="stack-meta">${dirMeta(o)}</span><a class="dir-all" href="#/director/${enc(o.name)}">전체 보기</a></div><div class="dir-strip">${filmStrip(o.list)}</div></div>`;
                 }
             });
             return `<div class="stack-grid">${html}</div>`;
@@ -1001,10 +1085,10 @@
             const restPerfect = perfect.filter(m => !heroIds.has(m.id));
             const myDirs = myDirectors();
             return heroHTML(heroList)
-                + carouselHTML('recent', 'RECENTLY WATCHED', '최근에 시청한 영화입니다.', recent.slice(0, 24), '#/all')
-                + carouselHTML('perfect', 'PERFECT 5.0', '최고의 평점을 준 완벽한 영화들입니다.', restPerfect, '#/rating')
-                + (myDirs.length ? section(`<div class="section-header"><div><div class="section-title">MY DIRECTORS</div><p class="section-desc">2편 이상 본 감독과 작품입니다.</p></div></div><div id="my-dirs">${dirsHTML()}</div>`) : '')
-                + carouselHTML('wish', 'WATCHLIST', '다음에 보고 싶은 영화입니다.', wishes().slice(0, 18), '#/watchlist');
+                + carouselHTML('recent', 'Recently watched', null, recent.slice(0, 24), '#/all')
+                + carouselHTML('perfect', 'Perfect 5.0', null, restPerfect, '#/rating')
+                + (myDirs.length ? section(`<div class="section-header"><div><div class="section-title">My directors</div></div></div><div id="my-dirs">${dirsHTML()}</div>`) : '')
+                + carouselHTML('wish', 'Watchlist', null, wishes().slice(0, 18), '#/watchlist');
         }
 
         /* ---------- 화면: 전체 ---------- */
@@ -1033,33 +1117,33 @@
                 ${selectHTML('region', '국가', p.region, [['', '전체 국가'], ...regions])}
                 ${active ? '<a class="tool-reset" href="#/all">초기화</a>' : ''}
             </div>`;
-            return section(`${pageHead('All Films')}${toolbar}<p class="result-count">총 ${list.length}편</p>${list.length ? pagedGrid('all', p, list) : '<div class="empty-state">조건에 맞는 영화가 없습니다.</div>'}`);
+            return section(`${pageHead('All films')}${toolbar}<p class="result-count">총 ${list.length}편</p>${list.length ? pagedGrid('all', p, list) : '<div class="empty-state">조건에 맞는 영화가 없습니다.</div>'}`);
         }
         /* ---------- 화면: 평점 ---------- */
         function viewRating(r) {
             const recent = [...films()].sort(byRecent);
             const groups = [...groupBy(recent, m => [fmt(m.rating)])].sort((a, b) => num(b[0]) - num(a[0]));
             const selected = groups.find(([k]) => k === r.params.r);
-            const chips = `<a class="chip ${selected ? '' : 'active'}" href="#/rating"${selected ? '' : ' aria-current="true"'}>전체 · ${recent.length}편</a>` + groups.map(([k, l]) => {
+            const chips = `<a class="chip ${selected ? '' : 'active'}" href="#/rating"${selected ? '' : ' aria-current="true"'}>전체 <small>${recent.length}</small></a>` + groups.map(([k, l]) => {
                 const on = selected && selected[0] === k;
-                return `<a class="chip ${on ? 'active' : ''}" href="${esc(hashOf('rating', on ? {} : { r: k }))}"${on ? ' aria-current="true"' : ''}>★ ${k} · ${l.length}편</a>`;
+                return `<a class="chip ${on ? 'active' : ''}" href="${esc(hashOf('rating', on ? {} : { r: k }))}"${on ? ' aria-current="true"' : ''}>★ ${k} <small>${l.length}</small></a>`;
             }).join('');
-            const head = pageHead('By Rating', selected ? `★ ${selected[0]} 영화 ${selected[1].length}편입니다.` : '평점을 누르면 해당 영화만 볼 수 있습니다.');
+            const head = pageHead('By rating');
             if (selected) return section(`${head}<div class="rating-filter">${chips}</div>${pagedGrid('rating', { r: selected[0], p: r.params.p }, selected[1])}`);
             return section(`${head}<div class="rating-filter">${chips}</div>`)
-                + groups.map(([k, l], i) => carouselHTML(`rating-${i}`, `★ ${k} <span style="font-size:0.85rem;color:var(--text-dim);font-weight:normal;">(${l.length}편)</span>`, null, l, hashOf('rating', { r: k }))).join('');
+                + groups.map(([k, l], i) => carouselHTML(`rating-${i}`, `★ ${k} <span style="font-size:0.85rem;color:var(--text-dim);font-weight:normal;margin-left:4px;">${l.length}편</span>`, null, l, hashOf('rating', { r: k }))).join('');
         }
 
         /* ---------- 화면: 검색 ---------- */
         function matchField(m, q) {
             if (norm(m.title).includes(q)) return { score: 4, hint: '' };
             const dir = directorsOf(m).find(d => norm(d).includes(q));
-            if (dir) return { score: 3, hint: `감독 · ${dir}` };
+            if (dir) return { score: 3, hint: `감독 ${dir}` };
             const cast = (Array.isArray(m.cast) ? m.cast : []).find(c => norm(c).includes(q));
-            if (cast) return { score: 3, hint: `출연 · ${cast}` };
+            if (cast) return { score: 3, hint: `출연 ${cast}` };
             const g = genresOf(m).find(x => norm(x).includes(q));
-            if (g) return { score: 2, hint: `장르 · ${g}` };
-            if (norm(m.region).includes(q)) return { score: 2, hint: `국가 · ${m.region}` };
+            if (g) return { score: 2, hint: `장르 ${g}` };
+            if (norm(m.region).includes(q)) return { score: 2, hint: `국가 ${m.region}` };
             if (String(m.year || '') === q) return { score: 2, hint: `${m.year}년 개봉` };
             const memo = viewingsOf(m).find(v => norm(v.memo).includes(q));
             if (memo) return { score: 1, hint: `"${memo.memo}"` };
@@ -1072,8 +1156,8 @@
             const run = list => list.map(m => ({ m, f: matchField(m, q) })).filter(x => x.f).sort((a, b) => b.f.score - a.f.score || byRecent(a.m, b.m)).map(x => { hints.set(x.m.id, x.f.hint); return x.m; });
             const list = q ? run(films()) : [];
             const wish = q ? run(wishes()) : [];
-            const head = pageHead('Search Results', `'${raw}' 검색 결과 ${list.length + wish.length}편`);
-            if (!list.length && !wish.length) return section(`${head}<div class="empty-state">아직 기록되지 않은 영화이거나 검색어가 다른 것 같아요.<br>제목, 감독, 장르, 국가, 개봉연도, 한줄평으로 찾을 수 있습니다.</div>`);
+            const head = pageHead(`'${raw}' 검색 결과`, `${list.length + wish.length}편`);
+            if (!list.length && !wish.length) return section(`${head}<div class="empty-state">찾는 영화가 없습니다.<br>제목, 감독, 배우, 장르로 검색해 보세요.</div>`);
             return section(`${head}${list.length ? pagedGrid(`search/${enc(raw)}`, r.params, list, m => hints.get(m.id)) : ''}${wish.length ? `<h2 class="sub-title">보고 싶은 영화</h2><div class="movie-grid-wrap">${wish.map(m => cardHTML(m, { hint: hints.get(m.id) })).join('')}</div>` : ''}`);
         }
 
@@ -1081,10 +1165,10 @@
         function viewDirector(r) {
             const name = r.seg.slice(1).join('/');
             const d = directorStats().find(x => x.name === name);
-            if (!d) return section('<a class="back-link" href="#/">← 첫 화면</a><div class="empty-state">이 감독의 기록을 찾지 못했습니다.</div>');
+            if (!d) return section('<a class="back-link" href="#/">첫 화면으로</a><div class="empty-state">이 감독의 기록을 찾지 못했습니다.</div>');
             const years = d.list.map(m => num(m.year)).filter(Boolean);
             const fives = d.list.filter(m => num(m.rating) === 5).length;
-            return section(`<a class="back-link" href="#/">← 첫 화면</a>${pageHead(esc(d.name))}
+            return section(`<a class="back-link" href="#/">첫 화면으로</a>${pageHead(esc(d.name))}
                 <div class="kpi-row">
                     <div class="kpi"><div class="kpi-label">본 작품</div><div class="kpi-value">${d.count}<small>편</small></div></div>
                     <div class="kpi"><div class="kpi-label">평균 평점</div><div class="kpi-value">${fmt(d.avg)}</div></div>
@@ -1100,14 +1184,14 @@
             const max = Math.max(1, ...rows.map(r => r.value));
             const peak = rows.reduce((b, r, i) => (r.value > (rows[b]?.value ?? -1) ? i : b), 0);
             return `<div class="chart-card ${wide ? 'wide' : ''}"><h3 class="chart-title">${esc(title)}</h3><p class="chart-sub">${esc(sub)}</p>
-                <div class="bars-v" role="img" aria-label="${esc(`${title}. ${rows.map(r => `${r.label} ${r.value}편`).join(', ')}`)}">${rows.map((r, i) => `<div class="bar-col" data-tip="${esc(`${r.tip || r.label} · ${r.value}편`)}">${i === peak && r.value > 0 ? `<span class="bar-peak">${r.value}</span>` : ''}<div class="bar-fill" style="height:${(r.value / max) * 82}%"></div></div>`).join('')}</div>
+                <div class="bars-v" role="img" aria-label="${esc(`${title}. ${rows.map(r => `${r.label} ${r.value}편`).join(', ')}`)}">${rows.map((r, i) => `<div class="bar-col" data-tip="${esc(`${r.tip || r.label} ${r.value}편`)}">${i === peak && r.value > 0 ? `<span class="bar-peak">${r.value}</span>` : ''}<div class="bar-fill" style="height:${(r.value / max) * 82}%"></div></div>`).join('')}</div>
                 <div class="bar-axis"></div><div class="bars-x">${rows.map(r => `<span>${esc(r.label)}</span>`).join('')}</div>${tableOf(title, head, rows)}</div>`;
         }
         function hBars(title, sub, head, rows) {
             const max = Math.max(1, ...rows.map(r => r.value));
             return `<div class="chart-card"><h3 class="chart-title">${esc(title)}</h3><p class="chart-sub">${esc(sub)}</p>${rows.length ? rows.map(r => {
                 const inner = `<span class="hbar-label">${esc(r.label)}</span><div class="hbar-track"><div class="hbar-fill" style="width:${(r.value / max) * 100}%"></div></div><span class="hbar-val">${r.value}</span>`;
-                return r.href ? `<a class="hbar" href="${esc(r.href)}" data-tip="${esc(`${r.label} · ${r.value}편`)}">${inner}</a>` : `<div class="hbar" data-tip="${esc(`${r.label} · ${r.value}편`)}">${inner}</div>`;
+                return r.href ? `<a class="hbar" href="${esc(r.href)}" data-tip="${esc(`${r.label} ${r.value}편`)}">${inner}</a>` : `<div class="hbar" data-tip="${esc(`${r.label} ${r.value}편`)}">${inner}</div>`;
             }).join('') : '<p class="chart-sub">기록이 없습니다.</p>'}${rows.length ? tableOf(title, head, rows) : ''}</div>`;
         }
         function viewStats(r) {
@@ -1117,7 +1201,7 @@
             const scoped = year === 'all' ? entries : entries.filter(e => e.v.date.startsWith(year));
             const unique = [...new Map(scoped.map(e => [e.m.id, e.m])).values()];
             const chips = [...years, 'all'].map(y => `<a class="chip ${y === year ? 'active' : ''}" href="${hashOf('stats', { y })}">${y === 'all' ? '전체' : `${y}년`}</a>`).join('');
-            const head = pageHead(year === 'all' ? 'All-Time Stats' : `${year} in Film`, year === 'all' ? '지금까지의 영화 기록을 한눈에 봅니다.' : `${year}년의 영화 기록 결산입니다.`);
+            const head = pageHead(year === 'all' ? '전체 기간' : `${year}년`);
             if (!scoped.length) return section(`${head}<div class="chip-list">${chips}</div><div class="empty-state">이 기간의 기록이 없습니다.</div>`);
 
             const rewatchCount = scoped.filter(e => !e.v.first).length;
@@ -1157,12 +1241,12 @@
                     <div class="kpi"><div class="kpi-label">재관람</div><div class="kpi-value">${rewatchCount}<small>회</small></div></div>
                 </div>${recap}
                 <div class="chart-grid">
-                    ${vBars('월별 관람', '달마다 본 횟수', '월', monthRows, true)}
-                    ${vBars('평점 분포', '점수별 관람 횟수', '평점', ratingRows)}
-                    ${vBars('개봉 시대', '영화가 나온 연대별 횟수', '시대', decadeRows)}
-                    ${hBars('많이 본 감독', '상위 8명', '감독', top(dirMap, 8).map(([label, value]) => ({ label, value, href: `#/director/${enc(label)}` })))}
+                    ${vBars('월별 관람', '', '월', monthRows, true)}
+                    ${vBars('평점 분포', '', '평점', ratingRows)}
+                    ${vBars('개봉 시대', '', '시대', decadeRows)}
+                    ${hBars('많이 본 감독', '', '감독', top(dirMap, 8).map(([label, value]) => ({ label, value, href: `#/director/${enc(label)}` })))}
                     ${hBars('많이 본 장르', '복수 장르는 각각 집계', '장르', top(genreMap, 8).map(([label, value]) => ({ label, value, href: hashOf('all', { genre: label }) })))}
-                    ${hBars('국가', '제작 국가별 횟수', '국가', top(regionMap, 8).map(([label, value]) => ({ label, value, href: hashOf('all', { region: label }) })))}
+                    ${hBars('국가', '', '국가', top(regionMap, 8).map(([label, value]) => ({ label, value, href: hashOf('all', { region: label }) })))}
                 </div>`);
         }
 
@@ -1170,7 +1254,7 @@
         function viewWatchlist() {
             const list = wishes();
             const add = isAdmin ? '<button type="button" class="btn-save" data-action="add-watchlist" style="margin-bottom:8px;">+ 보고 싶은 영화 추가</button>' : '';
-            return section(`${pageHead('Watchlist', `다음에 보고 싶은 영화 ${list.length}편입니다.`)}${add}${list.length ? `<div class="movie-grid-wrap">${list.map(m => cardHTML(m)).join('')}</div>` : '<div class="empty-state">아직 담아둔 영화가 없습니다.</div>'}`);
+            return section(`${pageHead('Watchlist', `${list.length}편`)}${add}${list.length ? `<div class="movie-grid-wrap">${list.map(m => cardHTML(m)).join('')}</div>` : '<div class="empty-state">아직 담아둔 영화가 없습니다.</div>'}`);
         }
 
         /* ---------- 라우팅 ---------- */
@@ -1259,7 +1343,7 @@
                 ratingBox.innerHTML = `${stars}<span class="st-num">${val.toFixed(1)}</span>`;
             }
             const facts = [['국가', m.region || '기타']];
-            if (genresOf(m).length) facts.push(['장르', genresOf(m).join(' · ')]);
+            if (genresOf(m).length) facts.push(['장르', genresOf(m).join(', ')]);
             if (m.media_type === 'tv') facts.push(['형식', '시리즈']);
             if (wish) facts.push(['상태', '보고 싶은 영화']);
             else {
@@ -1268,9 +1352,9 @@
             }
             $('detail-tags').innerHTML = facts.map(([k, v]) => `<div class="detail-fact"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
 
-            const actions = isAdmin ? [`<button type="button" class="btn-ghost" data-action="copy-link">🔗 링크 복사</button>`] : [];
-            if (isAdmin && wish) actions.unshift(`<button type="button" class="btn-ghost" data-action="convert">✅ 본 영화로 기록</button>`, `<button type="button" class="btn-ghost" data-edit="${esc(id)}">✏️ 수정</button>`);
-            if (isAdmin && !wish) actions.unshift(`<button type="button" class="btn-ghost" data-action="open-rewatch">🔁 다시 봤어요</button>`, `<button type="button" class="btn-ghost" data-edit="${esc(id)}">✏️ 수정</button>`);
+            const actions = isAdmin ? [`<button type="button" class="btn-ghost" data-action="copy-link">링크 복사</button>`] : [];
+            if (isAdmin && wish) actions.unshift(`<button type="button" class="btn-ghost" data-action="convert">본 영화로 기록</button>`, `<button type="button" class="btn-ghost" data-edit="${esc(id)}">수정</button>`);
+            if (isAdmin && !wish) actions.unshift(`<button type="button" class="btn-ghost" data-action="open-rewatch">다시 봤어요</button>`, `<button type="button" class="btn-ghost" data-edit="${esc(id)}">수정</button>`);
             $('detail-actions').innerHTML = actions.join('');
 
             const memo = cleanMemo(m.memo);
@@ -1320,6 +1404,138 @@
             document.title = TITLES[r.seg[0]] ? `${TITLES[r.seg[0]]} | Films.` : 'Films. | 나의 영화 기록';
         }
 
+        /* ---------- 달력 ---------- */
+        const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+        const isoOf = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const parseDate = v => {
+            const x = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+            if (!x) return null;
+            const d = new Date(+x[1], +x[2] - 1, +x[3]);
+            return d.getMonth() === +x[2] - 1 ? d : null;
+        };
+        const isoFrom = d => isoOf(d.getFullYear(), d.getMonth(), d.getDate());
+        function setDate(id, value) {
+            $(id).value = value || '';
+            const d = parseDate(value);
+            $(`${id}-btn`).querySelector('.date-text').textContent = d ? `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEK[d.getDay()]}요일` : (value || '날짜 선택');
+        }
+        const calBox = $('cal'), calScrim = $('cal-scrim');
+        let calState = null;
+        const calArrow = dir => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${dir < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}"/></svg>`;
+        function calHead(title, label, unit) {
+            return `<div class="cal-head"><button type="button" class="cal-title" data-cal-title aria-label="${label}">${title}<span aria-hidden="true">▾</span></button>
+                <button type="button" class="cal-nav" data-cal-move="-1" aria-label="이전 ${unit}">${calArrow(-1)}</button><button type="button" class="cal-nav" data-cal-move="1" aria-label="다음 ${unit}">${calArrow(1)}</button></div>`;
+        }
+        function renderCal(focusDay = false) {
+            const { y, m, mode, cursor, id } = calState;
+            if (mode === 'months') {
+                const picked = parseDate($(id).value);
+                calBox.innerHTML = calHead(`${y}년`, '날짜 보기로 돌아가기', '해') + `<div class="cal-months">${Array.from({ length: 12 }, (_, i) => `<button type="button" class="cal-month ${picked && picked.getFullYear() === y && picked.getMonth() === i ? 'on' : ''}" data-cal-month="${i}">${i + 1}월</button>`).join('')}</div>`;
+                calBox.querySelector('.cal-month.on, .cal-month').focus();
+                return;
+            }
+            const first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate(), now = today(), value = $(id).value;
+            let cells = '';
+            for (let i = 0; i < first; i++) cells += '<span class="cal-blank"></span>';
+            for (let d = 1; d <= last; d++) {
+                const iso = isoOf(y, m, d), wd = new Date(y, m, d).getDay();
+                cells += `<button type="button" class="cal-day ${wd === 0 ? 'sun' : wd === 6 ? 'sat' : ''} ${iso === value ? 'on' : ''} ${iso === now ? 'today' : ''}" data-cal-day="${iso}" tabindex="${iso === cursor ? 0 : -1}" aria-label="${m + 1}월 ${d}일 ${WEEK[wd]}요일"${iso === value ? ' aria-pressed="true"' : ''}${iso === now ? ' aria-current="date"' : ''}>${d}</button>`;
+            }
+            calBox.innerHTML = calHead(`${y}년 ${m + 1}월`, '연도와 월 고르기', '달')
+                + `<div class="cal-week" aria-hidden="true">${WEEK.map((w, i) => `<span class="${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</span>`).join('')}</div><div class="cal-days">${cells}</div>`
+                + '<div class="cal-foot"><button type="button" class="cal-today" data-cal-today>오늘</button></div>';
+            if (focusDay) calBox.querySelector(`[data-cal-day="${cursor}"]`)?.focus();
+        }
+        function placeCal() {
+            if (!calState) return;
+            calBox.style.left = calBox.style.top = '';
+            if (matchMedia('(max-width: 600px)').matches) return;
+            const r = $(`${calState.id}-btn`).getBoundingClientRect(), h = calBox.offsetHeight, w = calBox.offsetWidth;
+            const below = r.bottom + 6 + h <= innerHeight - 8;
+            const top = below ? r.bottom + 6 : r.top - h - 6;
+            calBox.style.left = `${Math.max(8, Math.min(r.left, innerWidth - w - 8))}px`;
+            calBox.style.top = `${Math.max(8, Math.min(top, innerHeight - h - 8))}px`;
+        }
+        function openCal(id) {
+            const d = parseDate($(id).value) || new Date();
+            calState = { id, y: d.getFullYear(), m: d.getMonth(), cursor: isoFrom(d), mode: 'days' };
+            calBox.hidden = false; calScrim.hidden = false;
+            $(`${id}-btn`).setAttribute('aria-expanded', 'true');
+            renderCal(); placeCal();
+            calBox.querySelector(`[data-cal-day="${calState.cursor}"]`)?.focus();
+        }
+        function closeCal(returnFocus = true) {
+            if (!calState) return;
+            const btn = $(`${calState.id}-btn`);
+            btn.setAttribute('aria-expanded', 'false');
+            calState = null; calBox.hidden = true; calScrim.hidden = true; calBox.innerHTML = '';
+            if (returnFocus) btn.focus();
+        }
+        function calGo(date) {
+            calState.y = date.getFullYear(); calState.m = date.getMonth(); calState.cursor = isoFrom(date);
+            renderCal(true); placeCal();
+        }
+        function calMoveMonth(n) {
+            const c = parseDate(calState.cursor), target = new Date(calState.y, calState.m + n, 1);
+            target.setDate(Math.min(c.getDate(), new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()));
+            calState.y = target.getFullYear(); calState.m = target.getMonth(); calState.cursor = isoFrom(target);
+            renderCal(); placeCal();
+        }
+        function pickDate(iso) { setDate(calState.id, iso); closeCal(); }
+        calBox.addEventListener('click', e => {
+            const day = e.target.closest('[data-cal-day]');
+            if (day) { pickDate(day.dataset.calDay); return; }
+            if (e.target.closest('[data-cal-today]')) { pickDate(today()); return; }
+            const move = e.target.closest('[data-cal-move]');
+            if (move) {
+                const n = Number(move.dataset.calMove);
+                if (calState.mode === 'months') { calState.y += n; renderCal(); calBox.querySelector(`[data-cal-move="${n}"]`).focus(); }
+                else { calMoveMonth(n); calBox.querySelector(`[data-cal-move="${n}"]`).focus(); }
+                return;
+            }
+            if (e.target.closest('[data-cal-title]')) {
+                calState.mode = calState.mode === 'days' ? 'months' : 'days';
+                renderCal(calState.mode === 'days'); placeCal();
+                return;
+            }
+            const month = e.target.closest('[data-cal-month]');
+            if (month) {
+                calState.mode = 'days'; calState.m = Number(month.dataset.calMonth);
+                const day1 = Math.min(parseDate(calState.cursor).getDate(), new Date(calState.y, calState.m + 1, 0).getDate());
+                calState.cursor = isoOf(calState.y, calState.m, day1);
+                renderCal(true); placeCal();
+            }
+        });
+        document.addEventListener('click', e => {
+            const trigger = e.target.closest?.('[data-date-for]');
+            if (calState) {
+                if (calBox.contains(e.target)) return;
+                e.stopPropagation(); e.preventDefault();
+                closeCal(!trigger);
+                return;
+            }
+            if (trigger) { e.stopPropagation(); openCal(trigger.dataset.dateFor); }
+        }, true);
+        document.addEventListener('keydown', e => {
+            if (!calState) return;
+            if (e.key === 'Escape') { e.stopImmediatePropagation(); e.preventDefault(); closeCal(); return; }
+            if (e.key === 'Tab') {
+                const items = [...calBox.querySelectorAll('button:not([tabindex="-1"])')];
+                const i = items.indexOf(document.activeElement);
+                e.preventDefault();
+                items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length]?.focus();
+                return;
+            }
+            if (calState.mode !== 'days' || !document.activeElement?.dataset?.calDay) return;
+            const c = parseDate(calState.cursor), step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+            if (step) { e.preventDefault(); c.setDate(c.getDate() + step); calGo(c); }
+            else if (e.key === 'Home') { e.preventDefault(); c.setDate(c.getDate() - c.getDay()); calGo(c); }
+            else if (e.key === 'End') { e.preventDefault(); c.setDate(c.getDate() + 6 - c.getDay()); calGo(c); }
+            else if (e.key === 'PageUp' || e.key === 'PageDown') { e.preventDefault(); calMoveMonth((e.key === 'PageUp' ? -1 : 1) * (e.shiftKey ? 12 : 1)); calBox.querySelector(`[data-cal-day="${calState.cursor}"]`)?.focus(); }
+        }, true);
+        window.addEventListener('resize', placeCal);
+        document.addEventListener('scroll', placeCal, true);
+
         /* ---------- 관리자: 등록 · 수정 ---------- */
         function setFormMode(mode) {
             form.mode = mode;
@@ -1332,15 +1548,14 @@
             $('search-result-overlay').style.display = 'none';
             $('search-title-input').value = '';
             const editing = !!m && mode !== 'convert';
-            $('modal-eyebrow').textContent = mode === 'watchlist' ? 'WATCHLIST' : mode === 'convert' ? 'WATCHED' : editing ? 'EDIT ENTRY' : 'NEW ENTRY';
-            $('modal-title').textContent = mode === 'watchlist' ? (editing ? '보고 싶은 영화 수정' : '보고 싶은 영화 추가') : mode === 'convert' ? '본 영화로 기록' : editing ? 'Edit Film' : 'Log a New Film';
+            $('modal-title').textContent = mode === 'watchlist' ? (editing ? '보고 싶은 영화 수정' : '보고 싶은 영화 추가') : mode === 'convert' ? '본 영화로 기록' : editing ? '기록 수정' : '영화 기록';
             $('input-title').value = m?.title || '';
             $('input-region').value = m?.region || '한국';
             $('input-genre').value = m?.genre || '';
             $('input-director').value = m?.director || '';
             $('input-year').value = m?.year || '';
             $('input-rating').value = m && !isWatchlist(m) ? (m.rating ?? '') : '';
-            $('input-watchDate').value = m?.watchDate || today();
+            setDate('input-watchDate', m?.watchDate || today());
             $('input-memo').value = m?.memo || '';
             $('btn-delete').hidden = !editing;
             $('btn-delete').textContent = mode === 'watchlist' ? '목록에서 제거' : '삭제';
@@ -1373,7 +1588,7 @@
                 const watchDate = $('input-watchDate').value;
                 if (Number.isNaN(year)) { toast('개봉 연도를 입력해주세요.'); return; }
                 if (Number.isNaN(rating) || rating < 0.5 || rating > 5 || rating * 2 !== Math.round(rating * 2)) { toast('평점은 0.5점 단위로 0.5~5.0 사이여야 합니다.'); return; }
-                if (!watchDate) { toast('시청 날짜를 입력해주세요.'); return; }
+                if (!watchDate) { toast('본 날짜를 골라주세요.'); return; }
                 Object.assign(payload, { rating, watchDate, memo: $('input-memo').value });
                 if (form.mode === 'convert') payload.status = 'watched';
             }
@@ -1418,12 +1633,11 @@
             const views = viewingsOf(m);
             const target = edit === null ? null : views.find(v => (edit === 'first' ? v.first : v.idx === edit));
             const round = target ? views.indexOf(target) + 1 : 0;
-            $('rewatch-eyebrow').textContent = target ? 'EDIT VIEWING' : 'REWATCH';
             $('rewatch-title').textContent = target ? `${m.title} ${round}회차 수정` : `${m.title} 다시 본 기록`;
-            document.querySelector('label[for=rewatch-date]').textContent = target ? '관람 날짜' : '다시 본 날짜';
+            document.querySelector('label[for=rewatch-date-btn]').textContent = target ? '관람 날짜' : '다시 본 날짜';
             document.querySelector('label[for=rewatch-rating]').textContent = target ? '평점' : '이번 평점';
             document.querySelector('label[for=rewatch-memo]').textContent = target ? '감상 (선택)' : '이번 감상 (선택)';
-            $('rewatch-date').value = target ? target.date : (preset.date || today());
+            setDate('rewatch-date', target ? target.date : (preset.date || today()));
             $('rewatch-rating').value = target ? target.rating : (preset.rating ?? m.rating ?? '');
             $('rewatch-memo').value = target ? target.memo : (preset.memo || '');
             $('rewatch-update').checked = target ? (round === views.length && target.rating === num(m.rating)) : true;
@@ -1432,7 +1646,7 @@
         async function saveRewatch() {
             const m = findDoc(rewatchId);
             const date = $('rewatch-date').value, rating = parseFloat($('rewatch-rating').value), memo = $('rewatch-memo').value.trim();
-            if (!m || !date) { toast('관람 날짜를 입력해주세요.'); return; }
+            if (!m || !date) { toast('날짜를 골라주세요.'); return; }
             if (Number.isNaN(rating) || rating < 0.5 || rating > 5 || rating * 2 !== Math.round(rating * 2)) { toast('평점은 0.5점 단위로 0.5~5.0 사이여야 합니다.'); return; }
             const useAsMain = $('rewatch-update').checked;
             const payload = {};
@@ -1483,7 +1697,7 @@
             if (!query) return;
             const box = $('tmdb-results-list');
             $('search-result-overlay').style.display = 'flex';
-            box.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:20px;">Searching... 🚀</div>';
+            box.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:20px;">검색 중입니다</div>';
             try {
                 const responses = await Promise.all([query, ...getSpaceVariations(query)].map(tmdbSearch));
                 const seen = new Set();
@@ -1498,7 +1712,7 @@
                     const director = isTv ? (movie.created_by || []).map(p => p.name).join(', ') || '-' : (movie.credits?.crew || []).find(p => p.job === 'Director')?.name || '-';
                     const item = document.createElement('button');
                     item.type = 'button'; item.className = 'tmdb-item'; item.style.cssText = 'width:100%;text-align:left;font:inherit;color:inherit;';
-                    item.innerHTML = `<img src="${esc(poster(movie.poster_path, 'w92'))}" alt="" class="tmdb-poster-small"><div class="tmdb-info-small"><span class="tmdb-item-title-small">${isTv ? '📺' : '🎬'} ${esc(title)}</span><span class="tmdb-item-meta-small">${esc(year)} • ${esc(director)}</span></div>`;
+                    item.innerHTML = `<img src="${esc(poster(movie.poster_path, 'w92'))}" alt="" class="tmdb-poster-small"><div class="tmdb-info-small"><span class="tmdb-item-title-small">${esc(title)}</span><span class="tmdb-item-meta-small">${esc(year)}, ${esc(director)}${isTv ? ', 시리즈' : ''}</span></div>`;
                     item.addEventListener('click', () => {
                         $('input-title').value = title;
                         if (year !== '-') $('input-year').value = year;
@@ -1531,10 +1745,10 @@
                     if (done % 10 === 0) toast(`출연진 저장 중... ${done}/${targets.length}`);
                 } catch (e) { /* 실패한 영화는 다음 실행 때 다시 시도 */ }
             }
-            toast(`출연진 저장 완료: ${done}편`);
+            toast(`${done}편의 출연진을 저장했습니다.`);
         }
         async function autoFixPosters() {
-            if (!confirm('포스터 복구를 진행합니다.')) return;
+            if (!confirm('포스터를 복구할까요?')) return;
             let count = 0;
             for (const m of docs) {
                 if (m.poster_path) continue;
@@ -1544,10 +1758,10 @@
                     if (best) { await updateDoc(doc(db, COLLECTION, m.id), { poster_path: best.poster_path }); m.poster_path = best.poster_path; count++; }
                 } catch (e) { /* 다음 영화 계속 */ }
             }
-            refresh(); toast(`포스터 ${count}편 복구`);
+            refresh(); toast(`포스터 ${count}편을 복구했습니다.`);
         }
         async function matchTmdbIds() {
-            if (!confirm('TMDB ID 매칭을 진행할까요? (줄거리/출연진 표시에 필요해요)')) return;
+            if (!confirm('TMDB와 연결할까요? 줄거리와 출연진을 보여주는 데 필요합니다.')) return;
             let count = 0; const failed = [];
             for (const m of docs) {
                 if (m.tmdb_id) continue;
@@ -1563,10 +1777,10 @@
                     Object.assign(m, changes); count++;
                 } catch (e) { failed.push(m.title); }
             }
-            alert(`매칭 완료! ${count}편 연결됨.${failed.length ? `\n연결 실패: ${failed.join(', ')}` : ''}`);
+            alert(`${count}편을 연결했습니다.${failed.length ? `\n연결 실패: ${failed.join(', ')}` : ''}`);
         }
         async function cleanupData() {
-            if (!confirm('데이터 정리를 실행할까요? (제목 따옴표 제거, 장르/감독 통일, recommended 채우기)')) return;
+            if (!confirm('데이터를 정리할까요? 제목의 따옴표를 지우고 장르와 감독 표기를 통일합니다.')) return;
             const GENRE_FIX = { '드라마/코미디': '코미디/드라마', '로맨틱코미디': '코미디/로맨스' };
             const DIRECTOR_FIX = { '만약에 우리': '김도영', '신의 한 수': '조범구', '신의 한 수: 귀수편': '리건' };
             let fixed = 0;
@@ -1579,7 +1793,7 @@
                 if (DIRECTOR_FIX[clean]) changes.director = DIRECTOR_FIX[clean];
                 if (Object.keys(changes).length) { await updateDoc(doc(db, COLLECTION, m.id), changes); Object.assign(m, changes); fixed++; }
             }
-            refresh(); toast(`정리 완료: ${fixed}편 수정`);
+            refresh(); toast(`${fixed}편을 정리했습니다.`);
         }
         function exportData() {
             if (!docs.length) { toast('내보낼 데이터가 없습니다.'); return; }
@@ -1595,7 +1809,7 @@
             'log-film': () => openForm('log'),
             'add-watchlist': () => openForm('watchlist'),
             'fill-cast': fillCast, 'fix-posters': autoFixPosters, 'match-ids': matchTmdbIds, cleanup: cleanupData, export: exportData,
-            logout: async () => { if (confirm('로그아웃 하시겠습니까?')) await signOut(auth); },
+            logout: async () => { if (confirm('로그아웃할까요?')) await signOut(auth); },
             'open-login': () => showModal('login-modal', true),
             'close-login': () => showModal('login-modal', false),
             'close-detail': closeDetail,
@@ -1692,7 +1906,7 @@
             isAdmin = !!user && user.uid === ADMIN_UID;
             const nameBtn = $('nav-user-name');
             nameBtn.hidden = !isAdmin;
-            nameBtn.innerHTML = '👤 <span class="user-label">cheezetomato</span> ▾';
+            nameBtn.innerHTML = '<span class="user-label">cheezetomato</span><span class="user-short">관리</span> ▾';
             $('secret-login-btn').hidden = isAdmin;
             $('user-menu').classList.toggle('no-dropdown', !isAdmin);
             $('user-menu').classList.remove('open');
@@ -1700,7 +1914,7 @@
         });
 
         async function load() {
-            $('main-content').innerHTML = '<div class="section"><div style="color:var(--text-dim); text-align:center; margin-top:100px;">Loading films... 🎞️</div></div>';
+            $('main-content').innerHTML = '<div class="section"><div style="color:var(--text-dim); text-align:center; margin-top:100px;">불러오는 중입니다</div></div>';
             try {
                 const snapshot = await getDocs(collection(db, COLLECTION));
                 docs = [];
