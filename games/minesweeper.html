@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../shared/i18n.js"></script>
     <title>지뢰찾기 | cheezetomato</title>
     <style>
         /* 폰트 로드 */
@@ -332,6 +333,11 @@
         .site-bar .sb-here { color: #ede8df; }
         .site-bar nav { display: flex; gap: 22px; }
         .site-bar nav a[aria-current] { color: #ede8df; }
+        .site-bar nav { align-items: center; }
+        .site-bar .lang-pick label { display: inline-flex; align-items: center; }
+        .site-bar .lang-pick label span { display: none; }
+        .site-bar .lang-pick select { appearance: none; -webkit-appearance: none; padding: 4px 22px 4px 8px; border: 1px solid #29292f; border-radius: 6px; background: #09090b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23948e83' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 6px center / 10px; color: #948e83; font: inherit; font-size: 13px; cursor: pointer; }
+        .site-bar .lang-pick select:hover, .site-bar .lang-pick select:focus { border-color: #7b7fd4; color: #ede8df; }
         .site-bar a:focus-visible { outline: 2px solid #7b7fd4; outline-offset: 3px; border-radius: 2px; }
         @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-here { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
 
@@ -364,7 +370,7 @@
 
 </head>
 <body>
-<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a></nav></header>
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a><span data-lang-slot></span></nav></header>
 
     <!-- 상단 헤더 -->
     <div class="top-header">

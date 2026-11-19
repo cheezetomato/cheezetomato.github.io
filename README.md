@@ -7,6 +7,8 @@ cheezetomato의 개인 사이트입니다. GitHub Pages로 운영합니다.
 | Films. | https://cheezetomato.github.io/films/ | [`films/`](films/) |
 | Games. | https://cheezetomato.github.io/games/ | [`games/`](games/) |
 
+두 사이트 모두 맨 아래(게임은 상단 바)의 Language에서 한국어, English, 日本語를 고를 수 있습니다. 번역은 [`shared/i18n.js`](shared/i18n.js)에 있습니다.
+
 ## Films.
 
 직접 본 영화의 별점과 한줄평, 다시 본 기록, 통계를 모아 둔 기록입니다.

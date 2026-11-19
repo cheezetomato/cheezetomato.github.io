@@ -863,11 +863,18 @@
         .main-nav .nav-out::before { content: ''; position: absolute; left: -15px; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: var(--border); }
         @media (max-width: 760px) { .main-nav .nav-out { margin-left: 10px; } .main-nav .nav-out::before { left: -11px; } }
 
+        /* 언어 선택 */
+        .lang-pick label { display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: 0.78rem; }
+        .lang-pick select { appearance: none; -webkit-appearance: none; padding: 5px 26px 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23948e83' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 8px center / 11px; color: var(--text-dim); font: inherit; font-size: 0.8rem; cursor: pointer; }
+        .lang-pick select:hover, .lang-pick select:focus { border-color: var(--accent); color: var(--text); }
+        @media (max-width: 760px) { .footer-bottom { flex-direction: column; align-items: flex-start; } }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
         }
     </style>
 </head>
+<script src="../shared/i18n.js"></script>
 <body>
 
     <header id="main-header">
@@ -929,6 +936,7 @@
         </div>
         <div class="footer-bottom">
             <span>© <span id="footer-year">2026</span> cheezetomato</span>
+            <div data-lang-slot></div>
             <span class="footer-fine">This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
         </div>
     </footer>
@@ -1311,43 +1319,59 @@
                     ${v.first ? '' : '<span class="diary-tag">재관람</span>'}${starsHTML(v.rating)}</a></li>`).join('')}</ol>
                 ${rows.length > 12 ? `<a class="diary-more" href="${esc(hashOf('stats', { y }))}">나머지 ${rows.length - 12}편 더 보기</a>` : ''}`);
         }
-        const RATING_GUIDE = [[5, '인생 영화. 언제든 다시 보고 싶은 작품'], [4.5, '거의 완벽했고 오래 기억에 남는 작품'], [4, '확실히 좋았고 추천할 만한 작품'], [3.5, '좋았지만 아쉬운 부분이 있던 작품'], [3, '무난하게 볼 만했던 작품'], [2.5, '기대보다 아쉬웠던 작품'], [2, '다시 보지는 않을 것 같은 작품']];
+        const LANG = (window.I18N && window.I18N.lang) || 'ko';
+        const L = o => o[LANG] ?? o.ko;
+        const RATING_GUIDE = [
+            [5, { ko: '인생 영화. 언제든 다시 보고 싶은 작품', en: 'A favourite. I’d watch it again any time.', ja: '人生の一本。いつでもまた観たい作品' }],
+            [4.5, { ko: '거의 완벽했고 오래 기억에 남는 작품', en: 'Nearly perfect and hard to forget.', ja: 'ほぼ完璧で長く記憶に残る作品' }],
+            [4, { ko: '확실히 좋았고 추천할 만한 작품', en: 'Really good; I’d recommend it.', ja: '確かに良く、人に勧めたい作品' }],
+            [3.5, { ko: '좋았지만 아쉬운 부분이 있던 작품', en: 'Good, with a few weak spots.', ja: '良かったが惜しい点もあった作品' }],
+            [3, { ko: '무난하게 볼 만했던 작품', en: 'Fine to watch.', ja: '無難に楽しめた作品' }],
+            [2.5, { ko: '기대보다 아쉬웠던 작품', en: 'Below what I hoped for.', ja: '期待より物足りなかった作品' }],
+            [2, { ko: '다시 보지는 않을 것 같은 작품', en: 'Probably not watching it again.', ja: 'もう観ないと思う作品' }]
+        ];
         function viewAbout() {
             const list = films(), views = allViewings();
             const first = views.length ? views[views.length - 1].v.date : '';
             const dirCount = new Set(list.flatMap(directorsOf)).size;
             const count = s => s === 2 ? list.filter(m => num(m.rating) <= 2).length : list.filter(m => num(m.rating) === s).length;
+            const unit = n => L({ ko: `${n}편`, en: `${n}`, ja: `${n}本` });
+            const ext = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+            const T = {
+                lede: L({ ko: 'cheezetomato의 영화 기록장입니다. 극장이나 집에서 본 영화를 별점과 한줄평으로 남기고, 다시 본 영화는 볼 때마다 따로 기록합니다. Letterboxd처럼 내 기록을 한곳에 모아 보고 싶어서 직접 만들었습니다.',
+                          en: 'This is cheezetomato’s film diary. Every film I watch, at the cinema or at home, gets a star rating and a short review, and rewatches are logged each time. I built it to keep my own record in one place, a bit like Letterboxd.',
+                          ja: 'cheezetomatoの映画の記録です。映画館や家で観た映画に星評価と短いレビューを残し、観直した映画はその都度記録しています。Letterboxdのように自分の記録を一か所にまとめたくて作りました。' }),
+                nums: [[L({ ko: '첫 기록', en: 'First entry', ja: '最初の記録' }), first ? esc(first.replace(/-/g, '.')) : '-'],
+                       [L({ ko: '기록한 영화', en: 'Films logged', ja: '記録した映画' }), L({ ko: `${list.length}편`, en: `${list.length}`, ja: `${list.length}本` })],
+                       [L({ ko: '관람 횟수', en: 'Viewings', ja: '鑑賞回数' }), L({ ko: `${views.length}번`, en: `${views.length}`, ja: `${views.length}回` })],
+                       [L({ ko: '감독', en: 'Directors', ja: '監督' }), L({ ko: `${dirCount}명`, en: `${dirCount}`, ja: `${dirCount}人` })]],
+                guide: L({ ko: '별점 기준', en: 'How I rate', ja: '星の基準' }),
+                guideNote: L({ ko: '2.0 칸에는 2.0 이하를 모두 셉니다.', en: 'The 2.0 row counts everything rated 2.0 or lower.', ja: '2.0の欄には2.0以下をすべて数えます。' }),
+                how: L({ ko: '기록하는 방법', en: 'How I log', ja: '記録のしかた' }),
+                howList: L({
+                    ko: ['영화를 본 날짜를 기준으로 기록합니다.', '다시 본 영화는 회차마다 날짜, 별점, 한줄평을 따로 남깁니다. 대표 별점은 가장 최근 회차를 따릅니다.', '보고 싶은 영화는 <a href="#/watchlist">Watchlist</a>에 담아두고, 보고 나면 본 영화로 옮깁니다.', '한 해 기록은 <a href="#/stats">Stats</a>에서 월별, 평점별, 감독별로 볼 수 있습니다.'],
+                    en: ['Each entry is dated by the day I watched the film.', 'Rewatches get their own date, rating and review. The main rating follows the latest viewing.', 'Films I want to see go on the <a href="#/watchlist">Watchlist</a> and move over once I’ve watched them.', '<a href="#/stats">Stats</a> breaks each year down by month, rating and director.'],
+                    ja: ['観た日を基準に記録します。', '観直した映画は回ごとに日付・星・レビューを残します。代表の星は最新の回に合わせます。', '観たい映画は<a href="#/watchlist">Watchlist</a>に入れておき、観たら観た映画に移します。', '1年の記録は<a href="#/stats">Stats</a>で月別・評価別・監督別に見られます。'] }),
+                built: L({ ko: '만든 방법', en: 'How it’s built', ja: '作り方' }),
+                builtList: L({
+                    ko: [`GitHub Pages에 올린 HTML 파일 하나로 운영합니다. ${ext(REPO_URL, '소스 코드')}는 공개되어 있습니다.`, '기록은 Firebase에 저장하고, 매주 월요일 GitHub에 자동으로 백업합니다.', `영화 정보와 포스터는 ${ext('https://www.themoviedb.org/', 'TMDB')}, OTT 정보는 ${ext('https://www.justwatch.com/kr', 'JustWatch')}에서 가져옵니다.`],
+                    en: [`A single HTML file on GitHub Pages. The ${ext(REPO_URL, 'source code')} is public.`, 'Records live in Firebase and are backed up to GitHub every Monday.', `Film details and posters come from ${ext('https://www.themoviedb.org/', 'TMDB')}; streaming info comes from ${ext('https://www.justwatch.com/kr', 'JustWatch')}.`],
+                    ja: [`GitHub Pagesに置いたHTMLファイル1つで運営しています。${ext(REPO_URL, 'ソースコード')}は公開しています。`, '記録はFirebaseに保存し、毎週月曜日にGitHubへ自動でバックアップします。', `映画の情報とポスターは${ext('https://www.themoviedb.org/', 'TMDB')}、配信情報は${ext('https://www.justwatch.com/kr', 'JustWatch')}から取得しています。`] }),
+                maker: L({ ko: '만든 사람', en: 'Made by', ja: '制作' })
+            };
             return section(`<div class="about">
                 ${pageHead('About')}
-                <p class="about-lede">cheezetomato의 영화 기록장입니다. 극장이나 집에서 본 영화를 별점과 한줄평으로 남기고, 다시 본 영화는 볼 때마다 따로 기록합니다. Letterboxd처럼 내 기록을 한곳에 모아 보고 싶어서 직접 만들었습니다.</p>
-                <dl class="about-nums">
-                    <div><dt>첫 기록</dt><dd>${first ? esc(first.replace(/-/g, '.')) : '-'}</dd></div>
-                    <div><dt>기록한 영화</dt><dd>${list.length}편</dd></div>
-                    <div><dt>관람 횟수</dt><dd>${views.length}번</dd></div>
-                    <div><dt>감독</dt><dd>${dirCount}명</dd></div>
-                </dl>
-
-                <h2 class="about-h">별점 기준</h2>
-                <ul class="guide">${RATING_GUIDE.map(([s, t]) => `<li><a href="${esc(hashOf('rating', { r: s.toFixed(1) }))}">${starsHTML(s)}<span class="guide-text">${esc(t)}</span><span class="guide-count">${count(s)}편</span></a></li>`).join('')}</ul>
-                <p class="about-note">2.0 칸에는 2.0 이하를 모두 셉니다.</p>
-
-                <h2 class="about-h">기록하는 방법</h2>
-                <ul class="about-list">
-                    <li>영화를 본 날짜를 기준으로 기록합니다.</li>
-                    <li>다시 본 영화는 회차마다 날짜, 별점, 한줄평을 따로 남깁니다. 대표 별점은 가장 최근 회차를 따릅니다.</li>
-                    <li>보고 싶은 영화는 <a href="#/watchlist">Watchlist</a>에 담아두고, 보고 나면 본 영화로 옮깁니다.</li>
-                    <li>한 해 기록은 <a href="#/stats">Stats</a>에서 월별, 평점별, 감독별로 볼 수 있습니다.</li>
-                </ul>
-
-                <h2 class="about-h">만든 방법</h2>
-                <ul class="about-list">
-                    <li>GitHub Pages에 올린 HTML 파일 하나로 운영합니다. <a href="${REPO_URL}" target="_blank" rel="noopener">소스 코드</a>는 공개되어 있습니다.</li>
-                    <li>기록은 Firebase에 저장하고, 매주 월요일 GitHub에 자동으로 백업합니다.</li>
-                    <li>영화 정보와 포스터는 <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>, OTT 정보는 <a href="https://www.justwatch.com/kr" target="_blank" rel="noopener">JustWatch</a>에서 가져옵니다.</li>
-                </ul>
-
-                <h2 class="about-h">Contact</h2>
-                <p class="about-text"><a href="https://github.com/cheezetomato" target="_blank" rel="noopener">GitHub @cheezetomato</a></p>
+                <p class="about-lede">${T.lede}</p>
+                <dl class="about-nums">${T.nums.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+                <h2 class="about-h">${T.guide}</h2>
+                <ul class="guide">${RATING_GUIDE.map(([s, t]) => `<li><a href="${esc(hashOf('rating', { r: s.toFixed(1) }))}">${starsHTML(s)}<span class="guide-text">${esc(L(t))}</span><span class="guide-count">${unit(count(s))}</span></a></li>`).join('')}</ul>
+                <p class="about-note">${T.guideNote}</p>
+                <h2 class="about-h">${T.how}</h2>
+                <ul class="about-list">${T.howList.map(x => `<li>${x}</li>`).join('')}</ul>
+                <h2 class="about-h">${T.built}</h2>
+                <ul class="about-list">${T.builtList.map(x => `<li>${x}</li>`).join('')}</ul>
+                <h2 class="about-h">${T.maker}</h2>
+                <p class="about-text">${ext('https://github.com/cheezetomato', 'cheezetomato')} (GitHub)</p>
             </div>`);
         }
         function viewHome() {
@@ -1411,7 +1435,8 @@
 
         /* ---------- 화면: 검색 ---------- */
         function matchField(m, q) {
-            if (norm(m.title).includes(q)) return { score: 4, hint: '' };
+            if (norm(m.title).includes(q) || (LANG !== 'ko' && norm(window.I18N.t(m.title || '')).includes(q))) return { score: 4, hint: '' };
+            if (LANG !== 'ko') { const ld = directorsOf(m).find(d => norm(window.I18N.t(d)).includes(q)); if (ld) return { score: 3, hint: `감독 ${ld}` }; }
             const dir = directorsOf(m).find(d => norm(d).includes(q));
             if (dir) return { score: 3, hint: `감독 ${dir}` };
             const cast = (Array.isArray(m.cast) ? m.cast : []).find(c => norm(c).includes(q));
@@ -1722,7 +1747,7 @@
             const type = m.media_type === 'tv' ? 'tv' : 'movie';
             const key = `${type}/${m.tmdb_id}`;
             try {
-                if (!tmdbCache.has(key)) tmdbCache.set(key, await fetch(`https://api.themoviedb.org/3/${key}?api_key=${TMDB_API_KEY}&language=ko-KR&append_to_response=credits`).then(res => res.json()));
+                if (!tmdbCache.has(key)) tmdbCache.set(key, await fetch(`https://api.themoviedb.org/3/${key}?api_key=${TMDB_API_KEY}&language=${(window.I18N && window.I18N.tmdbLang) || 'ko-KR'}&append_to_response=credits`).then(res => res.json()));
                 const data = tmdbCache.get(key);
                 if (currentDetailId !== id) return;
                 if (data.backdrop_path) $('detail-banner').style.backgroundImage = `url('${IMG}w1280${data.backdrop_path}')`;
@@ -1951,6 +1976,46 @@
             const body = d.flat.length ? `<span class="ott-list">${d.flat.map(p => `<span class="ott-item">${ottLogo(p)}${esc(p.name)}</span>`).join('')}</span>`
                 : (d.other ? '구독 서비스에는 없고 대여·구매만 가능' : '국내 서비스 없음');
             el.innerHTML = `${body}${d.link ? ` <a class="ott-source" href="${esc(d.link)}" target="_blank" rel="noopener">JustWatch</a>` : ''}`;
+        }
+
+        /* ---------- 언어: TMDB에서 그 나라 제목과 감독 이름 받아오기 ---------- */
+        async function localizeNames() {
+            if (LANG === 'ko' || !window.I18N) return;
+            const KEY = `films-names-${LANG}`, TTL = 30 * 864e5, now = Date.now();
+            const HANGUL = /[가-힣]/;
+            let cache = {};
+            try { cache = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { cache = {}; }
+            const keyOf = m => `${m.media_type === 'tv' ? 'tv' : 'movie'}/${m.tmdb_id}`;
+            const apply = () => {
+                const map = {};
+                docs.forEach(m => {
+                    const c = cache[keyOf(m)];
+                    if (!c) return;
+                    if (c.t && m.title) map[m.title] = c.t;
+                    const ko = directorsOf(m), loc = c.d || [];
+                    if (!ko.length || !loc.length) return;
+                    if (ko.length === loc.length) ko.forEach((k, i) => { map[k] = loc[i]; });
+                    else { map[String(m.director)] = loc.join(', '); if (ko.length === 1) map[ko[0]] = loc.join(', '); }
+                });
+                window.I18N.addNames(map);
+            };
+            apply();
+            const get = (m, lang) => fetch(`https://api.themoviedb.org/3/${keyOf(m)}?api_key=${TMDB_API_KEY}&language=${lang}&append_to_response=credits`).then(r => r.json());
+            const todo = docs.filter(m => m.tmdb_id && !(cache[keyOf(m)] && now - cache[keyOf(m)].ts < TTL));
+            for (let i = 0; i < todo.length; i += 8) {
+                await Promise.all(todo.slice(i, i + 8).map(async m => {
+                    try {
+                        const tv = m.media_type === 'tv';
+                        let j = await get(m, window.I18N.tmdbLang);
+                        let t = tv ? j.name : j.title;
+                        if (!t || HANGUL.test(t)) { const e = await get(m, 'en-US'); t = (tv ? e.name : e.title) || t; }
+                        const d = tv ? (j.created_by || []).map(p => p.name) : (j.credits?.crew || []).filter(c => c.job === 'Director').map(c => c.name);
+                        cache[keyOf(m)] = { t: t && !HANGUL.test(t) ? t : '', d: d.filter(x => !HANGUL.test(x)), ts: now };
+                    } catch (e) { /* 이번엔 건너뛰기 */ }
+                }));
+                apply();
+            }
+            try { localStorage.setItem(KEY, JSON.stringify(cache)); } catch (e) { /* 저장 공간 없음 */ }
         }
 
         /* ---------- 관리자: 등록 · 수정 ---------- */
@@ -2330,6 +2395,7 @@
                 docs = [];
                 snapshot.forEach(d => docs.push({ ...d.data(), id: d.id }));
                 dataReady = true;
+                localizeNames();
                 onRoute();
             } catch (e) {
                 $('main-content').innerHTML = '<div class="section"><div class="empty-state" style="color:#e0827e;">데이터를 불러오지 못했습니다. 잠시 후 새로고침해주세요.</div></div>';
