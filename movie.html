@@ -1355,9 +1355,9 @@
                 + carouselHTML('recent', 'Recently watched', null, recent.slice(0, 24), '#/all')
                 + reviewsHTML()
                 + carouselHTML('perfect', 'Perfect 5.0', null, restPerfect, '#/rating')
-                + (myDirs.length ? section(`<div class="section-header"><div><div class="section-title">My directors</div></div></div><div id="my-dirs">${dirsHTML()}</div>`) : '')
+                + carouselHTML('wish', 'Watchlist', null, wishes().slice(0, 18), '#/watchlist')
                 + diaryHTML()
-                + carouselHTML('wish', 'Watchlist', null, wishes().slice(0, 18), '#/watchlist');
+                + (myDirs.length ? section(`<div class="section-header"><div><div class="section-title">My directors</div></div></div><div id="my-dirs">${dirsHTML()}</div>`) : '');
         }
 
         /* ---------- 화면: 전체 ---------- */
