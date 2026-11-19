@@ -757,7 +757,8 @@
         @media (max-width: 600px) { .sp-star, .sp-star > svg, .sp-fill svg { width: 40px; height: 40px; } }
 
         /* OTT */
-        .card-ott { position: absolute; left: 8px; bottom: 8px; z-index: 3; display: flex; gap: 4px; pointer-events: none; }
+        .card-ott { position: absolute; top: 8px; right: 8px; z-index: 3; display: flex; gap: 4px; pointer-events: none; transition: opacity 0.15s ease; }
+        .movie-card:has(.edit-btn):hover .card-ott { opacity: 0; }
         .card-ott img { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
         .detail-ott dd { font-weight: 500; }
         .ott-list { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; vertical-align: middle; }
