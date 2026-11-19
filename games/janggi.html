@@ -1,15 +1,869 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>십이장기 | 주소가 바뀌었습니다</title>
-<link rel="canonical" href="https://cheezetomato.github.io/games/janggi.html">
-<meta name="robots" content="noindex">
-<script>location.replace('https://cheezetomato.github.io/games/janggi.html' + location.search + location.hash);</script>
-<meta http-equiv="refresh" content="0; url=https://cheezetomato.github.io/games/janggi.html">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>십이장기 | cheezetomato</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            /* ☀️ 라이트 모드 - 따뜻한 원목 테마 */
+            --bg-page-start: #fdf6ec;
+            --bg-page-end: #f1e3c8;
+            --text-main: #3b2f25;
+            --text-sub: #8a7a63;
+
+            --board-frame: #6d4c41;
+            --board-bg-a: #ecc888;
+            --board-bg-b: #dba968;
+            --cell-line: rgba(60, 40, 20, 0.22);
+            --cell-hover: rgba(255, 255, 255, 0.35);
+            --cell-highlight: rgba(46, 213, 115, 0.35);
+
+            --panel-bg: #fffaf0;
+            --panel-border: #e8d8b8;
+
+            --piece-bg: #ffffff;
+
+            --p1-color: #b13b3b;
+            --p1-bg: #f8e3e3;
+            --p2-color: #1e7145;
+            --p2-bg: #dff0e6;
+
+            --switch-track: #ccc;
+            --switch-knob: #fff;
+        }
+
+        body.dark-mode {
+            --bg-page-start: #15171c;
+            --bg-page-end: #0c0d10;
+            --text-main: #f0ede6;
+            --text-sub: #9aa0aa;
+
+            --board-frame: #4a3527;
+            --board-bg-a: #5b4636;
+            --board-bg-b: #46362a;
+            --cell-line: rgba(255, 255, 255, 0.08);
+            --cell-hover: rgba(255, 255, 255, 0.06);
+            --cell-highlight: rgba(46, 213, 115, 0.25);
+
+            --panel-bg: #1d2026;
+            --panel-border: #2a2e36;
+
+            --piece-bg: #232629;
+
+            --p1-color: #e06262;
+            --p1-bg: #3a2222;
+            --p2-color: #4fc488;
+            --p2-bg: #1b3327;
+
+            --switch-track: #000;
+            --switch-knob: #666;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(135deg, var(--bg-page-start) 0%, var(--bg-page-end) 100%);
+            color: var(--text-main); transition: background 0.4s, color 0.4s;
+            user-select: none; overflow: hidden;
+        }
+
+        h1 { margin: 0 0 6px 0; font-size: 42px; color: var(--text-main); letter-spacing: -1px; font-weight: 800; }
+        .subtitle { color: var(--text-sub); margin-bottom: 30px; font-size: 15px; }
+
+        #turn-indicator {
+            font-size: 20px; margin-bottom: 25px; font-weight: 800; transition: 0.3s;
+            padding: 10px 28px; border-radius: 40px; background: var(--panel-bg);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1); border: 2px solid var(--panel-border);
+        }
+
+        /* 🌟 로비 화면 */
+        #lobby-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--bg-page-start) 0%, var(--bg-page-end) 100%);
+            z-index: 2000; transition: opacity 0.5s;
+        }
+        .lobby-card {
+            background: var(--panel-bg); border: 2px solid var(--panel-border);
+            border-radius: 28px; padding: 50px 60px; box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .menu-btn {
+            background: var(--bg-page-start); color: var(--text-main); border: 2px solid var(--panel-border);
+            padding: 18px 40px; font-size: 17px; font-weight: 700; border-radius: 16px; margin: 8px 0;
+            cursor: pointer; transition: 0.2s; width: 320px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 4px 0 var(--panel-border);
+        }
+        .menu-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.1); border-color: var(--p1-color); }
+        .menu-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--panel-border); }
+        .menu-btn .emoji { font-size: 24px; }
+
+        #invite-box {
+            margin-top: 20px; padding: 18px; background: var(--p2-bg); border-radius: 16px;
+            border: 2px dashed var(--p2-color); text-align: center; display: none;
+            width: 85%; max-width: 420px; word-break: break-all; font-size: 14px;
+        }
+        #invite-box a { color: var(--p2-color); font-weight: bold; }
+
+        /* 게임 화면 */
+        #game-screen { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .game-layout { display: flex; align-items: stretch; gap: 24px; justify-content: center; width: 100%; max-width: 1100px; padding: 10px 20px; }
+
+        .side-panel {
+            width: 140px; background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 18px;
+            padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 12px; transition: 0.4s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.07);
+        }
+        .panel-title {
+            font-weight: 800; font-size: 14px; padding: 6px 14px; border-radius: 20px; width: 100%;
+            text-align: center; box-sizing: border-box;
+        }
+        .panel-title.p2 { color: var(--p2-color); background: var(--p2-bg); }
+        .panel-title.p1 { color: var(--p1-color); background: var(--p1-bg); }
+        .hand-pieces-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; min-height: 380px; }
+
+        /* 🌳 원목 보드 */
+        #game-board-outer {
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(160deg, var(--board-bg-a), var(--board-bg-b));
+            padding: 22px; border-radius: 18px;
+            border: 12px solid var(--board-frame);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.15), 0 20px 40px rgba(0,0,0,0.25);
+        }
+
+        #game-board {
+            display: grid; grid-template-columns: repeat(3, 96px); grid-template-rows: repeat(4, 96px);
+            gap: 4px;
+        }
+
+        .cell {
+            background-color: transparent; border-radius: 8px; position: relative;
+            box-shadow: inset 0 0 0 1.5px var(--cell-line); transition: 0.2s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .cell:hover { background-color: var(--cell-hover); cursor: pointer; }
+        .cell.highlight { background-color: var(--cell-highlight); box-shadow: inset 0 0 0 3px #2ed573; }
+        .cell.highlight::after {
+            content: ''; position: absolute; width: 18px; height: 18px;
+            background: rgba(255,255,255,0.9); border-radius: 50%; box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+
+        /* ♟️ 사진처럼 - 사각 카드 + 한자 + 이동방향 화살표 */
+        .piece {
+            width: 84px; height: 84px; border-radius: 14px;
+            background-color: var(--piece-bg);
+            border: 5px solid;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 50px; line-height: 1; font-weight: 900;
+            font-family: 'Batang', 'Gungsuh', serif;
+            box-shadow: 0 6px 0, 0 8px 16px rgba(0,0,0,0.2);
+            cursor: grab; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
+            touch-action: none; position: relative; z-index: 10;
+        }
+        .piece.king { font-size: 56px; }
+        .piece.promoted { font-size: 46px; }
+        .piece.child { font-size: 38px; }
+
+        .piece.p1 { border-color: var(--p1-color); color: var(--p1-color); box-shadow: 0 6px 0 var(--p1-color), 0 8px 16px rgba(0,0,0,0.2); }
+        .piece.p2 { border-color: var(--p2-color); color: var(--p2-color); box-shadow: 0 6px 0 var(--p2-color), 0 8px 16px rgba(0,0,0,0.2); }
+
+        .piece.on-board:active { cursor: grabbing; transform: translateY(5px); box-shadow: 0 1px 0, 0 4px 8px rgba(0,0,0,0.3); transition: 0.1s; }
+        .piece.selected {
+            transform: translateY(-8px) scale(1.12);
+            box-shadow: 0 12px 0 #e1b12c, 0 16px 26px rgba(0,0,0,0.3) !important;
+            border-color: #fbc531 !important; z-index: 20;
+        }
+
+        .piece.p2-rotate { transform: rotate(180deg); }
+        .piece.on-board.p2-rotate:active { transform: rotate(180deg) translateY(-5px); }
+        .piece.selected.p2-rotate {
+            transform: rotate(180deg) translateY(8px) scale(1.12);
+            box-shadow: 0 -12px 0 #e1b12c, 0 -16px 26px rgba(0,0,0,0.3) !important;
+        }
+
+        .piece.dragging {
+            position: fixed !important; z-index: 9999 !important; pointer-events: none !important;
+            transform: scale(1.15) !important; cursor: grabbing !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important; margin: 0 !important; transition: none !important;
+        }
+
+        /* 🌟 이동 방향 화살표 (사진처럼 말 색깔과 동일하게) */
+        .arrow {
+            position: absolute; width: 0; height: 0; border-style: solid;
+            pointer-events: none; color: inherit;
+        }
+        .arrow.top { border-width: 0 8px 9px 8px; border-color: transparent transparent currentColor transparent; top: -13px; left: 50%; transform: translateX(-50%); }
+        .arrow.bottom { border-width: 9px 8px 0 8px; border-color: currentColor transparent transparent transparent; bottom: -13px; left: 50%; transform: translateX(-50%); }
+        .arrow.left { border-width: 8px 9px 8px 0; border-color: transparent currentColor transparent transparent; left: -13px; top: 50%; transform: translateY(-50%); }
+        .arrow.right { border-width: 8px 0 8px 9px; border-color: transparent transparent transparent currentColor; right: -13px; top: 50%; transform: translateY(-50%); }
+        .arrow.top-left { border-width: 9px 9px 0 0; border-color: currentColor transparent transparent transparent; top: -13px; left: -13px; transform: rotate(-45deg); }
+        .arrow.top-right { border-width: 0 9px 9px 0; border-color: transparent currentColor transparent transparent; top: -13px; right: -13px; transform: rotate(45deg); }
+        .arrow.bottom-left { border-width: 9px 0 0 9px; border-color: transparent transparent transparent currentColor; bottom: -13px; left: -13px; transform: rotate(45deg); }
+        .arrow.bottom-right { border-width: 0 0 9px 9px; border-color: transparent transparent currentColor transparent; bottom: -13px; right: -13px; transform: rotate(-45deg); }
+
+        #effect-overlay {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 80px; font-weight: 900; color: #e74c3c; font-family: 'Pretendard', sans-serif;
+            text-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 5000; pointer-events: none; opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            text-align: center; line-height: 1.1; background: var(--panel-bg);
+            padding: 30px 50px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        #effect-overlay.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        #effect-overlay small { font-size: 30px; display: block; margin-top: 8px; font-weight: 700; color: var(--text-main); }
+
+        /* 공통 UI (다크모드 & 상단 버튼) */
+        .top-ui-container { position: fixed; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; z-index: 3000; pointer-events: none; box-sizing: border-box; }
+        .theme-switch-wrapper { display: flex; align-items: center; pointer-events: auto; }
+        .theme-switch { display: inline-block; height: 30px; position: relative; width: 60px; }
+        .theme-switch input { display: none; }
+        .slider { background-color: var(--switch-track); bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 30px; border: 2px solid rgba(255,255,255,0.1); }
+        .slider:before { background-color: var(--switch-knob); bottom: 2px; content: ""; height: 26px; left: 2px; position: absolute; transition: .4s; width: 26px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .slider::after { content: '🌙'; position: absolute; left: 6px; bottom: 5px; transition: .4s; font-size: 14px; opacity: 0.5; }
+        input:checked + .slider:before { transform: translateX(30px); }
+        input:checked + .slider::after { transform: translateX(30px); opacity: 1; }
+
+        .top-btn-group { display: flex; gap: 10px; pointer-events: auto; }
+        .home-btn {
+            background-color: var(--panel-bg); color: var(--text-main); border: 2px solid var(--panel-border);
+            padding: 8px 22px; border-radius: 30px; font-weight: 700; font-size: 14px; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer;
+        }
+        .home-btn:hover { background-color: var(--p1-color); color: #fff; border-color: var(--p1-color); transform: translateY(-2px); }
+
+        #loading-text { font-size: 16px; color: var(--p2-color); font-weight: bold; display: none; margin-top: 20px; }
+
+        /* ---- 사이트 공통: 상단 바와 색 ---- */
+        .site-bar { position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 6000; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; box-sizing: border-box; background: rgba(9,9,11,0.9); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid #1d1c22; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; user-select: none; }
+        .site-bar a { color: #948e83; text-decoration: none; font-size: 14px; transition: color 0.2s ease; }
+        .site-bar a:hover { color: #ede8df; }
+        .site-bar .sb-path { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: #625d55; }
+        .site-bar .sb-word { color: #ede8df; font-weight: 700; font-size: 17px; letter-spacing: -0.4px; }
+        .site-bar .sb-dot { color: #7b7fd4; }
+        .site-bar .sb-here { color: #ede8df; }
+        .site-bar nav { display: flex; gap: 22px; }
+        .site-bar nav a[aria-current] { color: #ede8df; }
+        .site-bar a:focus-visible { outline: 2px solid #7b7fd4; outline-offset: 3px; border-radius: 2px; }
+        @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-here { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+
+        /* ---- 십이장기: 어두운 사이트 톤 (판은 원목 유지) ---- */
+        body.dark-mode { --bg-page-start: #09090b; --bg-page-end: #09090b; --text-main: #ede8df; --text-sub: #948e83; --panel-bg: #111114; --panel-border: #24232a; --piece-bg: #1b1a20; --p1-color: #e07a72; --p1-bg: rgba(224,122,114,0.12); --p2-color: #6fc39a; --p2-bg: rgba(111,195,154,0.12); }
+        body { padding-top: 56px; }
+        .top-ui-container { display: none !important; }
+        #lobby-screen { top: 0; left: 0; padding-top: 56px; }
+        .lobby-card { background: none; border: none; box-shadow: none; padding: 0 20px; align-items: stretch; width: 360px; max-width: 100%; }
+        .lobby-card h1 { font-size: 44px; font-weight: 700; letter-spacing: -1.5px; }
+        .subtitle { margin-bottom: 28px; font-size: 16px; }
+        .menu-btn { width: 100%; padding: 16px 20px; margin: 5px 0; font-size: 16px; font-weight: 600; border: 1px solid #2a2930; border-radius: 8px; background: #17171b; box-shadow: none; font-family: inherit; justify-content: space-between; }
+        .menu-btn small { font-size: 13px; font-weight: 500; color: #948e83; }
+        .menu-btn:hover { transform: none; box-shadow: none; border-color: #7b7fd4; }
+        .menu-btn:active { transform: translateY(1px); box-shadow: none; }
+        #invite-box { border: 1px solid #6fc39a; border-radius: 8px; width: 100%; }
+        #loading-text { color: #948e83; font-weight: 500; }
+        #game-screen > h1 { font-size: 26px !important; font-weight: 700; letter-spacing: -0.6px; }
+        #turn-indicator { font-size: 17px; font-weight: 700; padding: 8px 18px; border-radius: 8px; border-width: 1px; box-shadow: none; background: #111114; }
+        .side-panel { border-width: 1px; border-radius: 10px; box-shadow: none; }
+        .panel-title { border-radius: 6px; font-weight: 700; }
+        #game-board-outer { border-radius: 10px; border-width: 10px; }
+        #effect-overlay { border-radius: 12px; }
+    </style>
 </head>
-<body style="margin:0;padding:48px 24px;background:#09090b;color:#948e83;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;">
-<p>십이장기 주소가 바뀌었습니다. <a href="https://cheezetomato.github.io/games/janggi.html" style="color:#9fa2e2;">새 주소로 이동</a></p>
+<body class="dark-mode">
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">십이장기</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a></nav></header>
+
+    <div class="top-ui-container">
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+        <div class="top-btn-group">
+            <button class="home-btn" onclick="location.href='index.html'">🎮 게임 목록</button>
+            <button class="home-btn" onclick="location.href='../index.html'">🏠 메인으로</button>
+        </div>
+    </div>
+
+    <div id="lobby-screen">
+        <div class="lobby-card">
+            <h1>십이장기</h1>
+            <div class="subtitle">3×4 판에서 두는 미니 장기</div>
+            <button class="menu-btn" onclick="startGame('local')">둘이서 두기 <small>한 기기에서 번갈아</small></button>
+            <button class="menu-btn" onclick="startGame('ai')">AI와 두기 <small>혼자</small></button>
+            <button class="menu-btn" onclick="createMultiplayerRoom()">친구와 온라인 대전 <small>초대 링크 만들기</small></button>
+            <div id="loading-text">연결 중입니다... 잠시만 기다려주세요.</div>
+            <div id="invite-box"></div>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <h1 style="font-size:30px; margin-bottom: 14px;">십이장기</h1>
+        <div id="turn-indicator" style="color: var(--p1-color); border-color: var(--p1-color);">Player 1의 턴</div>
+        <div id="effect-overlay">장군!</div>
+
+        <div class="game-layout">
+            <div class="side-panel" id="hand-p2">
+                <div class="panel-title p2">P2 보유 말</div>
+                <div id="p2-pieces-container" class="hand-pieces-container"></div>
+            </div>
+
+            <div id="game-board-outer">
+                <div id="game-board"></div>
+            </div>
+
+            <div class="side-panel" id="hand-p1">
+                <div class="panel-title p1">P1 보유 말</div>
+                <div id="p1-pieces-container" class="hand-pieces-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 🌙 다크모드 ---
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+        function switchTheme(e) {
+            if (e.target.checked) { document.body.classList.add('dark-mode'); localStorage.setItem('theme', 'dark'); }
+            else { document.body.classList.remove('dark-mode'); localStorage.setItem('theme', 'light'); }
+        }
+        toggleSwitch.addEventListener('change', switchTheme);
+        if (localStorage.getItem('theme') === 'dark') { toggleSwitch.checked = true; document.body.classList.add('dark-mode'); }
+
+        // --- 🎲 게임 상태 데이터 ---
+        let pieces = [
+            { id: 1, type: '將', owner: 'p2', pos: 0, promoted: false }, { id: 2, type: '王', owner: 'p2', pos: 1, promoted: false }, { id: 3, type: '相', owner: 'p2', pos: 2, promoted: false }, { id: 4, type: '子', owner: 'p2', pos: 4, promoted: false },
+            { id: 5, type: '子', owner: 'p1', pos: 7, promoted: false }, { id: 6, type: '相', owner: 'p1', pos: 9, promoted: false }, { id: 7, type: '王', owner: 'p1', pos: 10, promoted: false }, { id: 8, type: '將', owner: 'p1', pos: 11, promoted: false }
+        ];
+
+        let board = Array(12).fill(null);
+        let currentTurn = 'p1';
+        let selectedIndex = -1;
+        let validMoves = [];
+        let gameActive = false;
+
+        let gameMode = 'local';
+        let myRole = 'both';
+        let peer = null;
+        let conn = null;
+
+        const boardEl = document.getElementById('game-board');
+        const turnIndicator = document.getElementById('turn-indicator');
+        const effectOverlay = document.getElementById('effect-overlay');
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const gameScreen = document.getElementById('game-screen');
+
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            if (roomId) joinMultiplayerRoom(roomId);
+        };
+
+        function showGameScreen() {
+            lobbyScreen.style.opacity = '0';
+            setTimeout(() => { lobbyScreen.style.display = 'none'; gameScreen.style.display = 'flex'; }, 500);
+            initGame();
+        }
+
+        function startGame(mode) {
+            gameMode = mode;
+            if (mode === 'local') myRole = 'both';
+            else if (mode === 'ai') myRole = 'p1';
+            showGameScreen();
+        }
+
+        function createMultiplayerRoom() {
+            document.getElementById('loading-text').style.display = 'block';
+            peer = new Peer();
+            peer.on('open', (id) => {
+                document.getElementById('loading-text').style.display = 'none';
+                const inviteUrl = window.location.origin + window.location.pathname + '?room=' + id;
+                const inviteBox = document.getElementById('invite-box');
+                inviteBox.style.display = 'block';
+                inviteBox.innerHTML = `방이 생성되었습니다!<br>아래 링크를 친구에게 보내주세요.<br><br><a href="${inviteUrl}" target="_blank">${inviteUrl}</a>`;
+            });
+            peer.on('connection', (connection) => {
+                conn = connection;
+                setupConnection('p1');
+            });
+        }
+
+        function joinMultiplayerRoom(roomId) {
+            document.getElementById('loading-text').style.display = 'block';
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect(roomId);
+                conn.on('open', () => setupConnection('p2'));
+            });
+        }
+
+        function setupConnection(role) {
+            gameMode = 'multi';
+            myRole = role;
+            showGameScreen();
+            conn.on('data', (data) => {
+                if(data.type === 'sync') {
+                    pieces = data.pieces; currentTurn = data.currentTurn;
+                    updateBoardState(); renderAll(); checkWinCondition();
+                }
+            });
+        }
+
+        function syncState() {
+            if (gameMode === 'multi' && conn && conn.open) {
+                conn.send({ type: 'sync', pieces: pieces, currentTurn: currentTurn });
+            }
+        }
+
+        function initGame() {
+            gameActive = true;
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell'; cell.id = `cell-${i}`; cell.dataset.index = i;
+                cell.addEventListener('click', () => handleCellClick(i));
+                boardEl.appendChild(cell);
+            }
+            updateBoardState();
+            renderAll();
+        }
+
+        function updateBoardState() {
+            board.fill(null);
+            pieces.forEach(p => { if(p.pos >= 0 && p.pos < 12) board[p.pos] = p.id; });
+        }
+
+        function renderAll() {
+            for (let i = 0; i < 12; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                cell.innerHTML = '';
+                if (validMoves.includes(i)) cell.classList.add('highlight');
+                else cell.classList.remove('highlight');
+            }
+
+            const p1Hand = document.getElementById('p1-pieces-container');
+            const p2Hand = document.getElementById('p2-pieces-container');
+            p1Hand.innerHTML = ''; p2Hand.innerHTML = '';
+
+            pieces.forEach(pieceData => {
+                const pieceEl = document.createElement('div');
+                pieceEl.id = `piece-${pieceData.id}`;
+                pieceEl.className = `piece ${pieceData.owner}`;
+                pieceEl.innerText = pieceData.promoted ? '侯' : pieceData.type;
+
+                if (pieceData.type === '王') pieceEl.classList.add('king');
+                else if (pieceData.promoted) pieceEl.classList.add('promoted');
+                else if (pieceData.type === '子') pieceEl.classList.add('child');
+
+                if (pieceData.owner === 'p2') pieceEl.classList.add('p2-rotate');
+
+                // 🌟 이동 가능 방향을 작은 화살표로 표시 (말 색상과 동일)
+                getPieceDirections(pieceData).forEach(dir => {
+                    const arrow = document.createElement('div');
+                    arrow.className = `arrow ${dir}`;
+                    pieceEl.appendChild(arrow);
+                });
+
+                if (pieceData.pos >= 0) {
+                    pieceEl.classList.add('on-board');
+                    if (pieceData.pos === selectedIndex) pieceEl.classList.add('selected');
+                    document.getElementById(`cell-${pieceData.pos}`).appendChild(pieceEl);
+                } else {
+                    pieceEl.classList.add('in-hand');
+                    pieceEl.addEventListener('pointerdown', (e) => startDrag(e, pieceData));
+                    if (pieceData.owner === 'p1') p1Hand.appendChild(pieceEl);
+                    else p2Hand.appendChild(pieceEl);
+                }
+            });
+
+            let roleText = myRole === 'p1' ? '(당신)' : (myRole === 'p2' ? '(상대)' : '');
+            let roleText2 = myRole === 'p2' ? '(당신)' : (myRole === 'p1' ? '(상대)' : '');
+
+            if(currentTurn === 'p1') { turnIndicator.innerHTML = `Player 1의 턴 ${roleText}`; turnIndicator.style.color = "var(--p1-color)"; turnIndicator.style.borderColor = "var(--p1-color)"; }
+            else { turnIndicator.innerHTML = `Player 2의 턴 ${roleText2}`; turnIndicator.style.color = "var(--p2-color)"; turnIndicator.style.borderColor = "var(--p2-color)"; }
+        }
+
+        // 🌟 각 기물의 이동 방향을 가져오는 함수 (화살표 표시용)
+        function getPieceDirections(piece) {
+            const type = piece.promoted ? '侯' : piece.type;
+            let dirs = [];
+            if (type === '王') dirs = ['top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
+            else if (type === '將') dirs = ['top', 'bottom', 'left', 'right'];
+            else if (type === '相') dirs = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+            else if (type === '子') dirs = piece.owner === 'p1' ? ['top'] : ['bottom'];
+            else if (type === '侯') {
+                dirs = ['top', 'bottom', 'left', 'right'];
+                dirs = piece.owner === 'p1' ? dirs.concat(['top-left', 'top-right']) : dirs.concat(['bottom-left', 'bottom-right']);
+            }
+            return dirs;
+        }
+
+        function handleCellClick(index) {
+            if(!gameActive) return;
+            if(myRole !== 'both' && myRole !== currentTurn) return;
+
+            const clickedPieceId = board[index];
+
+            if (selectedIndex !== -1 && validMoves.includes(index)) {
+                executeMove(selectedIndex, index, false);
+                return;
+            }
+
+            if (clickedPieceId) {
+                const piece = pieces.find(p => p.id === clickedPieceId);
+                if (piece.owner === currentTurn) {
+                    if (selectedIndex === index) { selectedIndex = -1; validMoves = []; }
+                    else { selectedIndex = index; validMoves = getValidMoves(index, piece); }
+                    renderAll();
+                    return;
+                }
+            }
+            selectedIndex = -1; validMoves = [];
+            renderAll();
+        }
+
+        function executeMove(fromIndex, toIndex, isDrop, dropPieceId = null) {
+            let attacker = null;
+
+            if(isDrop) {
+                attacker = pieces.find(p => p.id === dropPieceId);
+            } else {
+                attacker = pieces.find(p => p.id === board[fromIndex]);
+                const targetId = board[toIndex];
+
+                if (targetId) {
+                    const captured = pieces.find(p => p.id === targetId);
+                    if(captured.type === '王') {
+                        attacker.pos = toIndex; captured.pos = -1;
+                        updateBoardState(); renderAll(); syncState();
+                        endGame(`${currentTurn === 'p1' ? 'P1' : 'P2'} 승리!`, "적의 왕을 쟁취했습니다.");
+                        return;
+                    }
+                    captured.pos = -1;
+                    captured.owner = currentTurn;
+                    captured.promoted = false;
+                }
+
+                const targetRow = Math.floor(toIndex / 3);
+                if (attacker.type === '子' && !attacker.promoted && ((attacker.owner === 'p1' && targetRow === 0) || (attacker.owner === 'p2' && targetRow === 3))) {
+                    attacker.promoted = true;
+                }
+            }
+            attacker.pos = toIndex;
+            finishTurn();
+        }
+
+        let draggedPiece = null; let draggedEl = null; let dragOffsetX = 0; let dragOffsetY = 0;
+
+        function startDrag(e, pieceData) {
+            if(!gameActive || pieceData.owner !== currentTurn) return;
+            if(myRole !== 'both' && myRole !== currentTurn) return;
+
+            draggedPiece = pieceData;
+            draggedEl = document.getElementById(`piece-${pieceData.id}`);
+            const rect = draggedEl.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top;
+
+            document.body.appendChild(draggedEl);
+            draggedEl.classList.add('dragging');
+            draggedEl.style.left = `${e.clientX - dragOffsetX}px`;
+            draggedEl.style.top = `${e.clientY - dragOffsetY}px`;
+
+            document.addEventListener('pointermove', dragMove);
+            document.addEventListener('pointerup', dropPiece);
+            document.addEventListener('pointercancel', dropPiece);
+        }
+
+        function dragMove(e) {
+            if(!draggedEl) return;
+            draggedEl.style.left = `${e.clientX - dragOffsetX}px`; draggedEl.style.top = `${e.clientY - dragOffsetY}px`;
+        }
+
+        function dropPiece(e) {
+            document.removeEventListener('pointermove', dragMove); document.removeEventListener('pointerup', dropPiece); document.removeEventListener('pointercancel', dropPiece);
+            if(!draggedPiece || !draggedEl) return;
+            draggedEl.style.display = 'none';
+            const targetCell = document.elementFromPoint(e.clientX, e.clientY)?.closest('.cell');
+            draggedEl.style.display = 'flex';
+            let dropped = false;
+
+            if (targetCell) {
+                const targetIndex = parseInt(targetCell.dataset.index);
+                if (board[targetIndex] === null) {
+                    if (currentTurn === 'p1' && targetIndex <= 2) {
+                        showOverlay("금수!", "#d35400", "<small>적진 끝줄엔 바로 놓을 수 없습니다.</small>", 1500);
+                    } else if (currentTurn === 'p2' && targetIndex >= 9) {
+                        showOverlay("금수!", "#d35400", "<small>적진 끝줄엔 바로 놓을 수 없습니다.</small>", 1500);
+                    } else {
+                        executeMove(null, targetIndex, true, draggedPiece.id); dropped = true;
+                    }
+                }
+            }
+            draggedEl.classList.remove('dragging');
+            draggedEl = null; draggedPiece = null;
+            if(!dropped) renderAll();
+        }
+
+        function getValidMoves(cellIndex, piece, currentBoard = board, currentPieces = pieces) {
+            let moves = [];
+            const row = Math.floor(cellIndex / 3); const col = cellIndex % 3;
+
+            const addMove = (rO, cO) => {
+                const nR = row + rO; const nC = col + cO;
+                if (nR >= 0 && nR < 4 && nC >= 0 && nC < 3) {
+                    const tIndex = nR * 3 + nC;
+                    const targetId = currentBoard[tIndex];
+                    if (!targetId || currentPieces.find(p => p.id === targetId).owner !== piece.owner) moves.push(tIndex);
+                }
+            };
+
+            const type = piece.promoted ? '侯' : piece.type;
+            if (type === '王') { for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) if(r!==0||c!==0) addMove(r, c); }
+            else if (type === '將') { addMove(-1, 0); addMove(1, 0); addMove(0, -1); addMove(0, 1); }
+            else if (type === '相') { addMove(-1, -1); addMove(-1, 1); addMove(1, -1); addMove(1, 1); }
+            else if (type === '子') { if (piece.owner === 'p1') addMove(-1, 0); else addMove(1, 0); }
+            else if (type === '侯') { addMove(-1, 0); addMove(1, 0); addMove(0, -1); addMove(0, 1); if (piece.owner === 'p1') { addMove(-1, -1); addMove(-1, 1); } else { addMove(1, -1); addMove(1, 1); } }
+            return moves;
+        }
+
+        function getPiecesCopy() { return pieces.map(p => ({ id: p.id, type: p.type, owner: p.owner, pos: p.pos, promoted: p.promoted })); }
+
+        function isJanggun(attacker, targetPieces) {
+            const defender = attacker === 'p1' ? 'p2' : 'p1';
+            const king = targetPieces.find(p => p.type === '王' && p.owner === defender && p.pos !== -1);
+            if(!king) return false;
+
+            for(let p of targetPieces) {
+                if(p.owner === attacker && p.pos >= 0) {
+                    const type = p.promoted ? '侯' : p.type;
+                    const row = Math.floor(p.pos / 3); const col = p.pos % 3;
+                    let canAttack = false;
+                    const checkAttack = (rO, cO) => { const nR = row+rO; const nC = col+cO; if(nR>=0 && nR<4 && nC>=0 && nC<3 && (nR*3+nC) === king.pos) canAttack = true; }
+
+                    if (type === '王') { for(let r=-1; r<=1; r++) for(let c=-1; c<=1; c++) if(r!==0||c!==0) checkAttack(r, c); }
+                    else if (type === '將') { checkAttack(-1, 0); checkAttack(1, 0); checkAttack(0, -1); checkAttack(0, 1); }
+                    else if (type === '相') { checkAttack(-1, -1); checkAttack(-1, 1); checkAttack(1, -1); checkAttack(1, 1); }
+                    else if (type === '子') { if (p.owner === 'p1') checkAttack(-1, 0); else checkAttack(1, 0); }
+                    else if (type === '侯') { checkAttack(-1, 0); checkAttack(1, 0); checkAttack(0, -1); checkAttack(0, 1); if (p.owner === 'p1') { checkAttack(-1, -1); checkAttack(-1, 1); } else { checkAttack(1, -1); checkAttack(1, 1); } }
+                    if(canAttack) return true;
+                }
+            }
+            return false;
+        }
+
+        function isCheckmate(defender) {
+            const myBoardPieces = pieces.filter(p => p.owner === defender && p.pos >= 0);
+            for (let p of myBoardPieces) {
+                const moves = getValidMoves(p.pos, p);
+                for (let move of moves) {
+                    const pCopy = getPiecesCopy();
+                    const movingPiece = pCopy.find(cp => cp.id === p.id);
+                    const targetPiece = pCopy.find(cp => cp.pos === move);
+                    if(targetPiece) { targetPiece.pos = -1; targetPiece.owner = defender; }
+                    movingPiece.pos = move;
+                    if (!isJanggun(defender === 'p1' ? 'p2' : 'p1', pCopy)) return false;
+                }
+            }
+
+            const myHandPieces = pieces.filter(p => p.owner === defender && p.pos === -1);
+            for (let p of myHandPieces) {
+                for (let i = 0; i < 12; i++) {
+                    if (board[i] === null) {
+                        if ((defender === 'p1' && i <= 2) || (defender === 'p2' && i >= 9)) continue;
+                        const pCopy = getPiecesCopy();
+                        pCopy.find(cp => cp.id === p.id).pos = i;
+                        if (!isJanggun(defender === 'p1' ? 'p2' : 'p1', pCopy)) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function finishTurn() {
+            selectedIndex = -1; validMoves = [];
+            currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
+            updateBoardState(); syncState(); renderAll(); checkWinCondition();
+        }
+
+        function checkWinCondition() {
+            if(!gameActive) return;
+
+            const p1King = pieces.find(p => p.type === '王' && p.owner === 'p1');
+            const p2King = pieces.find(p => p.type === '王' && p.owner === 'p2');
+
+            if (p2King && p2King.pos >= 9 && currentTurn === 'p1') { endGame(`P2 승리!`, "왕이 적진에서 턴을 무사히 버텨냈습니다."); return; }
+            if (p1King && p1King.pos <= 2 && currentTurn === 'p2') { endGame(`P1 승리!`, "왕이 적진에서 턴을 무사히 버텨냈습니다."); return; }
+
+            if (isJanggun(currentTurn === 'p1' ? 'p2' : 'p1', pieces)) {
+                if (isCheckmate(currentTurn)) {
+                    showEffect(`외통수!<br><small>${currentTurn === 'p1' ? 'P1' : 'P2'} 패배</small>`, currentTurn === 'p1' ? '#c0392b' : '#1e8f4e', 3000);
+                    endGame(`${currentTurn === 'p1' ? 'P2' : 'P1'} 최종 승리!`, "상대에게 완벽한 외통수를 가했습니다."); return;
+                } else { showEffect("장군!", currentTurn === 'p1' ? '#c0392b' : '#218c74'); }
+            }
+
+            if (gameMode === 'ai' && currentTurn === 'p2') setTimeout(playAITurn, 500);
+        }
+
+        // ---------------------------------------------------------
+        // 🧠 향상된 AI: 미니맥스 + 알파베타 가지치기
+        // ---------------------------------------------------------
+        const AI_DEPTH = 6; // 보드가 매우 작아 6수 앞까지 봐도 매우 빠르게 계산됩니다.
+        const PIECE_VALUES = { '王': 1000, '將': 40, '相': 35, '子': 10, '侯': 55 };
+
+        function clonePieces(pcs) {
+            return pcs.map(p => ({ id: p.id, type: p.type, owner: p.owner, pos: p.pos, promoted: p.promoted }));
+        }
+
+        function buildBoardFromPieces(pcs) {
+            const b = Array(12).fill(null);
+            pcs.forEach(p => { if (p.pos >= 0) b[p.pos] = p.id; });
+            return b;
+        }
+
+        function generateMoves(player, pcs, brd) {
+            let moves = [];
+            pcs.filter(p => p.owner === player).forEach(p => {
+                if (p.pos >= 0) {
+                    getValidMoves(p.pos, p, brd, pcs).forEach(m => moves.push({ pieceId: p.id, target: m, isDrop: false }));
+                } else {
+                    for (let i = 0; i < 12; i++) {
+                        if (brd[i] === null) {
+                            if ((player === 'p1' && i <= 2) || (player === 'p2' && i >= 9)) continue;
+                            moves.push({ pieceId: p.id, target: i, isDrop: true });
+                        }
+                    }
+                }
+            });
+            return moves;
+        }
+
+        function applyMoveToPieces(move, pcs, player) {
+            const piece = pcs.find(p => p.id === move.pieceId);
+            if (!move.isDrop) {
+                const captured = pcs.find(p => p.pos === move.target);
+                if (captured) { captured.pos = -1; captured.owner = player; captured.promoted = false; }
+                const targetRow = Math.floor(move.target / 3);
+                if (piece.type === '子' && !piece.promoted) {
+                    if ((player === 'p1' && targetRow === 0) || (player === 'p2' && targetRow === 3)) piece.promoted = true;
+                }
+            }
+            piece.pos = move.target;
+        }
+
+        function evaluatePosition(pcs, aiPlayer) {
+            let score = 0;
+            pcs.forEach(p => {
+                const key = p.promoted ? '侯' : p.type;
+                let val = PIECE_VALUES[key];
+                if (p.pos >= 0) {
+                    val += 2; // 보드 위에 있는 기물(손에 든 것보다)을 약간 더 우대
+                    if (key === '子') {
+                        const row = Math.floor(p.pos / 3);
+                        const advancement = p.owner === 'p1' ? (3 - row) : row; // 승급 줄까지 얼마나 전진했는지
+                        val += advancement * 3;
+                    }
+                }
+                score += (p.owner === aiPlayer ? val : -val);
+            });
+
+            // 이동 가능 수(기동력) 차이도 점수에 반영
+            const opp = aiPlayer === 'p1' ? 'p2' : 'p1';
+            const brd = buildBoardFromPieces(pcs);
+            const aiMoves = generateMoves(aiPlayer, pcs, brd).length;
+            const oppMoves = generateMoves(opp, pcs, brd).length;
+            score += (aiMoves - oppMoves) * 2;
+
+            return score;
+        }
+
+        function minimax(pcs, brd, player, depth, alpha, beta, aiPlayer) {
+            const p1KingAlive = pcs.some(p => p.type === '王' && p.owner === 'p1' && p.pos >= 0);
+            const p2KingAlive = pcs.some(p => p.type === '王' && p.owner === 'p2' && p.pos >= 0);
+            if (!p1KingAlive) return (aiPlayer === 'p2') ? 100000 + depth : -100000 - depth;
+            if (!p2KingAlive) return (aiPlayer === 'p1') ? 100000 + depth : -100000 - depth;
+
+            if (depth === 0) return evaluatePosition(pcs, aiPlayer);
+
+            const moves = generateMoves(player, pcs, brd);
+            if (moves.length === 0) {
+                // 둘 수가 전혀 없으면 그 쪽이 불리한 것으로 처리
+                return player === aiPlayer ? -90000 - depth : 90000 + depth;
+            }
+
+            const oppPlayer = player === 'p1' ? 'p2' : 'p1';
+            const maximizing = (player === aiPlayer);
+            let bestVal = maximizing ? -Infinity : Infinity;
+
+            for (const move of moves) {
+                const pcsCopy = clonePieces(pcs);
+                applyMoveToPieces(move, pcsCopy, player);
+                const brdCopy = buildBoardFromPieces(pcsCopy);
+                const val = minimax(pcsCopy, brdCopy, oppPlayer, depth - 1, alpha, beta, aiPlayer);
+
+                if (maximizing) {
+                    if (val > bestVal) bestVal = val;
+                    if (val > alpha) alpha = val;
+                } else {
+                    if (val < bestVal) bestVal = val;
+                    if (val < beta) beta = val;
+                }
+                if (alpha >= beta) break;
+            }
+            return bestVal;
+        }
+
+        function pickBestMove(player, depth) {
+            const brd = buildBoardFromPieces(pieces);
+            let moves = generateMoves(player, pieces, brd);
+            if (moves.length === 0) return null;
+            moves.sort(() => Math.random() - 0.5); // 동점일 때 매번 다른 수를 골라 변화를 줌
+
+            const opp = player === 'p1' ? 'p2' : 'p1';
+            let bestMoves = []; let bestScore = -Infinity;
+
+            for (const move of moves) {
+                const pcsCopy = clonePieces(pieces);
+                applyMoveToPieces(move, pcsCopy, player);
+
+                const oppKingAlive = pcsCopy.some(p => p.type === '王' && p.owner === opp && p.pos >= 0);
+                let val;
+                if (!oppKingAlive) {
+                    val = 999999; // 왕을 바로 잡는 수는 항상 최우선
+                } else {
+                    const brdCopy = buildBoardFromPieces(pcsCopy);
+                    val = minimax(pcsCopy, brdCopy, opp, depth - 1, -Infinity, Infinity, player);
+                }
+
+                if (val > bestScore) { bestScore = val; bestMoves = [move]; }
+                else if (val === bestScore) bestMoves.push(move);
+            }
+            return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+        }
+
+        function playAITurn() {
+            if (!gameActive) return;
+            const move = pickBestMove('p2', AI_DEPTH);
+            if (!move) return; // 둘 수가 없으면(외통수 등) 그대로 둠 - checkWinCondition에서 이미 처리됨
+
+            if (move.isDrop) executeMove(null, move.target, true, move.pieceId);
+            else {
+                const originalPiece = pieces.find(p => p.id === move.pieceId);
+                executeMove(originalPiece.pos, move.target, false);
+            }
+        }
+
+        function showEffect(text, color, time=1500) {
+            effectOverlay.innerHTML = text; effectOverlay.style.color = color;
+            effectOverlay.classList.add('show');
+            setTimeout(() => { effectOverlay.classList.remove('show'); }, time);
+        }
+        function showOverlay(title, color, text, time) { showEffect(`<strong>${title}</strong>${text}`, color, time); }
+        function endGame(title, msg) { gameActive = false; setTimeout(() => { alert(`게임 종료\n\n${title}\n${msg}`); location.href = window.location.pathname; }, 800); }
+
+    </script>
 </body>
 </html>
