@@ -327,12 +327,13 @@
         .site-bar a { color: #948e83; text-decoration: none; font-size: 14px; transition: color 0.2s ease; }
         .site-bar a:hover { color: #ede8df; }
         .site-bar .sb-path { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: #625d55; }
-        .site-bar .sb-word { color: #ede8df; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+        .site-bar .sb-word { color: #ede8df; font-weight: 700; font-size: 17px; letter-spacing: -0.4px; }
+        .site-bar .sb-dot { color: #7b7fd4; }
         .site-bar .sb-here { color: #ede8df; }
         .site-bar nav { display: flex; gap: 22px; }
         .site-bar nav a[aria-current] { color: #ede8df; }
         .site-bar a:focus-visible { outline: 2px solid #7b7fd4; outline-offset: 3px; border-radius: 2px; }
-        @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-sep, .site-bar .sb-path .sb-here { display: none; } }
+        @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-here { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
 
         /* ---- 지뢰찾기: 사이트 톤 ---- */
         :root { --bg-body: #09090b; --bg-sidebar: #0d0d10; --bg-panel: #111114; --text-main: #948e83; --text-highlight: #9fa2e2; --grid-gap-color: #09090b; --cell-unrevealed: #2b2a31; --cell-unrevealed-hover: #36353d; --cell-revealed: #141418; --cell-highlight: #3d3c45; }
@@ -363,7 +364,7 @@
 
 </head>
 <body>
-<header class="site-bar"><div class="sb-path"><a class="sb-word" href="../">cheezetomato</a><span class="sb-sep">/</span><a href="./">Games</a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../movie.html">Films</a><a href="./" aria-current="page">Games</a></nav></header>
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../">Films</a><a href="./" aria-current="page">Games</a></nav></header>
 
     <!-- 상단 헤더 -->
     <div class="top-header">
