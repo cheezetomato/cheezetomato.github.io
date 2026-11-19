@@ -3,278 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Web Portal - Pro</title>
+<title>cheezetomato</title>
+<meta name="description" content="cheezetomato의 개인 사이트. 영화 기록과 직접 만든 웹 게임이 있습니다.">
+<meta name="theme-color" content="#09090b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2309090b'/%3E%3Ccircle cx='16' cy='17' r='8' fill='%237b7fd4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
-/* 기본 웹 폰트 로드 */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  :root {
+    --bg: #09090b;
+    --surface: #131316;
+    --line: #24232a;
+    --text: #ede8df;
+    --text-dim: #948e83;
+    --text-mute: #625d55;
+    --accent: #7b7fd4;
+    --accent-light: #9fa2e2;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    background: var(--bg); color: var(--text);
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 16px; line-height: 1.6; word-break: keep-all;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+  .wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 28px; }
 
-/* ---------------------------------------------------- */
-/* [1. 테마 변수 설정] - 여기서 색상을 한 번에 관리합니다. */
-/* ---------------------------------------------------- */
-:root {
-  /* ☀️ 라이트 모드 (기본) 색상 */
-  --bg-body-start: #f5f7fa;
-  --bg-body-end: #c3cfe2;
-  --text-header: #2c3e50;
-  --text-desc: #576574;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --card-border-default: transparent;
-  --card-text-title: #333;
-  --card-text-desc: #777;
-  --card-shadow: rgba(0, 0, 0, 0.08);
+  .top { display: flex; align-items: center; justify-content: space-between; padding-top: 26px; padding-bottom: 26px; }
+  .wordmark { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.3px; }
+  .top nav { display: flex; gap: 26px; font-size: 0.9rem; color: var(--text-dim); }
+  .top nav a:hover { color: var(--text); }
 
-  /* 🌙 토글 스위치 자체 색상 (라이트 모드일 때) */
-  --switch-track: #ccc;
-  --switch-knob: #fff;
-  --switch-icon: #777;
-}
+  main { flex: 1; }
+  .intro { padding-top: 7vh; padding-bottom: 6vh; }
+  .intro h1 { margin: 0; font-size: clamp(2.3rem, 6vw, 4rem); line-height: 1.12; font-weight: 700; letter-spacing: -0.04em; }
+  .intro p { margin: 18px 0 0; max-width: 30em; font-size: 1.05rem; color: var(--text-dim); }
 
-body.dark-mode {
-  /* 🌙 다크 모드 새로운 회색 계열 색상 설정 */
-  --bg-body-start: #181818;
-  --bg-body-end: #121212;
-  --text-header: #f0f0f0;
-  --text-desc: #b0b0b0;
-  --card-bg: #232323;
-  --card-border-default: #232323;
-  --card-text-title: #f0f0f0;
-  --card-text-desc: #b0b0b0;
-  --card-shadow: rgba(0, 0, 0, 0.3);
+  .entry { display: block; border-top: 1px solid var(--line); padding: 34px 0 40px; }
+  .entry:last-of-type { border-bottom: 1px solid var(--line); }
+  .entry-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .entry-name { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; transition: color 0.2s ease; }
+  .entry-name .dot { color: var(--accent); }
+  .entry-meta { font-size: 0.9rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .entry-desc { margin: 10px 0 0; color: var(--text-dim); font-size: 0.98rem; }
+  a.entry:hover .entry-name { color: var(--accent-light); }
 
-  /* 🌙 토글 스위치 자체 색상 (다크 모드일 때) */
-  --switch-track: #000;
-  --switch-knob: #666;
-  --switch-icon: #fff;
-}
+  /* 영화: 최근 본 영화 포스터 */
+  .posters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-top: 26px; }
+  .posters span { aspect-ratio: 2 / 3; border-radius: 4px; background: var(--surface) center / cover no-repeat; box-shadow: 0 10px 26px rgba(0,0,0,0.5); opacity: 0; transform: translateY(6px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .posters.ready span { opacity: 1; transform: none; }
+  .posters.ready span:nth-child(2) { transition-delay: 0.05s; } .posters.ready span:nth-child(3) { transition-delay: 0.1s; }
+  .posters.ready span:nth-child(4) { transition-delay: 0.15s; } .posters.ready span:nth-child(5) { transition-delay: 0.2s; }
+  .posters.ready span:nth-child(6) { transition-delay: 0.25s; }
+  a.entry:hover .posters span { box-shadow: 0 14px 30px rgba(0,0,0,0.6); }
 
-/* ---------------------------------------------------- */
-/* [2. 기본 CSS 설정] */
-/* ---------------------------------------------------- */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
-  background: linear-gradient(135deg, var(--bg-body-start) 0%, var(--bg-body-end) 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  transition: background 0.5s, color 0.5s;
-}
+  /* 게임 목록 */
+  .games { list-style: none; margin: 22px 0 0; padding: 0; }
+  .games li + li { border-top: 1px solid var(--line); }
+  .games a { display: grid; grid-template-columns: 9.5em minmax(0, 1fr) auto; align-items: baseline; gap: 18px; padding: 14px 0; }
+  .games b { font-size: 1.1rem; font-weight: 600; transition: color 0.2s ease; }
+  .games span { color: var(--text-dim); font-size: 0.93rem; }
+  .games small { color: var(--text-mute); font-size: 0.85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .games a:hover b { color: var(--accent-light); }
+  .games-all { display: inline-block; margin-top: 12px; font-size: 0.88rem; color: var(--text-dim); }
+  .games-all:hover { color: var(--text); }
 
-/* ---------------------------------------------------- */
-/* [3. 다크모드 토글 스위치 디자인] */
-/* ---------------------------------------------------- */
-.theme-switch-wrapper {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  z-index: 1000;
-}
-.theme-switch {
-  display: inline-block;
-  height: 30px;
-  position: relative;
-  width: 60px;
-}
-.theme-switch input { display: none; }
-.slider {
-  background-color: var(--switch-track);
-  bottom: 0;
-  cursor: pointer;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-  transition: .4s;
-  border-radius: 30px;
-  border: 2px solid rgba(255,255,255,0.1);
-}
-.slider:before {
-  background-color: var(--switch-knob);
-  bottom: 2px;
-  content: "";
-  height: 26px;
-  left: 2px;
-  position: absolute;
-  transition: .4s;
-  width: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-.slider::after {
-  content: '🌙';
-  position: absolute;
-  left: 6px;
-  bottom: 5px;
-  transition: .4s;
-  color: var(--switch-icon);
-  font-size: 14px;
-  opacity: 0.5;
-}
-input:checked + .slider:before {
-  transform: translateX(30px);
-}
-input:checked + .slider::after {
-  transform: translateX(30px);
-  opacity: 1;
-}
+  footer { margin-top: 72px; padding-top: 22px; padding-bottom: 34px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.82rem; color: var(--text-mute); }
+  footer a:hover { color: var(--text-dim); }
 
-/* ---------------------------------------------------- */
-/* [4. 메인 콘텐츠 디자인] */
-/* ---------------------------------------------------- */
-.header {
-  text-align: center;
-  margin-bottom: 50px;
-}
-.header h1 {
-  font-size: 2.5rem;
-  color: var(--text-header);
-  margin: 0 0 10px 0;
-  letter-spacing: -1px;
-  transition: color 0.5s;
-}
-.header p {
-  color: var(--text-desc);
-  font-size: 1.1rem;
-  margin: 0;
-  transition: color 0.5s;
-}
-
-.menu-container {
-  display: flex;
-  gap: 30px;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 20px;
-  max-width: 700px; /* 카드가 2개로 줄었으므로 너비를 줄였습니다 */
-}
-
-.menu-card {
-  text-decoration: none;
-  background: var(--card-bg);
-  width: 280px;
-  height: 320px;
-  border-radius: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 30px var(--card-shadow);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--card-border-default);
-}
-
-/* 호버 효과 (라이트 모드) */
-.card-movie:hover {
-  border-color: #a29bfe;
-  box-shadow: 0 15px 35px rgba(162, 155, 254, 0.2);
-  transform: translateY(-5px);
-}
-
-/* 🎮 게임 허브 카드 호버 효과 (오렌지 톤) */
-.card-games:hover {
-  border-color: #ff9f43;
-  box-shadow: 0 15px 35px rgba(255, 159, 67, 0.2);
-  transform: translateY(-5px);
-}
-
-.menu-card:active {
-  transform: scale(0.95);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.icon {
-  font-size: 80px;
-  margin-bottom: 20px;
-  transition: transform 0.3s;
-}
-.menu-card:hover .icon {
-  transform: scale(1.1);
-}
-
-.title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--card-text-title);
-  margin-bottom: 10px;
-  transition: color 0.5s;
-}
-.desc {
-  font-size: 0.95rem;
-  color: var(--card-text-desc);
-  text-align: center;
-  padding: 0 20px;
-  transition: color 0.5s;
-  line-height: 1.4;
-}
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+    .top { padding-top: 18px; padding-bottom: 18px; }
+    .top nav { gap: 18px; }
+    .intro { padding-top: 5vh; padding-bottom: 5vh; }
+    .posters { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .posters span:nth-child(n+5) { display: none; }
+    .games a { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; }
+    .games span { grid-column: 1 / -1; grid-row: 2; }
+  }
+  @media (prefers-reduced-motion: reduce) { .posters span { transition: none; transform: none; } }
 </style>
 </head>
 <body>
+<header class="wrap top">
+  <a class="wordmark" href="./">cheezetomato</a>
+  <nav aria-label="사이트 메뉴">
+    <a href="movie.html">Films</a>
+    <a href="games/">Games</a>
+  </nav>
+</header>
 
-<div class="theme-switch-wrapper">
-  <label class="theme-switch" for="checkbox">
-    <input type="checkbox" id="checkbox" />
-    <div class="slider round"></div>
-  </label>
-</div>
+<main class="wrap">
+  <section class="intro">
+    <h1>cheezetomato의<br>개인 사이트</h1>
+    <p>본 영화를 기록하고, 직접 만든 웹 게임을 올려두는 곳입니다.</p>
+  </section>
 
-<div class="header">
-  <h1>Welcome to My Space</h1>
-  <p>원하는 메뉴를 선택해주세요!</p>
-</div>
-
-<div class="menu-container">
-  <a href="movie.html" class="menu-card card-movie">
-    <div class="icon">🍿</div>
-    <div class="title">영화 컬렉션</div>
-    <div class="desc">내가 본 영화들의 기록과 평점을 확인해보세요.</div>
+  <a class="entry" href="movie.html">
+    <div class="entry-head">
+      <h2 class="entry-name">Films<span class="dot">.</span></h2>
+      <span class="entry-meta" id="films-meta"></span>
+    </div>
+    <p class="entry-desc">직접 본 영화의 별점과 한줄평, 다시 본 기록과 통계</p>
+    <div class="posters" id="films-posters" aria-hidden="true"></div>
   </a>
 
-  <!-- 🎮 게임 허브로 통합된 카드 (사과/십이장기/지뢰찾기) -->
-  <a href="games/" class="menu-card card-games">
-    <div class="icon">🎮</div>
-    <div class="title">게임</div>
-    <div class="desc">사과 게임, 십이장기, 지뢰찾기를 한곳에서 즐겨보세요!</div>
-  </a>
-</div>
+  <section class="entry">
+    <div class="entry-head">
+      <h2 class="entry-name"><a href="games/">Games</a></h2>
+      <span class="entry-meta">3개</span>
+    </div>
+    <ul class="games">
+      <li><a href="games/apple.html"><b>사과 게임</b><span>합이 10이 되도록 사과를 묶어 120초 안에 수확</span><small id="apple-best"></small></a></li>
+      <li><a href="games/janggi.html"><b>십이장기</b><span>3×4 판에서 두는 미니 장기. AI 대전과 온라인 대전</span><small></small></a></li>
+      <li><a href="games/minesweeper.html"><b>지뢰찾기</b><span>운에 기대지 않는 판으로 즐기는 네 가지 난이도</span><small id="mine-best"></small></a></li>
+    </ul>
+  </section>
+</main>
+
+<footer class="wrap">
+  <span>© <span id="year">2026</span> cheezetomato</span>
+  <a href="https://github.com/cheezetomato" target="_blank" rel="noopener">GitHub @cheezetomato</a>
+</footer>
 
 <script>
-// 토글 스위치 요소를 가져옵니다.
-const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const FS = 'https://firestore.googleapis.com/v1/projects/my-first-page-931dd/databases/(default)/documents';
+  const plain = v => v == null ? null : ('stringValue' in v ? v.stringValue : 'integerValue' in v ? Number(v.integerValue) : 'doubleValue' in v ? v.doubleValue : 'arrayValue' in v ? (v.arrayValue.values || []).map(plain) : 'mapValue' in v ? Object.fromEntries(Object.entries(v.mapValue.fields || {}).map(([k, x]) => [k, plain(x)])) : null);
+  const fields = d => Object.fromEntries(Object.entries(d.fields || {}).map(([k, v]) => [k, plain(v)]));
 
-// 스위치 상태가 바뀔 때마다 실행되는 함수
-function switchTheme(e) {
-  if (e.target.checked) {
-    document.body.classList.add('dark-mode');
-    localStorage.setItem('theme', 'dark');
-  } else {
-    document.body.classList.remove('dark-mode');
-    localStorage.setItem('theme', 'light');
+  async function listAll(path) {
+    const out = []; let token = '';
+    do {
+      const res = await fetch(`${FS}/${path}?pageSize=300${token ? `&pageToken=${encodeURIComponent(token)}` : ''}`);
+      if (!res.ok) throw new Error(res.status);
+      const j = await res.json();
+      (j.documents || []).forEach(d => out.push(fields(d)));
+      token = j.nextPageToken || '';
+    } while (token);
+    return out;
   }
-}
 
-// 스위치에 클릭(change) 이벤트 리스너 추가
-toggleSwitch.addEventListener('change', switchTheme, false);
+  // 영화: 편수, 마지막 기록, 최근 본 포스터
+  listAll('myMoviesGallery').then(docs => {
+    const films = docs.filter(m => m.status !== 'watchlist');
+    const last = m => [m.watchDate || '', ...(m.rewatches || []).map(r => r.date || '')].sort().pop();
+    films.sort((a, b) => last(b).localeCompare(last(a)));
+    const d = films.length ? last(films[0]) : '';
+    document.getElementById('films-meta').textContent = `${films.length}편` + (d ? `, 마지막 기록 ${+d.slice(5, 7)}월 ${+d.slice(8, 10)}일` : '');
+    const box = document.getElementById('films-posters');
+    box.innerHTML = films.filter(m => m.poster_path).slice(0, 6).map(m => `<span style="background-image:url('https://image.tmdb.org/t/p/w342${m.poster_path}')"></span>`).join('');
+    requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('ready')));
+  }).catch(() => { document.getElementById('films-posters').remove(); });
 
-// 페이지 로드 시 이전에 저장된 테마 설정을 불러와 적용합니다.
-const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-if (currentTheme) {
-  if (currentTheme === 'dark') {
-    toggleSwitch.checked = true;
-    document.body.classList.add('dark-mode');
-  }
-}
+  // 게임: 최고 기록
+  fetch(`${FS}:runQuery`, { method: 'POST', body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'appleRecords' }], orderBy: [{ field: { fieldPath: 'score' }, direction: 'DESCENDING' }], limit: 1 } }) })
+    .then(r => r.json()).then(rows => {
+      const best = rows?.[0]?.document && fields(rows[0].document);
+      if (best && best.score != null) document.getElementById('apple-best').textContent = `최고 ${best.score}점`;
+    }).catch(() => {});
+  fetch(`${FS}/minesweeper_records?pageSize=10`).then(r => r.json()).then(j => {
+    const by = Object.fromEntries((j.documents || []).map(d => [decodeURIComponent(d.name.split('/').pop()), fields(d).noguess]));
+    const level = ['최상급', '고급', '중급', '초급'].find(k => by[k] != null);
+    if (level) document.getElementById('mine-best').textContent = `${level} 최고 ${by[level]}초`;
+  }).catch(() => {});
 </script>
-
 </body>
 </html>
