@@ -142,6 +142,8 @@
   .step.p1 .who::before { content: '👑'; display: block; text-align: center; font-size: 1.6rem; }
   @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
+  body.solo .chat { display: none; }
+  body.solo .arena { grid-template-columns: minmax(0, 1fr); max-width: 980px; margin: 0 auto; }
   @media (max-width: 980px) {
     .arena { grid-template-columns: 1fr; }
     .wait { grid-template-columns: 1fr; }
@@ -207,6 +209,7 @@
         <div class="row"><input class="input" id="code" placeholder="초대 링크 붙여넣기"><button class="btn" type="button" id="btn-code">들어가기</button></div>
       </div>
     </div>
+    <button class="mode-btn" type="button" id="btn-practice" style="margin-top:4px"><span class="m-name">혼자 연습</span><span class="m-desc">친구 없이 3라운드를 혼자 풀어 봅니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
     <p class="status" id="entry-status" role="status"></p>
   </aside>
 </main>
@@ -614,7 +617,7 @@
   }
 
   function startMatch() {
-    if (members.length < 2) return;
+    if (members.length < 2 && !practice) return;
     game = { phase: 'round', round: 0, players: members.map(m => ({ seat: m.seat, name: m.name, score: 0, chances: 3, status: 'play', place: 0, gain: 0, hist: [] })), puzzle: null, finished: [] };
     nextRound();
   }
@@ -645,6 +648,17 @@
     if (!game || game.phase !== 'round') return;
     const n = game.players.length;
     const active = game.players.filter(p => p.status === 'play');
+    if (n === 1) {
+      // 혼자 연습: 맞히거나 기회를 다 쓰면 라운드 끝
+      if (active.length) return;
+      const p = game.players[0];
+      p.gain = p.status === 'done' ? 5 : -1; p.score += p.gain; p.hist.push(p.gain);
+      if (p.status !== 'done') p.place = 1;
+      game.phase = game.round >= ROUNDS ? 'final' : 'result';
+      game.until = Date.now() + 4000;
+      if (game.phase === 'result') setTimeout(() => { if (game && game.phase === 'result') nextRound(); }, 4000);
+      return;
+    }
     if (active.length > 1) return;
     if (active.length === 1) { const p = active[0]; p.place = game.finished.length + 1; p.status = 'last'; }
     game.players.forEach(p => {
@@ -686,7 +700,17 @@
       onError(e) { entryStatus(e && e.type === 'peer-unavailable' ? '방을 찾을 수 없습니다. 방장이 나갔거나 링크가 틀렸습니다.' : `연결 오류: ${e.type || e.message || e}`, true); }
     });
   }
-  let kicked = false;
+  let kicked = false, practice = false;
+  function startPractice() {
+    const nick = $('nick').value.trim().slice(0, 12) || '나';
+    practice = true; isHost = true; mySeat = 0;
+    members = [{ seat: 0, name: nick }];
+    roomInfo = { name: '혼자 연습', max: 1, priv: true };
+    room = { peer: {}, broadcast() {}, sendTo() {}, kick() {}, close() {} };
+    document.body.classList.add('solo');
+    startMatch();
+  }
+  $('btn-practice').addEventListener('click', startPractice);
   function send(a) { if (isHost) handle(0, a); else room && room.send(a); }
 
   /* =========================================================
@@ -724,8 +748,8 @@
     // 점수판
     $('scoreboard').innerHTML = `<div class="round-badge"><small>ROUND</small><b>${game.round} / ${ROUNDS}</b></div>` + game.players.map(p => {
       const pips = `<span class="pips">${[0, 1, 2].map(i => `<i class="${i < p.chances ? '' : 'off'}"></i>`).join('')}</span>`;
-      const st = p.status === 'done' ? `${p.place}등 맞힘` : p.status === 'out' ? '기회 소진' : p.status === 'left' ? '나감' : p.status === 'last' ? '꼴찌' : '푸는 중';
-      return `<div class="pchip s${p.seat}${p.seat === mySeat ? ' me' : ''}${p.status === 'done' ? ' done' : ''}${p.status === 'out' || p.status === 'left' ? ' out' : ''}" data-seat="${p.seat}"><span class="chip"></span><span class="nm">${esc(p.name)}${p.seat === mySeat ? ' (나)' : ''}</span><span class="pt">${p.score}</span><span class="st">${pips}${st}</span></div>`;
+      const st = p.status === 'done' ? (practice ? '성공' : `${p.place}등 맞힘`) : p.status === 'out' ? '기회 소진' : p.status === 'left' ? '나감' : p.status === 'last' ? '꼴찌' : '푸는 중';
+      return `<div class="pchip s${p.seat}${p.seat === mySeat ? ' me' : ''}${p.status === 'done' ? ' done' : ''}${p.status === 'out' || p.status === 'left' ? ' out' : ''}" data-seat="${p.seat}"><span class="chip"></span><span class="nm">${esc(p.name)}${p.seat === mySeat && !practice ? ' (나)' : ''}</span><span class="pt">${p.score}</span><span class="st">${pips}${st}</span></div>`;
     }).join('');
     // 내 자리
     $('owner').className = `owner s${mySeat}`;
@@ -737,7 +761,7 @@
     const lock = $('lock');
     if (!playing && me) {
       lock.hidden = false;
-      $('lock-big').textContent = me.status === 'done' || (me.status === 'last' && me.place) ? `${me.place}등` : me.status === 'out' ? '기회 소진' : '';
+      $('lock-big').textContent = practice ? (me.status === 'done' ? '성공' : '실패') : me.status === 'done' || (me.status === 'last' && me.place) ? `${me.place}등` : me.status === 'out' ? '기회 소진' : '';
       $('lock-small').textContent = game.phase === 'round' ? '다른 사람이 끝나기를 기다리는 중' : '라운드 종료';
     } else lock.hidden = true;
     updateMsg();
@@ -763,7 +787,7 @@
   }
   let cdTimer = null;
   function showRoundResult() {
-    $('card').innerHTML = `<h2>${game.round}라운드 결과</h2><p class="sub">잠시 후 ${game.round + 1}라운드가 시작됩니다.</p>${resultTable(false)}<div class="foot"><span class="status" id="cd"></span></div>`;
+    $('card').innerHTML = `<h2>${game.round}라운드 ${practice ? (game.players[0].status === 'done' ? '성공' : '실패') : '결과'}</h2><p class="sub">잠시 후 ${game.round + 1}라운드가 시작됩니다.</p>${resultTable(false)}<div class="foot"><span class="status" id="cd"></span></div>`;
     $('overlay').hidden = false;
     clearInterval(cdTimer);
     cdTimer = setInterval(() => { const s = Math.max(0, Math.ceil((game.until - Date.now()) / 1000)); const el = $('cd'); if (el) el.textContent = `${s}초 뒤 시작`; if (s <= 0 || game.phase !== 'result') clearInterval(cdTimer); }, 250);
@@ -777,6 +801,14 @@
       return `<div class="step p${Math.min(r, 3)} s${p.seat}"><span class="who">${esc(p.name)}</span><span class="pts">${p.score}점</span><div class="block">${r}</div></div>`;
     }).join('');
     const champs = rows.filter(p => rankOf(p) === 1).map(p => p.name).join(', ');
+    if (practice) {
+      const p = game.players[0];
+      $('card').innerHTML = `<h2>연습 끝</h2><p class="sub">3라운드 합계 ${p.score}점</p>${resultTable(true)}<div class="foot"><button class="btn btn-main" type="button" id="btn-again">다시 하기</button><button class="btn btn-quiet" type="button" id="btn-out">나가기</button></div>`;
+      $('overlay').hidden = false;
+      $('btn-again').addEventListener('click', () => { shownPhase = ''; workRound = 0; startMatch(); });
+      $('btn-out').addEventListener('click', leave);
+      return;
+    }
     $('card').innerHTML = `<h2>최종 결과</h2><p class="sub">${esc(champs)} 우승</p><div class="podium">${podium}</div>${resultTable(true)}<div class="foot">${isHost ? '<button class="btn btn-main" type="button" id="btn-again">대기실로</button>' : '<span class="status">방장이 대기실로 돌아가면 다시 할 수 있습니다.</span>'}<button class="btn btn-quiet" type="button" id="btn-out">나가기</button></div>`;
     $('overlay').hidden = false;
     $('btn-again') && $('btn-again').addEventListener('click', () => { shownPhase = ''; workRound = 0; backToLobby(); });
@@ -788,7 +820,7 @@
     if (seat === mySeat) {
       const b = $('booth'); b.classList.remove('flash-ok', 'flash-no'); void b.offsetWidth;
       b.classList.add(ok ? 'flash-ok' : 'flash-no');
-      toast(ok ? `정답! ${place}등입니다.` : chances > 0 ? `대칭이 아닙니다. 기회가 ${chances}번 남았습니다.` : '기회를 모두 썼습니다.');
+      toast(ok ? (practice ? '정답입니다.' : `정답! ${place}등입니다.`) : chances > 0 ? `대칭이 아닙니다. 기회가 ${chances}번 남았습니다.` : '기회를 모두 썼습니다.');
     } else if (ok) toast(`${nm} 님이 ${place}등으로 맞혔습니다.`);
     sys(ok ? `${nm} 님 정답 (${place}등)` : `${nm} 님 오답${chances <= 0 ? ', 기회 소진' : ''}`);
   }
