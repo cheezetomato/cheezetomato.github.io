@@ -36,19 +36,16 @@
   .tile .meta span { font-size: 0.78rem; color: var(--text-dim); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
   .tile .meta span.new { color: #f2c66d; border-color: rgba(242, 198, 109, 0.4); }
   .tile .desc { grid-column: 1 / -1; margin: 0; color: var(--text-dim); font-size: 0.96rem; max-width: 34em; }
-  /* 마우스를 올리면: 판이 살짝 떠오르고 게임 색 테두리, 들어가기 표시 */
+  /* 마우스를 올리면: 판이 살짝 떠오르고 게임 색 테두리 */
   .tile { --hl: var(--site); }
   .stage { transition: transform 0.25s cubic-bezier(.2,.8,.3,1), box-shadow 0.25s ease; }
   .stage svg { transition: transform 0.4s cubic-bezier(.2,.8,.3,1), filter 0.25s ease; filter: saturate(0.9) brightness(0.92); }
   .tile h3 { transition: color 0.2s ease; }
-  .go { position: absolute; right: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 12px; border-radius: 999px; background: var(--hl); color: var(--hl-ink, #0b0c10); font-size: 0.88rem; font-weight: 800; letter-spacing: -0.2px; opacity: 0; transform: translateY(8px); transition: opacity 0.2s ease, transform 0.25s cubic-bezier(.2,.8,.3,1); pointer-events: none; box-shadow: 0 8px 20px -6px rgba(0,0,0,0.6); }
-  .go svg { position: static; width: 10px; height: 10px; }
   .tile:hover .stage, .tile:focus-visible .stage { transform: translateY(-6px); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), 0 0 0 2px var(--hl), 0 22px 44px -18px color-mix(in srgb, var(--hl) 70%, transparent); }
   .tile:hover .stage svg, .tile:focus-visible .stage svg { transform: scale(1.04); filter: none; }
-  .tile:hover .go, .tile:focus-visible .go { opacity: 1; transform: none; }
   .tile:hover h3, .tile:focus-visible h3 { color: var(--hl); }
   .tile:active .stage { transform: translateY(-2px) scale(0.985); }
-  @media (hover: none) { .go { opacity: 1; transform: none; } .stage svg { filter: none; } }
+  @media (hover: none) { .stage svg { filter: none; } }
   @media (prefers-reduced-motion: reduce) { .tile:hover .stage, .tile:hover .stage svg { transform: none; } }
 
   footer { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.84rem; color: var(--text-mute); }
@@ -79,7 +76,7 @@
     <div class="shelf-head"><h2 id="shelf-multi">같이 하기</h2><p>링크를 보내 친구와 각자 기기로</p></div>
     <div class="tiles">
       <a class="tile" href="symmetry.html" style="--hl:#3fb383;--hl-ink:#06130d">
-        <div class="stage" style="--stage:#1c5a41"><svg data-demo="symmetry" viewBox="0 0 400 250" role="img" aria-label="조각을 돌리고 붙여 좌우 대칭을 만드는 장면"></svg><span class="go" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>들어가기</span></div>
+        <div class="stage" style="--stage:#1c5a41"><svg data-demo="symmetry" viewBox="0 0 400 250" role="img" aria-label="조각을 돌리고 붙여 좌우 대칭을 만드는 장면"></svg></div>
         <div class="tile-text">
           <h3>대칭 퍼즐</h3>
           <div class="meta"><span class="new">새 게임</span><span>2~4명</span></div>
@@ -87,7 +84,7 @@
         </div>
       </a>
       <a class="tile" href="wallgo.html" style="--hl:#e5533d;--hl-ink:#fff6f2">
-        <div class="stage" style="--stage:#1d2126"><svg data-demo="wallgo" viewBox="0 0 400 250" role="img" aria-label="차를 곧게 두 칸 옮기고 벽을 세우는 장면"></svg><span class="go" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>들어가기</span></div>
+        <div class="stage" style="--stage:#1d2126"><svg data-demo="wallgo" viewBox="0 0 400 250" role="img" aria-label="차를 곧게 두 칸 옮기고 벽을 세우는 장면"></svg></div>
         <div class="tile-text">
           <h3>벽바둑</h3>
           <div class="meta"><span class="new">새 게임</span><span>2~3명</span></div>
@@ -101,7 +98,7 @@
     <div class="shelf-head"><h2 id="shelf-solo">혼자서도</h2><p>기록은 게임 안에서 볼 수 있습니다</p></div>
     <div class="tiles three">
       <a class="tile" href="apple.html" style="--hl:#e04a35;--hl-ink:#fff7ef">
-        <div class="stage" style="--stage:#16211a"><svg data-demo="apple" viewBox="0 0 400 250" role="img" aria-label="합이 10인 사과를 상자로 묶어 수확하는 장면"></svg><span class="go" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>들어가기</span></div>
+        <div class="stage" style="--stage:#16211a"><svg data-demo="apple" viewBox="0 0 400 250" role="img" aria-label="합이 10인 사과를 상자로 묶어 수확하는 장면"></svg></div>
         <div class="tile-text">
           <h3>사과 게임</h3>
           <div class="meta"><span>120초</span></div>
@@ -109,7 +106,7 @@
         </div>
       </a>
       <a class="tile" href="minesweeper.html" style="--hl:#7fb2ff;--hl-ink:#0c1420">
-        <div class="stage" style="--stage:#171c22"><svg data-demo="mines" viewBox="0 0 400 250" role="img" aria-label="빈칸을 눌러 판이 열리고 지뢰에 깃발을 꽂는 장면"></svg><span class="go" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>들어가기</span></div>
+        <div class="stage" style="--stage:#171c22"><svg data-demo="mines" viewBox="0 0 400 250" role="img" aria-label="빈칸을 눌러 판이 열리고 지뢰에 깃발을 꽂는 장면"></svg></div>
         <div class="tile-text">
           <h3>지뢰찾기</h3>
           <div class="meta"><span>4단계</span></div>
@@ -117,7 +114,7 @@
         </div>
       </a>
       <a class="tile" href="janggi.html" style="--hl:#d9a866;--hl-ink:#1c130a">
-        <div class="stage" style="--stage:#251b12"><svg data-demo="janggi" viewBox="0 0 400 250" role="img" aria-label="자(子)가 상대 말을 잡아 손에 넣는 장면"></svg><span class="go" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"/></svg>들어가기</span></div>
+        <div class="stage" style="--stage:#251b12"><svg data-demo="janggi" viewBox="0 0 400 250" role="img" aria-label="자(子)가 상대 말을 잡아 손에 넣는 장면"></svg></div>
         <div class="tile-text">
           <h3>십이장기</h3>
           <div class="meta"><span>AI 대전</span><span>온라인</span></div>
