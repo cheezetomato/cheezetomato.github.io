@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대칭 퍼즐 | cheezetomato</title>
+<meta name="description" content="조각을 돌리고 옮겨 좌우 대칭을 먼저 만드는 2~4인 온라인 게임">
+<meta name="theme-color" content="#09090b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a2118'/%3E%3Cpath d='M16 5v22' stroke='%23d9b25c' stroke-width='1.6' stroke-dasharray='2 2'/%3E%3Cpath d='M16 8L8 16l8 8z' fill='%233a6fb5'/%3E%3Cpath d='M16 8l8 8-8 8z' fill='%23c8553d'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="common.css">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js" defer></script>
+<script src="common.js"></script>
+<style>
+  :root {
+    --g: #d9b25c; --g-ink: #1b140a;
+    --stone: #241c14; --stone-2: #2e2419; --stone-line: #3b2f22; --gold: #d9b25c; --sand: #e9d8b4;
+  }
+  .s0 { --pc: #e5533d; } .s1 { --pc: #3f86e8; } .s2 { --pc: #e6b13a; } .s3 { --pc: #4fb07a; }
+
+  /* ---------- 입구 ---------- */
+  .entry-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .entry-tabs .mode-btn { grid-template-columns: 1fr; }
+  .entry-tabs .mode-btn[aria-pressed="true"] { border-color: var(--g); background: var(--raise); }
+  .panel { display: grid; gap: 14px; padding: 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+  .check { display: flex; align-items: center; gap: 10px; font-size: 0.93rem; cursor: pointer; }
+  .check input { width: 18px; height: 18px; accent-color: var(--g); }
+  .check small { color: var(--text-mute); }
+  .room-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 340px; overflow: auto; }
+  .room-list li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 12px; padding: 10px 12px; border-radius: 8px; background: var(--raise); }
+  .room-list .rn { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .room-list .rh { grid-column: 1; font-size: 0.8rem; color: var(--text-mute); }
+  .room-list .rc { grid-column: 2; grid-row: 1 / span 2; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text-dim); }
+  .room-list .rc.playing { color: var(--text-mute); font-weight: 500; font-size: 0.82rem; }
+  .room-list .btn { grid-column: 3; grid-row: 1 / span 2; min-height: 36px; padding: 6px 14px; }
+  .empty { color: var(--text-mute); font-size: 0.92rem; padding: 18px 4px; text-align: center; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row .input { flex: 1; min-width: 160px; }
+
+  /* ---------- 대기실 ---------- */
+  .wait { max-width: 1080px; margin: 0 auto; padding: 36px 28px 56px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px 40px; }
+  .wait-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+  .wait-head h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.04em; line-height: 1.1; overflow-wrap: anywhere; }
+  .wait-head .tag { display: inline-block; margin-left: 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); vertical-align: middle; letter-spacing: 0; }
+  .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .slot { position: relative; min-height: 112px; padding: 18px; border-radius: 12px; border: 1px dashed var(--line); display: flex; flex-direction: column; justify-content: space-between; color: var(--text-mute); }
+  .slot.on { border: 1px solid color-mix(in srgb, var(--pc) 45%, var(--line)); background: color-mix(in srgb, var(--pc) 8%, var(--surface)); color: var(--text); }
+  .slot .who { font-size: 1.25rem; font-weight: 750; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+  .slot .role { font-size: 0.82rem; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
+  .slot .chip { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); }
+  .slot .kick { position: absolute; top: 10px; right: 10px; min-height: 30px; padding: 4px 10px; font-size: 0.8rem; }
+  .wait-foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+
+  /* ---------- 채팅 ---------- */
+  .chat { display: grid; grid-template-rows: auto 1fr auto auto; gap: 10px; padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); min-height: 280px; max-height: 520px; }
+  .chat h2 { margin: 0; font-size: 0.9rem; color: var(--text-dim); font-weight: 600; }
+  .chat-log { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; min-height: 120px; padding-right: 4px; }
+  .chat-log .m { line-height: 1.45; overflow-wrap: anywhere; }
+  .chat-log .m b { color: var(--pc); font-weight: 700; margin-right: 6px; }
+  .chat-log .sys { color: var(--text-mute); font-size: 0.82rem; }
+  .emojis { display: flex; gap: 4px; flex-wrap: wrap; }
+  .emojis button { border: 1px solid var(--line); background: var(--raise); border-radius: 8px; width: 38px; height: 34px; font-size: 18px; cursor: pointer; line-height: 1; }
+  .emojis button:hover { border-color: var(--g); }
+  .chat form { display: flex; gap: 6px; }
+  .chat form .input { min-height: 38px; padding: 7px 10px; font-size: 0.9rem; }
+  .chat form .btn { min-height: 38px; padding: 6px 12px; font-size: 0.88rem; }
+
+  /* ---------- 경기 ---------- */
+  .match { max-width: 1240px; margin: 0 auto; padding: 18px 24px 40px; }
+  .scoreboard { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .round-badge { display: grid; place-content: center; padding: 6px 16px; border-radius: 10px; background: var(--g); color: var(--g-ink); text-align: center; min-width: 96px; }
+  .round-badge small { font-size: 0.72rem; font-weight: 700; opacity: 0.75; }
+  .round-badge b { font-size: 1.35rem; letter-spacing: -0.02em; line-height: 1.1; }
+  .pchip { position: relative; flex: 1 1 150px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2px 10px; padding: 10px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+  .pchip.me { border-color: color-mix(in srgb, var(--pc) 60%, var(--line)); }
+  .pchip .chip { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); }
+  .pchip .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pchip .pt { font-weight: 800; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .pchip .st { grid-column: 2 / span 2; font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+  .pips { display: inline-flex; gap: 3px; }
+  .pips i { width: 8px; height: 8px; border-radius: 50%; background: var(--pc); display: block; }
+  .pips i.off { background: transparent; box-shadow: inset 0 0 0 1.5px #4a4650; }
+  .pchip.done .st { color: #f2d48a; }
+  .pchip.out { opacity: 0.6; }
+  .float-emoji { position: absolute; left: 50%; top: -6px; font-size: 30px; pointer-events: none; animation: rise 2.2s ease-out forwards; z-index: 5; }
+  @keyframes rise { 0% { transform: translate(-50%, 6px) scale(0.6); opacity: 0; } 15% { transform: translate(-50%, -14px) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -54px) scale(1); opacity: 0; } }
+
+  .arena { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+  .booth { position: relative; border-radius: 18px; padding: 14px; background: linear-gradient(180deg, #31261a, #241c14); box-shadow: inset 0 0 0 1px #4a3a26, 0 30px 60px -30px rgba(0,0,0,0.9); }
+  .booth-plate { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px 12px; color: var(--sand); }
+  .booth-plate .owner { display: flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -0.02em; }
+  .booth-plate .owner .chip { width: 14px; height: 14px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 0 3px rgba(0,0,0,0.25); }
+  .booth-plate .help { font-size: 0.8rem; color: #b8a585; }
+  .booth-plate kbd { font-family: inherit; font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; border: 1px solid #5b4a33; color: var(--sand); }
+  .banner { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; z-index: 4; animation: banner 1.8s ease forwards; }
+  .banner b { font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: -0.05em; color: #f2d48a; text-shadow: 0 6px 30px rgba(0,0,0,0.8); line-height: 1; }
+  .banner span { color: var(--sand); font-size: 1.05rem; margin-top: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+  @keyframes banner { 0% { opacity: 0; transform: scale(1.15); } 15%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+  .work { width: 100%; height: auto; max-height: calc(100dvh - 330px); min-height: 220px; display: block; border-radius: 10px; touch-action: none; user-select: none; -webkit-user-select: none; background: var(--stone); }
+  .piece { cursor: grab; outline: none; }
+  .piece.drag { cursor: grabbing; }
+  .piece .tri { stroke-width: 0.6; stroke-linejoin: round; }
+  .piece .edge { fill: none; stroke: rgba(15, 10, 5, 0.75); stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+  .piece.sel .edge { stroke: #fff6df; stroke-width: 2.6; }
+  .piece:focus-visible .edge { stroke: #fff6df; stroke-width: 3; }
+  .piece.bad .tri { opacity: 0.55; }
+  .booth-bar { display: flex; align-items: center; gap: 10px; padding-top: 14px; flex-wrap: wrap; }
+  .booth-bar .btn { background: #3a2e20; border-color: #574631; color: var(--sand); }
+  .booth-bar .btn:hover { border-color: var(--gold); }
+  .booth-msg { flex: 1; min-width: 160px; font-size: 0.92rem; color: #d8c7a6; }
+  .buzzer { margin-left: auto; position: relative; width: 104px; height: 104px; border-radius: 50%; border: 0; cursor: pointer; padding: 0; background: radial-gradient(circle at 50% 38%, #ff7b62, #d2341c 60%, #9e2412); box-shadow: 0 8px 0 #6e180b, 0 12px 26px rgba(0,0,0,0.6), inset 0 -6px 12px rgba(0,0,0,0.25); color: #fff3e8; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; transition: transform 0.08s ease, box-shadow 0.08s ease; }
+  .buzzer:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 #6e180b, 0 6px 14px rgba(0,0,0,0.6), inset 0 -6px 12px rgba(0,0,0,0.25); }
+  .buzzer:disabled { filter: grayscale(0.85) brightness(0.6); cursor: not-allowed; }
+  .buzzer small { display: block; font-size: 0.72rem; font-weight: 600; opacity: 0.85; }
+  .lock { position: absolute; inset: 14px; border-radius: 12px; display: grid; place-content: center; text-align: center; background: rgba(20, 14, 8, 0.66); color: var(--sand); pointer-events: none; }
+  .lock b { font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: -0.04em; color: #f2d48a; }
+  .lock span { font-size: 1rem; }
+  .flash-ok { animation: ok 0.6s ease; }
+  .flash-no { animation: no 0.45s ease; }
+  @keyframes ok { 0% { box-shadow: inset 0 0 0 1px #4a3a26, 0 0 0 0 rgba(242,212,138,0.9); } 100% { box-shadow: inset 0 0 0 1px #4a3a26, 0 0 0 26px rgba(242,212,138,0); } }
+  @keyframes no { 0%, 100% { transform: none; } 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
+
+  /* ---------- 결과와 시상식 ---------- */
+  .overlay { position: fixed; inset: var(--bar) 0 0 0; z-index: 5000; background: rgba(6, 5, 4, 0.86); display: grid; place-items: center; padding: 24px; overflow: auto; }
+  .card { width: min(560px, 100%); padding: 28px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+  .card h2 { margin: 0; font-size: 1.8rem; letter-spacing: -0.04em; }
+  .card .sub { margin: 6px 0 18px; color: var(--text-dim); }
+  .res { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .res td, .res th { padding: 10px 6px; border-bottom: 1px solid var(--line-soft); text-align: left; }
+  .res th { font-size: 0.8rem; color: var(--text-mute); font-weight: 500; }
+  .res td.num, .res th.num { text-align: right; }
+  .res .gain.up { color: #8fd6a8; } .res .gain.down { color: #f08a7c; }
+  .res .nmcell { display: flex; align-items: center; gap: 8px; }
+  .res .chip { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); flex: none; }
+  .card .foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .podium { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 10px; margin: 8px 0 22px; min-height: 230px; }
+  .step { display: grid; justify-items: center; gap: 8px; }
+  .step .who { font-weight: 800; font-size: 1.05rem; text-align: center; overflow-wrap: anywhere; letter-spacing: -0.02em; }
+  .step .pts { font-size: 0.85rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+  .step .block { width: 100%; border-radius: 10px 10px 4px 4px; display: grid; place-items: start center; padding-top: 10px; font-size: 1.8rem; font-weight: 900; color: rgba(0,0,0,0.55); background: var(--pc); transform-origin: bottom; animation: grow 0.7s cubic-bezier(.2,.9,.3,1.1) both; }
+  .step.p1 .block { height: 150px; animation-delay: 0.9s; } .step.p2 .block { height: 108px; animation-delay: 0.45s; } .step.p3 .block { height: 76px; }
+  .step.p1 .who::before { content: '👑'; display: block; text-align: center; font-size: 1.6rem; }
+  @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+  @media (max-width: 980px) {
+    .arena { grid-template-columns: 1fr; }
+    .wait { grid-template-columns: 1fr; }
+    .chat { max-height: 360px; }
+  }
+  @media (max-width: 560px) {
+    .slots { grid-template-columns: 1fr; }
+    .round-badge { min-width: 0; flex: 1 1 100%; grid-auto-flow: column; gap: 8px; align-items: baseline; padding: 6px 12px; }
+    .pchip { padding: 8px 10px; }
+    .work { max-height: none; }
+    .booth { padding: 8px; border-radius: 12px; }
+    .buzzer { width: 84px; height: 84px; }
+    .booth-plate .help { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">대칭 퍼즐</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a></nav></header>
+
+<!-- ============ 입구 ============ -->
+<main id="entry" class="lobby">
+  <section>
+    <h1 class="lobby-title">대칭 퍼즐</h1>
+    <p class="lobby-tag">같은 조각을 나눠 받고, 각자 자리에서 좌우 대칭 도형을 먼저 완성하는 게임입니다.</p>
+    <ul class="rules">
+      <li>라운드마다 모두 <b>같은 조각 2~3개</b>를 받습니다. 조각은 옮기고 <b>돌릴 수만</b> 있고 뒤집을 수는 없습니다.</li>
+      <li>조각을 전부 써서 서로 맞닿게 붙이고, 전체 모양이 <b>좌우 대칭</b>이 되면 <b>버저</b>를 누릅니다.</li>
+      <li>정답이면 누른 순서대로 1등, 2등, 3등이 됩니다. 틀리면 기회가 줄고, <b>3번</b> 틀리면 그 라운드 꼴찌입니다.</li>
+      <li>꼴찌가 정해지는 순간 라운드가 끝납니다. 1등 <b>+5</b>, 2등 <b>+3</b>, 3등 <b>+1</b>, 꼴찌 <b>-1</b>.</li>
+      <li>3라운드 합계가 가장 높은 사람이 이깁니다. 2명부터 4명까지 할 수 있습니다.</li>
+    </ul>
+  </section>
+
+  <aside class="lobby-side">
+    <div class="field">
+      <label for="nick">닉네임</label>
+      <input class="input" id="nick" maxlength="12" autocomplete="nickname" placeholder="게임에서 쓸 이름">
+    </div>
+
+    <div id="invited" class="panel" hidden>
+      <p class="status">초대받은 방에 들어갑니다.</p>
+      <button class="btn btn-main" type="button" id="btn-enter-link">입장하기</button>
+    </div>
+
+    <div id="choose">
+      <div class="entry-tabs">
+        <button class="mode-btn" type="button" id="tab-make" aria-pressed="true"><span class="m-name">방 만들기</span><span class="m-desc">방장이 되어 친구를 부릅니다</span></button>
+        <button class="mode-btn" type="button" id="tab-join" aria-pressed="false"><span class="m-name">참가하기</span><span class="m-desc">열려 있는 방에 들어갑니다</span></button>
+      </div>
+
+      <div class="panel" id="panel-make" style="margin-top:12px">
+        <div class="field"><label for="room-name">방 이름</label><input class="input" id="room-name" maxlength="24" placeholder="예: 대칭 고수만"></div>
+        <div class="field"><label>최대 인원</label>
+          <div class="seg" role="group" aria-label="최대 인원" id="max-seg"><button type="button" data-n="2" aria-pressed="false">2명</button><button type="button" data-n="3" aria-pressed="false">3명</button><button type="button" data-n="4" aria-pressed="true">4명</button></div>
+        </div>
+        <label class="check"><input type="checkbox" id="private"> 비공개 방 <small>목록에 안 뜨고 링크로만 들어옵니다</small></label>
+        <button class="btn btn-main" type="button" id="btn-make">방 만들기</button>
+      </div>
+
+      <div class="panel" id="panel-join" style="margin-top:12px" hidden>
+        <div class="row"><b style="font-size:0.95rem">열린 방</b><span class="status" id="list-status" style="margin-left:auto"></span><button class="btn btn-quiet" type="button" id="btn-refresh">새로고침</button></div>
+        <ul class="room-list" id="room-list"></ul>
+        <div class="row"><input class="input" id="code" placeholder="초대 링크 붙여넣기"><button class="btn" type="button" id="btn-code">들어가기</button></div>
+      </div>
+    </div>
+    <p class="status" id="entry-status" role="status"></p>
+  </aside>
+</main>
+
+<!-- ============ 대기실 ============ -->
+<main id="waiting" class="wait" hidden>
+  <div class="wait-head">
+    <h1><span id="w-name"></span><span class="tag" id="w-tag"></span></h1>
+    <div class="row"><input class="input" id="w-link" readonly aria-label="초대 링크" style="min-width:260px"><button class="btn" type="button" id="btn-w-copy">링크 복사</button></div>
+  </div>
+  <section>
+    <div class="slots" id="slots"></div>
+    <div class="wait-foot">
+      <button class="btn btn-main" type="button" id="btn-start" hidden>게임 시작</button>
+      <p class="status" id="w-status"></p>
+      <button class="btn btn-quiet" type="button" id="btn-w-leave" style="margin-left:auto">나가기</button>
+    </div>
+  </section>
+  <div class="chat" data-chat></div>
+</main>
+
+<!-- ============ 경기 ============ -->
+<main id="match" class="match" hidden>
+  <div class="scoreboard" id="scoreboard"></div>
+  <div class="arena">
+    <section class="booth" id="booth">
+      <div class="booth-plate">
+        <div class="owner" id="owner"></div>
+        <div class="help">끌어서 이동 <kbd>Q</kbd> 시계 <kbd>E</kbd> 반시계 우클릭·휠로도 회전</div>
+      </div>
+      <svg class="work" id="work" role="application" aria-label="내 작업 공간"></svg>
+      <div class="booth-bar">
+        <button class="btn" type="button" id="rot-ccw" aria-label="반시계로 돌리기">↺ 반시계</button>
+        <button class="btn" type="button" id="rot-cw" aria-label="시계로 돌리기">↻ 시계</button>
+        <button class="btn" type="button" id="btn-reset">조각 처음 자리로</button>
+        <span class="booth-msg" id="booth-msg"></span>
+        <button class="buzzer" type="button" id="buzzer">버저<small id="buzz-left"></small></button>
+      </div>
+      <div class="lock" id="lock" hidden><b id="lock-big"></b><span id="lock-small"></span></div>
+    </section>
+    <div class="chat" data-chat></div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" hidden><div class="card" id="card"></div></div>
+
+<script>
+(() => {
+  'use strict';
+  const { esc, toast, dialog, db, Room, copy, savedName, saveName } = window.Kit;
+  const $ = id => document.getElementById(id);
+  const rnd = n => Math.floor(Math.random() * n);
+  const COLORS = ['빨강', '파랑', '노랑', '초록'];
+  const PIECE_COLORS = ['#3a6fb5', '#c8553d', '#3d9a72'];
+  const ROUNDS = 3;
+  const POINTS = [5, 3, 1];
+  const ROOMS = 'symRooms';
+
+  /* =========================================================
+   * 조각 수학: 네모 칸 하나를 대각선으로 4등분한 삼각형(위 0, 오른쪽 1, 아래 2, 왼쪽 3)
+   * 조각 = [[행, 열, 삼각형], ...]
+   * ======================================================= */
+  const key = (r, c, q) => `${r},${c},${q}`;
+  function nbrs(r, c, q) {
+    const out = [[r, c, (q + 1) % 4], [r, c, (q + 3) % 4]];
+    if (q === 0) out.push([r - 1, c, 2]); else if (q === 1) out.push([r, c + 1, 3]); else if (q === 2) out.push([r + 1, c, 0]); else out.push([r, c - 1, 1]);
+    return out;
+  }
+  function normalize(cells) {
+    const r0 = Math.min(...cells.map(x => x[0])), c0 = Math.min(...cells.map(x => x[1]));
+    return cells.map(([r, c, q]) => [r - r0, c - c0, q]).sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  }
+  const sizeOf = cells => [Math.max(...cells.map(x => x[0])) + 1, Math.max(...cells.map(x => x[1])) + 1];
+  // 시계 방향 90°: (x,y) → (-y,x), 위쪽 삼각형은 오른쪽으로
+  const rotCW = cells => normalize(cells.map(([r, c, q]) => [c, -r - 1, (q + 1) % 4]));
+  const rotate = (cells, n) => { let x = cells; for (let i = 0; i < ((n % 4) + 4) % 4; i++) x = rotCW(x); return x; };
+
+  function connected(set) {
+    if (!set.size) return false;
+    const start = set.values().next().value, seen = new Set([start]), q = [start];
+    while (q.length) { const [r, c, qq] = q.pop().split(',').map(Number); for (const n of nbrs(r, c, qq)) { const k = key(...n); if (set.has(k) && !seen.has(k)) { seen.add(k); q.push(k); } } }
+    return seen.size === set.size;
+  }
+  // 좌우 대칭: 세로축 하나에 대해 거울에 비춘 모양이 같아야 함
+  function symmetric(set) {
+    let xmin = Infinity, xmax = -Infinity;
+    const arr = [...set].map(k => k.split(',').map(Number));
+    arr.forEach(([, c, q]) => { const a = q === 1 ? c + 0.5 : c, b = q === 3 ? c + 0.5 : c + 1; xmin = Math.min(xmin, a); xmax = Math.max(xmax, b); });
+    const sum = xmin + xmax;
+    if (!Number.isInteger(sum)) return false;
+    return arr.every(([r, c, q]) => set.has(key(r, sum - 1 - c, q === 1 ? 3 : q === 3 ? 1 : q)));
+  }
+  // 놓인 조각들 → 판정
+  function judge(pieces, layout) {
+    const all = new Set(); let overlap = false;
+    layout.forEach(L => {
+      const p = pieces[L.id];
+      rotate(p, L.rot).forEach(([r, c, q]) => { const k = key(r + L.r, c + L.c, q); if (all.has(k)) overlap = true; all.add(k); });
+    });
+    if (overlap) return 'overlap';
+    if (!connected(all)) return 'apart';
+    return symmetric(all) ? 'ok' : 'wrong';
+  }
+
+  /* ---------- 문제 만들기: 대칭 도형을 먼저 만들고 잘라서 나눔 ---------- */
+  const UNITS = [[0, 1, 2, 3], [0, 1], [1, 2], [2, 3], [3, 0]];
+  function makeSymmetric(target, H) {
+    const center = Math.random() < 0.5, w = 3 + rnd(2);
+    const W = center ? 2 * w + 1 : 2 * w, M = center ? 2 * w : 2 * w - 1;
+    const set = new Set();
+    const add = (r, c, q) => { set.add(key(r, c, q)); set.add(key(r, M - c, q === 1 ? 3 : q === 3 ? 1 : q)); };
+    const r0 = Math.floor(H / 2);
+    [0, 1, 2, 3].forEach(q => { add(r0, center ? w : w - 1, q); });
+    for (let guard = 0; set.size < target && guard < 400; guard++) {
+      const wantFull = Math.random() < 0.45;
+      const cands = [];
+      for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) for (const u of (wantFull ? [UNITS[0]] : UNITS.slice(1))) {
+        const fresh = u.filter(q => !set.has(key(r, c, q)));
+        if (!fresh.length) continue;
+        if (fresh.some(q => nbrs(r, c, q).some(n => set.has(key(...n))))) cands.push([r, c, u]);
+      }
+      if (!cands.length) continue;
+      const [r, c, u] = cands[rnd(cands.length)];
+      u.forEach(q => add(r, c, q));
+    }
+    return set;
+  }
+  function cut(set, k) {
+    const all = [...set];
+    const dist = from => { const d = new Map([[from, 0]]), q = [from]; while (q.length) { const x = q.shift(); const [r, c, qq] = x.split(',').map(Number); for (const n of nbrs(r, c, qq)) { const kk = key(...n); if (set.has(kk) && !d.has(kk)) { d.set(kk, d.get(x) + 1); q.push(kk); } } } return d; };
+    const seeds = [all[rnd(all.length)]];
+    while (seeds.length < k) {
+      const ds = seeds.map(dist);
+      let best = null, bd = -1;
+      all.forEach(x => { if (seeds.includes(x)) return; const m = Math.min(...ds.map(d => d.get(x))) + Math.random() * 1.5; if (m > bd) { bd = m; best = x; } });
+      seeds.push(best);
+    }
+    const owner = new Map(seeds.map((s, i) => [s, i]));
+    const pieces = seeds.map(s => [s]);
+    for (let guard = 0; owner.size < all.length && guard < 2000; guard++) {
+      const i = guard % k;
+      const cells = new Set(pieces[i].map(x => x.split(',').slice(0, 2).join(',')));
+      const front = [];
+      pieces[i].forEach(x => { const [r, c, q] = x.split(',').map(Number); nbrs(r, c, q).forEach(n => { const kk = key(...n); if (set.has(kk) && !owner.has(kk)) front.push(kk); }); });
+      if (!front.length) continue;
+      // 같은 칸을 먼저 채워서 반듯한 조각이 되게
+      const weighted = front.flatMap(x => (cells.has(x.split(',').slice(0, 2).join(',')) ? [x, x, x, x, x, x] : [x]));
+      const pick = weighted[rnd(weighted.length)];
+      owner.set(pick, i); pieces[i].push(pick);
+    }
+    return pieces.map(p => p.map(x => x.split(',').map(Number)));
+  }
+  function selfSymmetric(cells) { return [0, 1, 2, 3].some(n => symmetric(new Set(rotate(cells, n).map(x => key(...x))))); }
+  function makePuzzle(k) {
+    for (let tries = 0; tries < 300; tries++) {
+      const H = k === 2 ? 4 : 5;
+      const target = k === 2 ? 22 + rnd(10) : 34 + rnd(12);
+      const shape = makeSymmetric(target, H);
+      if (shape.size < target * 0.8) continue;
+      // 칠교 느낌: 비스듬한 변이 있어야 함
+      const cellCount = new Map(); shape.forEach(x => { const c = x.split(',').slice(0, 2).join(','); cellCount.set(c, (cellCount.get(c) || 0) + 1); });
+      if (![...cellCount.values()].some(v => v < 4)) continue;
+      const pieces = cut(shape, k);
+      const sizes = pieces.map(p => p.length), avg = shape.size / k;
+      if (sizes.some(s => s < Math.max(4, avg * 0.5))) continue;
+      if (pieces.some(p => !connected(new Set(p.map(x => key(...x)))))) continue;
+      if (pieces.every(selfSymmetric)) continue;
+      const turns = pieces.map(() => rnd(4));
+      // sol: 원래 자리 (시험용, 다른 사람에게는 보내지 않음)
+      const sol = pieces.map((p, id) => ({ id, rot: (4 - turns[id]) % 4, r: Math.min(...p.map(x => x[0])), c: Math.min(...p.map(x => x[1])) }));
+      return { pieces: pieces.map((p, i) => rotate(normalize(p), turns[i])), sol };
+    }
+    return makePuzzle(k);
+  }
+
+  /* =========================================================
+   * 내 작업 공간 (조각 끌기, 돌리기)
+   * ======================================================= */
+  let GW = 18, GH = 10;
+  const S = 34;
+  const svg = $('work');
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+  let puzzle = null, mine = [], home = [], selected = 0, locked = false, workRound = 0;
+
+  function triPts(r, c, q) {
+    const x = c * S, y = r * S, cx = x + S / 2, cy = y + S / 2;
+    const P = [[x, y], [x + S, y], [x + S, y + S], [x, y + S]];
+    const a = P[q], b = P[(q + 1) % 4];
+    return `${a[0]},${a[1]} ${b[0]},${b[1]} ${cx},${cy}`;
+  }
+  function drawGrid() {
+    svg.innerHTML = '';
+    const defs = mk('defs', {}, svg);
+    const pat = mk('pattern', { id: 'g', width: S, height: S, patternUnits: 'userSpaceOnUse' }, defs);
+    mk('path', { d: `M ${S} 0 L 0 0 0 ${S}`, fill: 'none', stroke: '#3b2f22', 'stroke-width': 1 }, pat);
+    mk('path', { d: `M 0 0 L ${S} ${S} M ${S} 0 L 0 ${S}`, fill: 'none', stroke: '#2c2318', 'stroke-width': 0.7 }, pat);
+    mk('rect', { x: 0, y: 0, width: GW * S, height: GH * S, fill: 'url(#g)' }, svg);
+    mk('g', { id: 'pieces' }, svg);
+  }
+  function pieceCells(p) { return rotate(puzzle.pieces[p.id], p.rot); }
+  function cellsAt(p) { return pieceCells(p).map(([r, c, q]) => key(r + p.r, c + p.c, q)); }
+  function overlapping() {
+    const seen = new Map(), bad = new Set();
+    mine.forEach(p => cellsAt(p).forEach(k => { if (seen.has(k)) { bad.add(p.id); bad.add(seen.get(k)); } else seen.set(k, p.id); }));
+    return bad;
+  }
+  function renderPieces() {
+    const layer = svg.querySelector('#pieces');
+    const bad = overlapping();
+    mine.forEach(p => {
+      let g = layer.querySelector(`[data-id="${p.id}"]`);
+      if (!g) {
+        g = mk('g', { class: 'piece', 'data-id': p.id, tabindex: 0, role: 'button', 'aria-label': `조각 ${p.id + 1}` }, layer);
+        g.addEventListener('pointerdown', e => startDrag(e, p.id));
+        g.addEventListener('contextmenu', e => { e.preventDefault(); if (!locked) { select(p.id); turn(1); } });
+        g.addEventListener('wheel', e => { if (locked) return; e.preventDefault(); select(p.id); turn(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+        g.addEventListener('focus', () => select(p.id));
+      }
+      const cells = pieceCells(p), set = new Set(cells.map(x => key(...x)));
+      const col = PIECE_COLORS[p.id % PIECE_COLORS.length];
+      let html = '';
+      cells.forEach(([r, c, q]) => { html += `<polygon class="tri" points="${triPts(r, c, q)}" fill="${col}" stroke="${col}"/>`; });
+      // 바깥 테두리
+      let d = '';
+      cells.forEach(([r, c, q]) => {
+        const x = c * S, y = r * S, cx = x + S / 2, cy = y + S / 2;
+        const P = [[x, y], [x + S, y], [x + S, y + S], [x, y + S]];
+        const a = P[q], b = P[(q + 1) % 4];
+        const [o1, o2, o3] = nbrs(r, c, q); // 같은 칸 이웃 두 개, 다른 칸 이웃 하나
+        if (!set.has(key(...o3))) d += `M${a[0]} ${a[1]}L${b[0]} ${b[1]}`;
+        if (!set.has(key(...o1))) d += `M${b[0]} ${b[1]}L${cx} ${cy}`;
+        if (!set.has(key(...o2))) d += `M${a[0]} ${a[1]}L${cx} ${cy}`;
+      });
+      html += `<path class="edge" d="${d}"/>`;
+      g.innerHTML = html;
+      if (!g.classList.contains('drag')) g.setAttribute('transform', `translate(${p.c * S} ${p.r * S})`);
+      g.classList.toggle('sel', p.id === selected);
+      g.classList.toggle('bad', bad.has(p.id));
+      layer.appendChild(layer.querySelector(`[data-id="${selected}"]`) || g);
+    });
+    updateMsg();
+  }
+  function clampPiece(p) {
+    const [h, w] = sizeOf(pieceCells(p));
+    p.r = Math.max(0, Math.min(GH - h, p.r)); p.c = Math.max(0, Math.min(GW - w, p.c));
+  }
+  function select(id) { selected = id; renderPieces(); }
+  function turn(dir) {
+    if (locked) return;
+    const p = mine.find(x => x.id === selected); if (!p) return;
+    const [h0, w0] = sizeOf(pieceCells(p));
+    p.rot = (p.rot + dir + 4) % 4;
+    const [h1, w1] = sizeOf(pieceCells(p));
+    p.r += Math.round((h0 - h1) / 2); p.c += Math.round((w0 - w1) / 2);
+    clampPiece(p); renderPieces();
+  }
+  function moveBy(dr, dc) {
+    if (locked) return;
+    const p = mine.find(x => x.id === selected); if (!p) return;
+    p.r += dr; p.c += dc; clampPiece(p); renderPieces();
+  }
+
+  let drag = null;
+  function svgPoint(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+  function startDrag(e, id) {
+    if (locked || e.button === 2) return;
+    e.preventDefault();
+    select(id);
+    const p = mine.find(x => x.id === id), g = svg.querySelector(`[data-id="${id}"]`);
+    const pt = svgPoint(e);
+    drag = { p, g, dx: pt.x - p.c * S, dy: pt.y - p.r * S, pid: e.pointerId };
+    g.classList.add('drag'); g.setPointerCapture(e.pointerId);
+    g.addEventListener('pointermove', onDrag);
+    g.addEventListener('pointerup', endDrag, { once: true });
+    g.addEventListener('pointercancel', endDrag, { once: true });
+  }
+  function onDrag(e) {
+    if (!drag) return;
+    const pt = svgPoint(e);
+    drag.g.setAttribute('transform', `translate(${pt.x - drag.dx} ${pt.y - drag.dy})`);
+  }
+  function endDrag(e) {
+    if (!drag) return;
+    const pt = svgPoint(e);
+    drag.p.c = Math.round((pt.x - drag.dx) / S); drag.p.r = Math.round((pt.y - drag.dy) / S);
+    clampPiece(drag.p);
+    drag.g.removeEventListener('pointermove', onDrag);
+    drag.g.classList.remove('drag');
+    drag = null; renderPieces();
+  }
+  document.addEventListener('keydown', e => {
+    if ($('match').hidden || locked || e.target.closest('input, textarea')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'q') { turn(1); e.preventDefault(); }
+    else if (k === 'e') { turn(-1); e.preventDefault(); }
+    else if (e.target.closest('.piece')) {
+      const m = { arrowup: [-1, 0], arrowdown: [1, 0], arrowleft: [0, -1], arrowright: [0, 1] }[k];
+      if (m) { moveBy(...m); e.preventDefault(); }
+    }
+  });
+  $('rot-cw').addEventListener('click', () => turn(1));
+  $('rot-ccw').addEventListener('click', () => turn(-1));
+  $('btn-reset').addEventListener('click', () => { if (locked) return; mine = home.map(x => ({ ...x })); renderPieces(); });
+
+  function setupWork(pz, round) {
+    puzzle = pz; workRound = round; locked = false;
+    // 좁은 화면에서는 세로로 긴 작업 공간
+    if (window.innerWidth < 640) { GW = 11; GH = 13; } else { GW = 18; GH = 10; }
+    svg.setAttribute('viewBox', `0 0 ${GW * S} ${GH * S}`);
+    drawGrid();
+    // 조각을 아래쪽에 띄엄띄엄 펼쳐 둠
+    let x = 1, y = GH - 1, rowH = 0; const placed = [];
+    pz.pieces.forEach((cells, id) => {
+      const [h, w] = sizeOf(cells);
+      if (x + w > GW - 1) { x = 1; y -= rowH + 1; rowH = 0; }
+      rowH = Math.max(rowH, h);
+      placed.push({ id, rot: 0, r: 0, c: x, h });
+      x += w + 2;
+    });
+    placed.forEach(p => { p.r = GH - 1 - p.h; delete p.h; });
+    home = placed.map(p => ({ ...p }));
+    mine = placed; selected = 0;
+    renderPieces();
+  }
+  const layout = () => mine.map(p => ({ id: p.id, r: p.r, c: p.c, rot: p.rot }));
+  function updateMsg() {
+    const m = $('booth-msg');
+    if (!puzzle || locked) { m.textContent = ''; return; }
+    const v = judge(puzzle.pieces, layout());
+    m.textContent = v === 'overlap' ? '조각이 겹쳐 있습니다.' : v === 'apart' ? '조각을 모두 맞닿게 붙이세요.' : '대칭이라고 생각되면 버저를 누르세요.';
+  }
+
+  /* =========================================================
+   * 방 (방장이 모든 판정을 맡음)
+   * ======================================================= */
+  let room = null, isHost = false, mySeat = -1;
+  let roomInfo = { name: '', max: 4, priv: false };
+  let members = [];         // [{ seat, name }]
+  let game = null;          // 방장이 보내는 경기 상태
+  let beat = null;
+  const nameOf = seat => (members.find(m => m.seat === seat) || {}).name || COLORS[seat];
+
+  function show(id) { ['entry', 'waiting', 'match'].forEach(x => { $(x).hidden = x !== id; }); $('overlay').hidden = true; window.scrollTo(0, 0); }
+
+  // ----- 방장 쪽 -----
+  function hostSync() {
+    room.broadcast({ t: 'lobby', info: roomInfo, members });
+    if (game) room.broadcast({ t: 'game', g: game });
+    renderAll();
+    publish();
+  }
+  async function publish() {
+    if (!isHost || roomInfo.priv || !room || !room.peer.id) return;
+    try {
+      await db.merge(ROOMS, room.peer.id, { name: roomInfo.name, host: members[0] ? members[0].name : '', count: members.length, max: roomInfo.max, playing: !!(game && game.phase !== 'lobby'), ts: Date.now() });
+    } catch (e) { /* 목록 등록 실패: 링크로는 계속 들어올 수 있음 */ }
+  }
+  function unpublish() { if (isHost && !roomInfo.priv && room && room.peer.id) db.del(ROOMS, room.peer.id).catch(() => {}); }
+
+  function createRoom() {
+    const nick = myNick(); if (!nick) return;
+    if (!window.Peer) return entryStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true);
+    roomInfo = { name: $('room-name').value.trim().slice(0, 24) || `${nick}의 방`, max: maxSel, priv: $('private').checked };
+    isHost = true; mySeat = 0; members = [{ seat: 0, name: nick }];
+    entryStatus('방을 만드는 중입니다…');
+    room = Room.host({
+      seats: roomInfo.max, name: nick,
+      onReady(r) {
+        $('w-link').value = r.link;
+        show('waiting'); renderAll(); sys('방을 만들었습니다. 링크를 보내 친구를 부르세요.');
+        publish(); beat = setInterval(publish, 15000);
+      },
+      onJoin(seat, names) {
+        if (game && game.phase !== 'lobby') { room.sendTo(seat, { t: 'busy' }); room.kick(seat); return; }
+        const nm = (names[seat] || '').trim() || COLORS[seat];
+        members = members.filter(m => m.seat !== seat).concat({ seat, name: nm }).sort((a, b) => a.seat - b.seat);
+        hostSync(); hostChat(-1, `${nm} 님이 들어왔습니다.`);
+      },
+      onLeave(seat) {
+        const m = members.find(x => x.seat === seat); if (!m) return;
+        members = members.filter(x => x.seat !== seat);
+        hostChat(-1, `${m.name} 님이 나갔습니다.`);
+        if (game && game.phase !== 'lobby') {
+          const pl = game.players.find(p => p.seat === seat);
+          if (pl && (pl.status === 'play')) { pl.status = 'left'; checkRoundEnd(); }
+          else if (pl) pl.status = pl.status === 'done' ? 'done' : 'left';
+        }
+        hostSync();
+      },
+      onAction(seat, a) { handle(seat, a); },
+      onError(e) { entryStatus(`연결 오류: ${e.type || e.message || e}`, true); }
+    });
+  }
+  function handle(seat, a) {
+    if (!a) return;
+    if (a.k === 'chat') return hostChat(seat, String(a.text || '').slice(0, 120));
+    if (a.k === 'emoji') { const e = String(a.e || '').slice(0, 4); room && room.broadcast({ t: 'emoji', seat, e }); popEmoji(seat, e); return; }
+    if (a.k === 'buzz') return onBuzz(seat, a.layout);
+  }
+  function hostChat(seat, text) {
+    if (!text) return;
+    const msg = { t: 'chat', seat, name: seat >= 0 ? nameOf(seat) : '', text };
+    room && room.broadcast(msg); addChat(msg);
+  }
+
+  function startMatch() {
+    if (members.length < 2) return;
+    game = { phase: 'round', round: 0, players: members.map(m => ({ seat: m.seat, name: m.name, score: 0, chances: 3, status: 'play', place: 0, gain: 0, hist: [] })), puzzle: null, finished: [] };
+    nextRound();
+  }
+  function nextRound() {
+    game.round++;
+    game.phase = 'round';
+    const pz = makePuzzle(game.round === 1 ? 2 : 3);
+    game.puzzle = { pieces: pz.pieces };
+    if (location.hash === '#selftest') window.Sym.sol = pz.sol;
+    game.finished = [];
+    game.players.forEach(p => { p.chances = 3; p.place = 0; p.gain = 0; if (p.status !== 'left') p.status = 'play'; });
+    hostSync();
+  }
+  function onBuzz(seat, lay) {
+    if (!game || game.phase !== 'round') return;
+    const pl = game.players.find(p => p.seat === seat);
+    if (!pl || pl.status !== 'play' || !Array.isArray(lay) || lay.length !== game.puzzle.pieces.length) return;
+    const v = judge(game.puzzle.pieces, lay.map(x => ({ id: +x.id, r: +x.r, c: +x.c, rot: +x.rot })));
+    if (v === 'overlap' || v === 'apart') return; // 화면에서 미리 막지만 혹시 몰라 무시
+    if (v === 'ok') { game.finished.push(seat); pl.status = 'done'; pl.place = game.finished.length; }
+    else { pl.chances--; if (pl.chances <= 0) pl.status = 'out'; }
+    room.broadcast({ t: 'buzz', seat, ok: v === 'ok', place: pl.place, chances: pl.chances });
+    buzzFeedback(seat, v === 'ok', pl.place, pl.chances);
+    checkRoundEnd();
+    hostSync();
+  }
+  function checkRoundEnd() {
+    if (!game || game.phase !== 'round') return;
+    const n = game.players.length;
+    const active = game.players.filter(p => p.status === 'play');
+    if (active.length > 1) return;
+    if (active.length === 1) { const p = active[0]; p.place = game.finished.length + 1; p.status = 'last'; }
+    game.players.forEach(p => {
+      if (p.status === 'done' || p.status === 'last') p.gain = p.place >= n ? -1 : POINTS[p.place - 1] ?? 0;
+      else p.gain = -1; // 기회를 다 썼거나 나감
+      if (p.status === 'out' || p.status === 'left') p.place = n;
+      p.score += p.gain; p.hist.push(p.gain);
+    });
+    game.phase = game.round >= ROUNDS ? 'final' : 'result';
+    game.until = Date.now() + 7000;
+    if (game.phase === 'result') setTimeout(() => { if (game && game.phase === 'result') nextRound(); }, 7000);
+  }
+  function backToLobby() { game = null; hostSync(); room.broadcast({ t: 'game', g: null }); }
+
+  // ----- 손님 쪽 -----
+  function joinRoom(id) {
+    const nick = myNick(); if (!nick) return;
+    if (!window.Peer) return entryStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true);
+    isHost = false;
+    entryStatus('방에 들어가는 중입니다…');
+    room = Room.join(id, {
+      name: nick,
+      onMessage(msg) {
+        if (msg.t === 'full') return entryStatus('자리가 다 찼습니다.', true);
+        if (msg.t === 'busy') return entryStatus('이미 게임이 진행 중인 방입니다.', true);
+        if (msg.t === 'kicked') { kicked = true; return; }
+        if (msg.t === 'seat') { mySeat = msg.seat; const u = new URL(location.href); u.search = ''; u.searchParams.set('room', id); $('w-link').value = u.toString(); return; }
+        if (msg.t === 'lobby') { roomInfo = msg.info; members = msg.members; if (!game || game.phase === 'lobby') { if ($('waiting').hidden && !$('entry').hidden) { show('waiting'); sys(`${roomInfo.name}에 들어왔습니다.`); } } renderAll(); return; }
+        if (msg.t === 'game') { game = msg.g; renderAll(); return; }
+        if (msg.t === 'chat') return addChat(msg);
+        if (msg.t === 'emoji') return popEmoji(msg.seat, msg.e);
+        if (msg.t === 'buzz') return buzzFeedback(msg.seat, msg.ok, msg.place, msg.chances);
+      },
+      onClose() {
+        if (kicked) { dialog({ title: '방에서 나가게 되었습니다', text: '방장이 내보냈습니다.', actions: [{ label: '확인', main: true, onClick: () => location.replace(location.pathname) }] }); return; }
+        if (!$('entry').hidden) return entryStatus('방에 들어갈 수 없습니다.', true);
+        dialog({ title: '연결이 끊겼습니다', text: '방장이 나갔거나 연결이 끊어졌습니다.', actions: [{ label: '처음으로', main: true, onClick: () => location.replace(location.pathname) }] });
+      },
+      onError(e) { entryStatus(e && e.type === 'peer-unavailable' ? '방을 찾을 수 없습니다. 방장이 나갔거나 링크가 틀렸습니다.' : `연결 오류: ${e.type || e.message || e}`, true); }
+    });
+  }
+  let kicked = false;
+  function send(a) { if (isHost) handle(0, a); else room && room.send(a); }
+
+  /* =========================================================
+   * 화면 그리기
+   * ======================================================= */
+  function renderAll() {
+    if (!room) return;
+    if (!game) { workRound = 0; shownPhase = ''; }
+    if (game && game.phase !== 'lobby') { renderMatch(); return; }
+    if ($('waiting').hidden) show('waiting');
+    renderWaiting();
+  }
+  function renderWaiting() {
+    $('w-name').textContent = roomInfo.name;
+    $('w-tag').textContent = roomInfo.priv ? '비공개' : '공개';
+    $('slots').innerHTML = Array.from({ length: roomInfo.max }, (_, seat) => {
+      const m = members.find(x => x.seat === seat);
+      if (!m) return `<div class="slot"><span class="who" style="color:var(--text-mute);font-weight:500;font-size:1rem">빈자리</span><span class="role">초대 링크로 들어올 수 있습니다</span></div>`;
+      const kick = isHost && seat !== 0 ? `<button class="btn kick" type="button" data-kick="${seat}">강퇴</button>` : '';
+      return `<div class="slot on s${seat}"><span class="who">${esc(m.name)}</span><span class="role"><span class="chip"></span>${seat === 0 ? '방장' : '참가자'}${seat === mySeat ? ' · 나' : ''}</span>${kick}</div>`;
+    }).join('');
+    $('slots').querySelectorAll('[data-kick]').forEach(b => b.addEventListener('click', () => {
+      const seat = +b.dataset.kick, m = members.find(x => x.seat === seat);
+      if (m && confirm(`${m.name} 님을 내보낼까요?`)) room.kick(seat);
+    }));
+    $('btn-start').hidden = !isHost;
+    $('btn-start').disabled = members.length < 2;
+    $('w-status').textContent = isHost ? (members.length < 2 ? '2명 이상 모이면 시작할 수 있습니다.' : `${members.length}명이 모였습니다.`) : '방장이 시작하기를 기다리는 중입니다.';
+  }
+  let shownRound = 0, shownPhase = '';
+  function renderMatch() {
+    if ($('match').hidden) show('match');
+    const me = game.players.find(p => p.seat === mySeat);
+    if (game.puzzle && workRound !== game.round) setupWork(game.puzzle, game.round);
+    // 점수판
+    $('scoreboard').innerHTML = `<div class="round-badge"><small>ROUND</small><b>${game.round} / ${ROUNDS}</b></div>` + game.players.map(p => {
+      const pips = `<span class="pips">${[0, 1, 2].map(i => `<i class="${i < p.chances ? '' : 'off'}"></i>`).join('')}</span>`;
+      const st = p.status === 'done' ? `${p.place}등 맞힘` : p.status === 'out' ? '기회 소진' : p.status === 'left' ? '나감' : p.status === 'last' ? '꼴찌' : '푸는 중';
+      return `<div class="pchip s${p.seat}${p.seat === mySeat ? ' me' : ''}${p.status === 'done' ? ' done' : ''}${p.status === 'out' || p.status === 'left' ? ' out' : ''}" data-seat="${p.seat}"><span class="chip"></span><span class="nm">${esc(p.name)}${p.seat === mySeat ? ' (나)' : ''}</span><span class="pt">${p.score}</span><span class="st">${pips}${st}</span></div>`;
+    }).join('');
+    // 내 자리
+    $('owner').className = `owner s${mySeat}`;
+    $('owner').innerHTML = `<span class="chip"></span><span>${esc(me ? me.name : '')}의 자리</span>`;
+    $('buzz-left').textContent = me ? `기회 ${me.chances}` : '';
+    const playing = me && me.status === 'play' && game.phase === 'round';
+    locked = !playing;
+    $('buzzer').disabled = !playing;
+    const lock = $('lock');
+    if (!playing && me) {
+      lock.hidden = false;
+      $('lock-big').textContent = me.status === 'done' || (me.status === 'last' && me.place) ? `${me.place}등` : me.status === 'out' ? '기회 소진' : '';
+      $('lock-small').textContent = game.phase === 'round' ? '다른 사람이 끝나기를 기다리는 중' : '라운드 종료';
+    } else lock.hidden = true;
+    updateMsg();
+    // 결과 화면
+    const key2 = `${game.round}-${game.phase}`;
+    if (game.phase === 'result' && shownPhase !== key2) { shownPhase = key2; showRoundResult(); }
+    if (game.phase === 'final' && shownPhase !== key2) { shownPhase = key2; setTimeout(showFinal, 900); }
+    if (game.phase === 'round' && shownPhase !== key2) {
+      shownPhase = key2; $('overlay').hidden = true;
+      const bn = document.createElement('div'); bn.className = 'banner';
+      bn.innerHTML = `<b>ROUND ${game.round}</b><span>조각 ${game.puzzle.pieces.length}개로 좌우 대칭을 만드세요</span>`;
+      $('booth').appendChild(bn); setTimeout(() => bn.remove(), 1900);
+    }
+  }
+
+  function resultTable(withHist) {
+    const rows = [...game.players].sort((a, b) => (withHist ? b.score - a.score : a.place - b.place || b.score - a.score));
+    return `<table class="res"><thead><tr><th>${withHist ? '순위' : '등수'}</th><th>이름</th>${withHist ? Array.from({ length: ROUNDS }, (_, i) => `<th class="num">R${i + 1}</th>`).join('') : '<th class="num">이번 라운드</th>'}<th class="num">합계</th></tr></thead><tbody>${rows.map((p, i) => {
+      const rank = withHist ? rows.findIndex(x => x.score === p.score) + 1 : (p.status === 'out' || p.status === 'left' ? '-' : p.place);
+      const gainCell = g => `<td class="num gain ${g > 0 ? 'up' : g < 0 ? 'down' : ''}">${g > 0 ? '+' : ''}${g}</td>`;
+      return `<tr class="s${p.seat}"><td>${rank}</td><td><span class="nmcell"><span class="chip"></span>${esc(p.name)}${p.status === 'out' ? ' <small style="color:var(--text-mute)">기회 소진</small>' : p.status === 'left' ? ' <small style="color:var(--text-mute)">나감</small>' : ''}</span></td>${withHist ? p.hist.map(gainCell).join('') : gainCell(p.gain)}<td class="num"><b>${p.score}</b></td></tr>`;
+    }).join('')}</tbody></table>`;
+  }
+  let cdTimer = null;
+  function showRoundResult() {
+    $('card').innerHTML = `<h2>${game.round}라운드 결과</h2><p class="sub">잠시 후 ${game.round + 1}라운드가 시작됩니다.</p>${resultTable(false)}<div class="foot"><span class="status" id="cd"></span></div>`;
+    $('overlay').hidden = false;
+    clearInterval(cdTimer);
+    cdTimer = setInterval(() => { const s = Math.max(0, Math.ceil((game.until - Date.now()) / 1000)); const el = $('cd'); if (el) el.textContent = `${s}초 뒤 시작`; if (s <= 0 || game.phase !== 'result') clearInterval(cdTimer); }, 250);
+  }
+  function showFinal() {
+    const rows = [...game.players].sort((a, b) => b.score - a.score);
+    const rankOf = p => rows.findIndex(x => x.score === p.score) + 1;
+    const podium = [1, 0, 2].map(i => rows[i]).map((p, j) => {
+      if (!p) return '<div></div>';
+      const r = rankOf(p);
+      return `<div class="step p${Math.min(r, 3)} s${p.seat}"><span class="who">${esc(p.name)}</span><span class="pts">${p.score}점</span><div class="block">${r}</div></div>`;
+    }).join('');
+    const champs = rows.filter(p => rankOf(p) === 1).map(p => p.name).join(', ');
+    $('card').innerHTML = `<h2>최종 결과</h2><p class="sub">${esc(champs)} 우승</p><div class="podium">${podium}</div>${resultTable(true)}<div class="foot">${isHost ? '<button class="btn btn-main" type="button" id="btn-again">대기실로</button>' : '<span class="status">방장이 대기실로 돌아가면 다시 할 수 있습니다.</span>'}<button class="btn btn-quiet" type="button" id="btn-out">나가기</button></div>`;
+    $('overlay').hidden = false;
+    $('btn-again') && $('btn-again').addEventListener('click', () => { shownPhase = ''; workRound = 0; backToLobby(); });
+    $('btn-out').addEventListener('click', leave);
+  }
+
+  function buzzFeedback(seat, ok, place, chances) {
+    const nm = nameOf(seat);
+    if (seat === mySeat) {
+      const b = $('booth'); b.classList.remove('flash-ok', 'flash-no'); void b.offsetWidth;
+      b.classList.add(ok ? 'flash-ok' : 'flash-no');
+      toast(ok ? `정답! ${place}등입니다.` : chances > 0 ? `대칭이 아닙니다. 기회가 ${chances}번 남았습니다.` : '기회를 모두 썼습니다.');
+    } else if (ok) toast(`${nm} 님이 ${place}등으로 맞혔습니다.`);
+    sys(ok ? `${nm} 님 정답 (${place}등)` : `${nm} 님 오답${chances <= 0 ? ', 기회 소진' : ''}`);
+  }
+  $('buzzer').addEventListener('click', () => {
+    if (locked || !puzzle) return;
+    const v = judge(puzzle.pieces, layout());
+    if (v === 'overlap') return toast('조각이 겹쳐 있습니다. 겹치지 않게 놓으세요.');
+    if (v === 'apart') return toast('조각을 모두 맞닿게 붙여야 버저를 누를 수 있습니다.');
+    send({ k: 'buzz', layout: layout() });
+  });
+
+  /* ---------- 채팅과 이모지 ---------- */
+  const EMOJI = ['👍', '😂', '😮', '😭', '🔥', '👏'];
+  const chatLog = [];
+  document.querySelectorAll('[data-chat]').forEach(box => {
+    box.innerHTML = `<h2>채팅</h2><div class="chat-log" aria-live="polite"></div><div class="emojis">${EMOJI.map(e => `<button type="button" data-e="${e}" aria-label="${e} 보내기">${e}</button>`).join('')}</div><form><input class="input" maxlength="120" placeholder="메시지 입력" aria-label="채팅 메시지"><button class="btn" type="submit">보내기</button></form>`;
+    box.querySelector('form').addEventListener('submit', e => {
+      e.preventDefault();
+      const inp = box.querySelector('input'); const text = inp.value.trim(); if (!text) return;
+      inp.value = ''; send({ k: 'chat', text });
+    });
+    box.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', () => send({ k: 'emoji', e: b.dataset.e })));
+  });
+  function addChat(msg) { chatLog.push(msg); if (chatLog.length > 80) chatLog.shift(); drawChat(); }
+  function sys(text) { addChat({ seat: -1, text }); }
+  function drawChat() {
+    document.querySelectorAll('.chat-log').forEach(log => {
+      log.innerHTML = '';
+      chatLog.forEach(m => {
+        const d = document.createElement('div');
+        if (m.seat < 0) { d.className = 'm sys'; d.textContent = m.text; }
+        else { d.className = `m s${m.seat}`; const b = document.createElement('b'); b.textContent = m.name; d.append(b, document.createTextNode(m.text)); }
+        log.appendChild(d);
+      });
+      log.scrollTop = log.scrollHeight;
+    });
+  }
+  function popEmoji(seat, e) {
+    const host = document.querySelector(`.pchip[data-seat="${seat}"]`) || document.querySelector(`.slot.s${seat}`);
+    if (!host) return;
+    const f = document.createElement('span'); f.className = 'float-emoji'; f.textContent = e;
+    host.appendChild(f); setTimeout(() => f.remove(), 2300);
+  }
+
+  /* =========================================================
+   * 입구
+   * ======================================================= */
+  function entryStatus(msg, err) { const s = $('entry-status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+  function myNick() {
+    const n = $('nick').value.trim().slice(0, 12);
+    if (!n) { entryStatus('닉네임을 먼저 정해 주세요.', true); $('nick').focus(); return ''; }
+    saveName(n); return n;
+  }
+  $('nick').value = savedName().slice(0, 12);
+  let maxSel = 4;
+  $('max-seg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { maxSel = +b.dataset.n; $('max-seg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
+  function tab(which) {
+    $('tab-make').setAttribute('aria-pressed', String(which === 'make')); $('tab-join').setAttribute('aria-pressed', String(which === 'join'));
+    $('panel-make').hidden = which !== 'make'; $('panel-join').hidden = which !== 'join';
+    if (which === 'join') loadRooms();
+  }
+  $('tab-make').addEventListener('click', () => tab('make'));
+  $('tab-join').addEventListener('click', () => tab('join'));
+  $('btn-make').addEventListener('click', createRoom);
+  $('btn-refresh').addEventListener('click', loadRooms);
+  $('btn-code').addEventListener('click', () => {
+    const v = $('code').value.trim(); if (!v) return;
+    let id = v; try { id = new URL(v).searchParams.get('room') || v; } catch (e) { /* 코드만 붙여넣음 */ }
+    joinRoom(id);
+  });
+  let listTimer = null;
+  async function loadRooms() {
+    const ul = $('room-list');
+    $('list-status').textContent = '불러오는 중';
+    try {
+      const all = await db.list(ROOMS);
+      const live = all.filter(r => Date.now() - (r.ts || 0) < 45000).sort((a, b) => (a.playing - b.playing) || (b.ts - a.ts));
+      ul.innerHTML = live.length ? live.map(r => {
+        const full = r.count >= r.max;
+        return `<li><span class="rn">${esc(r.name)}</span><span class="rh">방장 ${esc(r.host)}</span><span class="rc${r.playing ? ' playing' : ''}">${r.playing ? '게임 중' : `${r.count}/${r.max}`}</span><button class="btn" type="button" data-room="${esc(r.id)}"${full || r.playing ? ' disabled' : ''}>참가</button></li>`;
+      }).join('') : '<li class="empty" style="display:block;background:none">열린 방이 없습니다. 방을 만들어 보세요.</li>';
+      ul.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => joinRoom(b.dataset.room)));
+      $('list-status').textContent = '';
+    } catch (e) {
+      ul.innerHTML = '<li class="empty" style="display:block;background:none">방 목록을 불러오지 못했습니다. 초대 링크로 들어가 주세요.</li>';
+      $('list-status').textContent = '';
+    }
+    clearTimeout(listTimer);
+    listTimer = setTimeout(() => { if (!$('panel-join').hidden && !$('entry').hidden) loadRooms(); }, 8000);
+  }
+
+  $('btn-start').addEventListener('click', () => { if (isHost) startMatch(); });
+  $('btn-w-copy').addEventListener('click', () => copy($('w-link').value));
+  $('btn-w-leave').addEventListener('click', leave);
+  function leave() { unpublish(); clearInterval(beat); if (room) room.close(); location.replace(location.pathname); }
+  window.addEventListener('pagehide', unpublish);
+
+  const invited = new URLSearchParams(location.search).get('room');
+  if (invited) {
+    $('choose').hidden = true; $('invited').hidden = false;
+    $('btn-enter-link').addEventListener('click', () => joinRoom(invited));
+    $('nick').focus();
+  }
+
+  // 시험용
+  window.Sym = { makePuzzle, judge, rotate, symmetric, connected, key, normalize };
+})();
+</script>
+</body>
+</html>

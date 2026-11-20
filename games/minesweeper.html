@@ -1,1027 +1,278 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../shared/i18n.js"></script>
-    <title>지뢰찾기 | cheezetomato</title>
-    <style>
-        /* 폰트 로드 */
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=DSDIGIT&family=VT323&display=swap');
-
-        :root {
-            --bg-body: #121316;          
-            --bg-sidebar: #1a1c20;       
-            --bg-panel: #22252a;         
-            
-            --text-main: #8f959e;        
-            --text-highlight: #60a5fa;   
-            
-            --grid-gap-color: #121316;   
-            --cell-unrevealed: #3a3f47;  
-            --cell-unrevealed-hover: #454b54; 
-            --cell-revealed: #22252a;    
-            --cell-highlight: #4d545e;   
-            
-            --digital-bg: #090a0c;
-            --digital-text: #ef4444;
-
-            /* 🟢 동적 셀 크기 (자바스크립트에서 난이도/화면크기에 맞춰 갱신) */
-            --cell-size: 28px;
-        }
-
-        html, body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        body {
-            display: flex;
-        }
-
-        .top-header {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 60px;
-            background-color: rgba(26, 28, 32, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            padding: 0 30px;
-            box-sizing: border-box;
-            z-index: 10;
-        }
-        .top-header .logo {
-            font-size: 22px;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: -0.5px;
-        }
-
-        .sidebar {
-            width: 260px;
-            flex-shrink: 0;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid rgba(255,255,255,0.05);
-            padding-top: 90px; 
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-sizing: border-box;
-            height: 100vh;
-        }
-        
-        .sidebar-section {
-            display: flex;
-            flex-direction: column;
-            padding: 0 20px;
-        }
-
-        .menu-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            text-align: left;
-            padding: 12px 15px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .menu-btn:hover { background-color: rgba(255,255,255,0.03); color: #fff; }
-        .menu-btn.active { 
-            background-color: rgba(96, 165, 250, 0.1); 
-            color: var(--text-highlight); 
-            font-weight: 700; 
-        }
-
-        /* 🟢 현재 모드를 보여주는 정적 라벨 (버튼 아님) */
-        .mode-label {
-            padding: 10px 15px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-highlight);
-            background-color: rgba(96, 165, 250, 0.08);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .main-content {
-            flex: 1;
-            min-width: 0;
-            height: 100vh;
-            box-sizing: border-box;
-            padding-top: 90px;
-            padding-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            overflow: hidden;
-        }
-
-        #game-view {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        #record-view {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .diff-nav {
-            display: flex;
-            background: var(--bg-sidebar);
-            padding: 6px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            flex-shrink: 0;
-        }
-        .diff-nav button {
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 14px;
-            font-weight: 600;
-            padding: 8px 24px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .diff-nav button:hover { color: #fff; }
-        .diff-nav button.active { 
-            background: var(--text-highlight); 
-            color: #fff; 
-            box-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
-        }
-
-        .panel-wrapper {
-            background-color: var(--bg-panel);
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
-            max-width: calc(100vw - 320px);
-            max-height: calc(100vh - 200px);
-        }
-
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.2);
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255,255,255,0.02);
-            width: 100%;
-            box-sizing: border-box;
-            flex-shrink: 0;
-        }
-
-        .digital-display {
-            background-color: var(--digital-bg);
-            color: var(--digital-text);
-            font-family: 'VT323', monospace;
-            font-size: 38px;
-            line-height: 1;
-            padding: 4px 12px;
-            border-radius: 6px;
-            width: 60px;
-            text-align: center;
-            letter-spacing: 2px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
-        }
-
-        #reset-btn {
-            width: 45px;
-            height: 45px;
-            font-size: 24px;
-            cursor: pointer;
-            background: var(--cell-unrevealed);
-            border: none;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 0.1s, background 0.2s;
-        }
-        #reset-btn:active { transform: scale(0.92); }
-        #reset-btn:hover { background: var(--cell-unrevealed-hover); }
-
-        #board {
-            display: grid;
-            gap: 1.5px;
-            background-color: var(--grid-gap-color);
-            border: 1.5px solid var(--grid-gap-color);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .cell {
-            width: var(--cell-size);
-            height: var(--cell-size);
-            background-color: var(--cell-unrevealed);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 800;
-            font-size: calc(var(--cell-size) * 0.6);
-            cursor: pointer;
-            box-sizing: border-box;
-            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.05);
-            transition: background-color 0.1s;
-        }
-        .cell:hover:not(.revealed) { background-color: var(--cell-unrevealed-hover); }
-        
-        .cell.revealed {
-            background-color: var(--cell-revealed);
-            box-shadow: none; 
-            cursor: default;
-        }
-        .cell.highlight {
-            background-color: var(--cell-highlight);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); 
-        }
-        .cell.mine { background-color: #ef4444 !important; }
-
-        /* 🟢 게임 시작 전 클릭해야 하는 시작 칸 표시 */
-        .cell.start-cell {
-            background-color: rgba(96, 165, 250, 0.18);
-            color: var(--text-highlight);
-            font-weight: 900;
-            box-shadow: inset 0 0 0 2px var(--text-highlight);
-        }
-
-        /* 🟢 게임 시작 전에는 시작 칸 외 다른 칸은 클릭 불가 */
-        #board.pre-game .cell:not(.start-cell) {
-            pointer-events: none;
-            opacity: 0.55;
-            cursor: not-allowed;
-        }
-
-        .record-header {
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #fff;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 15px; text-align: center;}
-        th { color: var(--text-highlight); font-weight: 700; }
-        td { color: #ddd; }
-        
-        .btn-back-game {
-            display: block;
-            margin: 30px auto 0;
-            padding: 12px 30px;
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.1);
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 30px;
-            font-size: 15px;
-            transition: all 0.2s;
-        }
-        .btn-back-game:hover { 
-            background: rgba(255,255,255,0.1); 
-        }
-
-
-        /* ---- 사이트 공통: 상단 바와 색 ---- */
-        .site-bar { position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 6000; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; box-sizing: border-box; background: rgba(9,9,11,0.9); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid #1d1c22; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; user-select: none; }
-        .site-bar a { color: #948e83; text-decoration: none; font-size: 14px; transition: color 0.2s ease; }
-        .site-bar a:hover { color: #ede8df; }
-        .site-bar .sb-path { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: #625d55; }
-        .site-bar .sb-word { color: #ede8df; font-weight: 700; font-size: 17px; letter-spacing: -0.4px; }
-        .site-bar .sb-dot { color: #7b7fd4; }
-        .site-bar .sb-here { color: #ede8df; }
-        .site-bar nav { display: flex; gap: 22px; }
-        .site-bar nav a[aria-current] { color: #ede8df; }
-        .site-bar nav { align-items: center; }
-        .site-bar .lang-pick label { display: inline-flex; align-items: center; }
-        .site-bar .lang-pick label span { display: none; }
-        .site-bar .lang-pick select { appearance: none; -webkit-appearance: none; padding: 4px 22px 4px 8px; border: 1px solid #29292f; border-radius: 6px; background: #09090b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23948e83' stroke-width='1.4'/%3E%3C/svg%3E") no-repeat right 6px center / 10px; color: #948e83; font: inherit; font-size: 13px; cursor: pointer; }
-        .site-bar .lang-pick select:hover, .site-bar .lang-pick select:focus { border-color: #7b7fd4; color: #ede8df; }
-        .site-bar a:focus-visible { outline: 2px solid #7b7fd4; outline-offset: 3px; border-radius: 2px; }
-        @media (max-width: 560px) { .site-bar { padding: 0 16px; } .site-bar nav { gap: 14px; } .site-bar .sb-path .sb-here { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
-
-        /* ---- 지뢰찾기: 사이트 톤 ---- */
-        :root { --bg-body: #09090b; --bg-sidebar: #0d0d10; --bg-panel: #111114; --text-main: #948e83; --text-highlight: #9fa2e2; --grid-gap-color: #09090b; --cell-unrevealed: #2b2a31; --cell-unrevealed-hover: #36353d; --cell-revealed: #141418; --cell-highlight: #3d3c45; }
-        .top-header { display: none !important; }
-        .sidebar { width: 260px; padding-top: 84px; border-right: 1px solid #1d1c22; gap: 6px; }
-        .sidebar-section { padding: 0 18px; }
-        .sb-label { padding: 0 15px 6px; font-size: 12px; color: #625d55; }
-        .menu-btn { border-radius: 6px; padding: 10px 15px; font-family: inherit; }
-        .menu-btn.active { background: rgba(123,127,212,0.12); color: #ede8df; }
-        .mode-label { background: none; padding: 4px 15px 14px; color: #948e83; font-weight: 500; font-size: 13px; line-height: 1.55; border-radius: 0; }
-        .main-content { padding-top: 84px; }
-        .diff-nav { background: none; border: none; box-shadow: none; padding: 0; gap: 22px; border-radius: 0; margin-bottom: 18px; }
-        .diff-nav button { padding: 6px 0; border-radius: 0; border-bottom: 2px solid transparent; font-family: inherit; font-size: 15px; }
-        .diff-nav button.active { background: none; color: #ede8df; box-shadow: none; border-bottom-color: #7b7fd4; }
-        .panel-wrapper { border-radius: 10px; border-color: #1f1e24; box-shadow: none; }
-        .game-header { border-radius: 8px; background: #0b0b0e; }
-        #reset-btn { border-radius: 8px; background: #2b2a31; box-shadow: none; }
-        #board { border-radius: 4px; }
-        .cell.start-cell { background-color: rgba(123,127,212,0.18); color: #9fa2e2; box-shadow: inset 0 0 0 2px #7b7fd4; }
-        .record-header { font-size: 22px; font-weight: 700; color: #ede8df; }
-        th { color: #948e83; font-weight: 600; }
-        .btn-back-game { border-radius: 8px; font-family: inherit; font-weight: 600; }
-    </style>
-
-    <!-- 🟢 Firebase SDK 추가 (Firestore용) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지뢰찾기 | cheezetomato</title>
+<meta name="description" content="숫자를 단서로 지뢰 없는 칸을 모두 여는 지뢰찾기. 네 가지 난이도">
+<meta name="theme-color" content="#09090b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23222831'/%3E%3Cpath d='M12 24V8' stroke='%23e9e2d3' stroke-width='2.4'/%3E%3Cpath d='M12 8l11 4-11 4z' fill='%23ff6b5e'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="common.css">
+<script src="common.js"></script>
+<style>
+  :root { --g: #7fb2ff; --g-ink: #0c1420; --steel: #222831; --steel-2: #2b323d; --closed: #3a4350; --closed-hi: #46505f; --open: #1a1f26; --mine: #ff6b5e; --cell: 28px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 28px; align-items: start; }
+  .head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .head h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.04em; margin-right: auto; }
+  .device { display: inline-block; max-width: 100%; padding: 14px; border-radius: 16px; background: var(--steel); box-shadow: inset 0 0 0 1px #343c48, 0 30px 60px -30px rgba(0,0,0,0.9); }
+  .meters { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .lcd { min-width: 72px; padding: 4px 10px; border-radius: 6px; background: #0d1014; color: var(--mine); font: 800 1.6rem/1.15 ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 1px; text-align: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); font-variant-numeric: tabular-nums; }
+  .meters .btn { white-space: nowrap; min-height: 38px; padding: 6px 14px; background: var(--steel-2); border-color: #414a57; }
+  .flagmode[aria-pressed="true"] { border-color: var(--mine); color: #ffd3cd; }
+  .boardwrap { overflow: auto; max-width: 100%; border-radius: 6px; }
+  .board { display: grid; gap: 2px; width: max-content; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .c { width: var(--cell); height: var(--cell); border-radius: 3px; background: var(--closed); box-shadow: inset 0 2px 0 rgba(255,255,255,0.07), inset 0 -2px 0 rgba(0,0,0,0.18); display: grid; place-items: center; font-weight: 800; font-size: calc(var(--cell) * 0.56); cursor: pointer; line-height: 1; }
+  .c:hover { background: var(--closed-hi); }
+  .c.o { background: var(--open); box-shadow: none; cursor: default; }
+  .c.press { background: #2c333d; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); }
+  .c.start { background: #4a5a7a; color: #cfe0ff; box-shadow: inset 0 0 0 2px #7fb2ff; }
+  .c.boom { background: var(--mine); }
+  .c.wrong { background: #3a2a2d; }
+  .c svg { width: 62%; height: 62%; }
+  .n1 { color: #7fb2ff; } .n2 { color: #7fd39b; } .n3 { color: #ff8f84; } .n4 { color: #c9a2ff; } .n5 { color: #ffb86b; } .n6 { color: #6fd7d0; } .n7 { color: #e9e2d3; } .n8 { color: #9aa3ad; }
+  .board.pre .c:not(.start) { opacity: 0.55; cursor: not-allowed; }
+  .tip { color: var(--text-mute); font-size: 0.86rem; margin: 12px 0 0; }
+  .side h2 { margin: 0 0 10px; font-size: 0.9rem; color: var(--text-dim); font-weight: 600; }
+  .side section + section { margin-top: 26px; }
+  @media (max-width: 560px) { .lcd { min-width: 54px; font-size: 1.25rem; padding: 4px 6px; } .meters { gap: 6px; } .meters .btn { padding: 6px 10px; font-size: 0.88rem; } .device { padding: 10px; } }
+  @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } .device { display: block; } }
+</style>
 </head>
 <body>
-<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a><span data-lang-slot></span></nav></header>
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">지뢰찾기</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a></nav></header>
 
-    <!-- 상단 헤더 -->
-    <div class="top-header">
-        <div class="logo">💣 Minesweeper Pro</div>
+<main class="play">
+  <div class="layout">
+    <div>
+      <div class="head">
+        <h1>지뢰찾기</h1>
+        <div class="seg" role="group" aria-label="난이도" id="diffs"></div>
+      </div>
+      <div class="device">
+        <div class="meters">
+          <span class="lcd" id="left" aria-label="남은 지뢰">010</span>
+          <button class="btn flagmode" type="button" id="flagmode" aria-pressed="false">깃발 모드</button>
+          <button class="btn" type="button" id="reset">새 판</button>
+          <span class="lcd" id="clock" aria-label="걸린 시간">000</span>
+        </div>
+        <div class="boardwrap"><div class="board" id="board" role="grid" aria-label="지뢰찾기 판"></div></div>
+      </div>
+      <p class="tip">파란 테두리 칸을 눌러 시작하면 그 주변이 한 번에 열립니다. 오른쪽 클릭(휴대폰은 길게 누르기)으로 깃발, 숫자 칸을 누르면 깃발 수가 맞을 때 주변을 한꺼번에 엽니다.</p>
     </div>
-
-    <!-- 좌측 사이드바 -->
-    <div class="sidebar">
-        <div class="sidebar-section">
-            <div class="sb-label">지뢰찾기</div>
-            <div class="mode-label">추측 없이 모드: 숫자만 보고 끝까지 풀 수 있는 판이 나옵니다. 처음엔 표시된 칸을 눌러 시작하세요.</div>
-        </div>
-        <div style="height:1px; background:rgba(255,255,255,0.05); margin: 5px 20px;"></div>
-        <div class="sidebar-section">
-            <button class="menu-btn" id="btn-menu-record" onclick="openRecords()">최고 기록</button>
-        </div>
-    </div>
-
-    <!-- 메인 콘텐츠 영역 -->
-    <div class="main-content">
-        
-        <!-- 게임 화면 -->
-        <div id="game-view">
-            <div class="diff-nav">
-                <button id="btn-초급" onclick="changeDiff('초급')">초급</button>
-                <button id="btn-중급" onclick="changeDiff('중급')">중급</button>
-                <button id="btn-고급" onclick="changeDiff('고급')">고급</button>
-                <button id="btn-최상급" onclick="changeDiff('최상급')">최상급</button>
-            </div>
-
-            <div class="panel-wrapper">
-                <div class="game-header">
-                    <div class="digital-display" id="mine-count">010</div>
-                    <button id="reset-btn" onclick="initGame()">🙂</button>
-                    <div class="digital-display" id="timer">000</div>
-                </div>
-                <!-- 우클릭/드래그 방지 -->
-                <div id="board" oncontextmenu="return false;" ondragstart="return false;"></div>
-            </div>
-        </div>
-
-        <!-- 기록실 화면 -->
-        <div id="record-view">
-            <div class="panel-wrapper">
-                <h2 class="record-header">최고 기록</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>난이도</th>
-                            <th>최고 기록</th>
-                        </tr>
-                    </thead>
-                    <tbody id="record-tbody"></tbody>
-                </table>
-                <button class="btn-back-game" onclick="closeRecords()">게임으로 돌아가기</button>
-            </div>
-        </div>
-
-    </div>
+    <aside class="side">
+      <section>
+        <h2>최고 기록 (모두)</h2>
+        <table class="records" id="best"><tbody><tr><td class="note">불러오는 중</td></tr></tbody></table>
+      </section>
+      <section>
+        <h2>내 기록 (이 기기)</h2>
+        <table class="records" id="mine"></table>
+      </section>
+    </aside>
+  </div>
+</main>
 
 <script>
-    // ---------------------------------
-    // 🟢 1. 파이어베이스 초기화 (Firestore)
-    // ---------------------------------
-    const firebaseConfig = {
-            apiKey: "AIzaSyC1hcxeEpsGo-N75xyPxWb7RuTjspvpzNw",
-            authDomain: "my-first-page-931dd.firebaseapp.com",
-            projectId: "my-first-page-931dd",
-            storageBucket: "my-first-page-931dd.firebasestorage.app",
-            messagingSenderId: "905407958433",
-            appId: "1:905407958433:web:e9ea7fa164807ad8ebcfe0"
-    };
-    
-    // 파이어베이스 앱 초기화
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+(() => {
+  'use strict';
+  const { dialog, db, toast } = window.Kit;
+  const $ = id => document.getElementById(id);
+  const DIFF = { '초급': { r: 9, c: 9, m: 10 }, '중급': { r: 16, c: 16, m: 40 }, '고급': { r: 16, c: 30, m: 99 }, '최상급': { r: 24, c: 30, m: 160 } };
+  const NAMES = Object.keys(DIFF);
+  const FLAG = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 17V3" stroke="#e9e2d3" stroke-width="2"/><path d="M6 3l10 4-10 4z" fill="#ff6b5e"/></svg>';
+  const MINE = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.5" fill="#0d1014"/><path d="M10 2v16M2 10h16M4.5 4.5l11 11M15.5 4.5l-11 11" stroke="#0d1014" stroke-width="1.8"/><circle cx="8" cy="8" r="1.6" fill="#fff"/></svg>';
+
+  let diff = '초급', R, C, M, cells = [], first = true, over = false, left = 0, opened = 0, time = 0, timer = 0, flagMode = false, start = null;
+
+  /* ---------- 저장/불러오기 (이 기기) ---------- */
+  const saveKey = () => `ms_state_${diff}_noguess`;
+  function save() {
+    try {
+      localStorage.setItem(saveKey(), JSON.stringify({ board: cells.map(row => row.map(x => ({ isMine: x.m, isRevealed: x.o, isFlagged: x.f, neighborMines: x.n }))), isFirstClick: first, isGameOver: over, minesLeft: left, revealedCount: opened, timeElapsed: time }));
+      localStorage.setItem('ms_lastConfig', JSON.stringify({ diff }));
+    } catch (e) { /* 저장 공간 없음 */ }
+  }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(saveKey()));
+      if (!s || !s.board || s.board.length !== R || s.board[0].length !== C) return false;
+      cells = s.board.map(row => row.map(x => ({ m: x.isMine, o: x.isRevealed, f: x.isFlagged, n: x.neighborMines })));
+      first = s.isFirstClick; over = s.isGameOver; left = s.minesLeft; opened = s.revealedCount; time = s.timeElapsed || 0;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* ---------- 판 ---------- */
+  function fitCell() {
+    const wrap = document.querySelector('.layout > div');
+    const avail = Math.max(240, wrap.clientWidth - 30);
+    const availH = window.innerHeight - 300;
+    let s = Math.floor(Math.min((avail - (C - 1) * 2) / C, (availH - (R - 1) * 2) / R));
+    s = Math.max(window.innerWidth < 640 ? 20 : 16, Math.min(32, s));
+    document.documentElement.style.setProperty('--cell', `${s}px`);
+  }
+  function setup(d, fresh) {
+    diff = d; ({ r: R, c: C, m: M } = DIFF[d]);
+    document.querySelectorAll('#diffs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.d === d)));
+    clearInterval(timer);
+    if (fresh || !load()) {
+      cells = Array.from({ length: R }, () => Array.from({ length: C }, () => ({ m: false, o: false, f: false, n: 0 })));
+      first = true; over = false; left = M; opened = 0; time = 0;
     }
-    const db = firebase.firestore();
-
-    // ---------------------------------
-    // 기존 지뢰찾기 로직
-    // ---------------------------------
-    const difficulties = {
-        '초급': { r: 9, c: 9, m: 10 },
-        '중급': { r: 16, c: 16, m: 40 },
-        '고급': { r: 16, c: 30, m: 99 },
-        '최상급': { r: 24, c: 30, m: 160 }
-    };
-
-    const colors = [
-        '', '#60a5fa', '#4ade80', '#f87171', 
-         '#c084fc', '#fbbf24', '#2dd4bf', 
-        '#d1d5db', '#9ca3af'
-    ];
-
-    let currentDiff = '초급';
-    // 🟢 이제 모드는 항상 "추측 없이"로 고정됩니다.
-    const isNoGuessMode = true;
-    
-    let ROWS, COLS, MINES;
-    let board = [];
-    let isFirstClick = true;
-    let isGameOver = false;
-    let minesLeft;
-    let revealedCount;
-    
-    let timerInterval = null;
-    let timeElapsed = 0;
-
-    let isLeftMouseDown = false;
-    let chordingCell = null;
-    let highlightedCells = [];
-    let startCell = null; // 🟢 게임 시작 전 클릭해야 하는 칸 (X 표시)
-
-    const boardElement = document.getElementById('board');
-    const mineCountElement = document.getElementById('mine-count');
-    const resetBtn = document.getElementById('reset-btn');
-    const timerElement = document.getElementById('timer');
-
-    window.addEventListener('mouseup', (e) => {
-        if (e.button === 0) {
-            isLeftMouseDown = false;
-            if(!isGameOver) resetBtn.textContent = '🙂';
-            clearAllHighlights();
-        }
-    });
-
-    // ---------------------------------
-    // 🟢 2. 화면 크기에 맞춰 셀 크기를 자동으로 계산 (스크롤 없이 한 화면에 표시)
-    // ---------------------------------
-    function calcCellSize(rows, cols) {
-        const sidebarWidth = 260;
-        const horizontalBuffer = 100;  // panel padding + 여백
-        const verticalBuffer = 90 + 50 + 90 + 40; // top-header + diff-nav + game-header + 여백
-
-        const availWidth = window.innerWidth - sidebarWidth - horizontalBuffer;
-        const availHeight = window.innerHeight - verticalBuffer;
-
-        let size = Math.floor(Math.min(availWidth / cols, availHeight / rows));
-        size = Math.max(13, Math.min(28, size)); // 13px ~ 28px 사이로 제한
-        return size;
+    start = { r: Math.floor(R / 2), c: Math.floor(C / 2) };
+    fitCell(); build(); paintAll(); meters();
+    if (!first && !over) run();
+    save();
+  }
+  function build() {
+    const b = $('board'); b.innerHTML = '';
+    b.style.gridTemplateColumns = `repeat(${C}, var(--cell))`;
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const el = document.createElement('div');
+      el.className = 'c'; el.dataset.r = r; el.dataset.c = c; el.setAttribute('role', 'gridcell');
+      b.appendChild(el);
     }
+  }
+  const elAt = (r, c) => $('board').children[r * C + c];
+  const around = (r, c) => { const o = []; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const nr = r + a, nc = c + b; if ((a || b) && nr >= 0 && nr < R && nc >= 0 && nc < C) o.push([nr, nc]); } return o; };
+  function paint(r, c) {
+    const x = cells[r][c], el = elAt(r, c);
+    el.className = 'c'; el.innerHTML = '';
+    if (x.o) {
+      el.classList.add('o');
+      if (x.m) { el.innerHTML = MINE; if (x.boom) el.classList.add('boom'); }
+      else if (x.n) { el.textContent = x.n; el.classList.add(`n${x.n}`); }
+    } else if (x.f) {
+      el.innerHTML = FLAG; if (over && !x.m) el.classList.add('wrong');
+    } else if (over && x.m) { el.classList.add('o'); el.innerHTML = MINE; }
+    else if (first && r === start.r && c === start.c) { el.classList.add('start'); el.textContent = '✕'; }
+  }
+  function paintAll() { for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) paint(r, c); $('board').classList.toggle('pre', first && !over); }
+  function meters() {
+    $('left').textContent = left < 0 ? `-${String(-left).padStart(2, '0')}` : String(left).padStart(3, '0');
+    $('clock').textContent = String(Math.min(999, time)).padStart(3, '0');
+  }
+  function run() { clearInterval(timer); timer = setInterval(() => { if (time < 999) { time++; meters(); save(); } }, 1000); }
 
-    function updateCellSize() {
-        if (!ROWS || !COLS) return;
-        const size = calcCellSize(ROWS, COLS);
-        document.documentElement.style.setProperty('--cell-size', size + 'px');
-        boardElement.style.gridTemplateColumns = `repeat(${COLS}, var(--cell-size))`;
+  function place(fr, fc) {
+    let n = 0;
+    while (n < M) {
+      const r = Math.floor(Math.random() * R), c = Math.floor(Math.random() * C);
+      if (cells[r][c].m || (Math.abs(r - fr) <= 1 && Math.abs(c - fc) <= 1)) continue;
+      cells[r][c].m = true; n++;
     }
-
-    window.addEventListener('resize', updateCellSize);
-
-    // ---------------------------------
-    // 🟢 3. 시작 칸(X) 표시 및 게임 시작 전 클릭 차단
-    // ---------------------------------
-    function getStartCell(rows, cols) {
-        return { r: Math.floor(rows / 2), c: Math.floor(cols / 2) };
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) cells[r][c].n = around(r, c).filter(([a, b]) => cells[a][b].m).length;
+  }
+  function open(r, c) {
+    const st = [[r, c]];
+    while (st.length) {
+      const [a, b] = st.pop(), x = cells[a][b];
+      if (x.o || x.f) continue;
+      x.o = true; opened++; paint(a, b);
+      if (x.m) { x.boom = true; paint(a, b); return lose(); }
+      if (!x.n) around(a, b).forEach(p => st.push(p));
     }
-
-    // 시작 칸에 X 마커를 표시하고, 보드에 pre-game 클래스를 달아 다른 칸 클릭을 막습니다.
-    function applyPreGameMarker() {
-        startCell = getStartCell(ROWS, COLS);
-        boardElement.classList.add('pre-game');
-        const el = document.getElementById(`cell-${startCell.r}-${startCell.c}`);
-        if (el) {
-            el.classList.add('start-cell');
-            el.textContent = '✕';
-        }
+  }
+  function reveal(r, c) {
+    if (over) return;
+    const x = cells[r][c];
+    if (first) {
+      if (r !== start.r || c !== start.c) { toast('파란 테두리 칸부터 눌러 주세요.'); return; }
+      first = false; place(r, c); run(); $('board').classList.remove('pre'); paint(r, c);
     }
+    if (x.o) {
+      // 숫자 칸: 깃발 수가 맞으면 주변 열기
+      if (!x.n) return;
+      const nb = around(r, c), flags = nb.filter(([a, b]) => cells[a][b].f).length;
+      if (flags === x.n) nb.forEach(([a, b]) => { if (!over) open(a, b); });
+    } else if (!x.f) open(r, c);
+    if (!over && opened === R * C - M) win();
+    save();
+  }
+  function flag(r, c) {
+    if (over || first) return;
+    const x = cells[r][c]; if (x.o) return;
+    x.f = !x.f; left += x.f ? -1 : 1; paint(r, c); meters(); save();
+  }
+  function lose() { over = true; clearInterval(timer); paintAll(); save(); toast('지뢰를 밟았습니다. 새 판을 눌러 다시 하세요.', 3000); }
 
-    // 첫 클릭이 일어나면 더 이상 칸을 막지 않습니다.
-    function clearPreGameBlocking() {
-        boardElement.classList.remove('pre-game');
+  async function win() {
+    over = true; clearInterval(timer);
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (cells[r][c].m && !cells[r][c].f) { cells[r][c].f = true; }
+    left = 0; paintAll(); meters(); save();
+    const mineBest = myBest(); const prev = mineBest[diff];
+    if (prev == null || time < prev) { mineBest[diff] = time; try { localStorage.setItem('ms_my_best', JSON.stringify(mineBest)); } catch (e) { /* 저장 공간 없음 */ } }
+    let msg = prev == null || time < prev ? '이 기기에서 가장 빠른 기록입니다.' : `이 기기 최고 기록은 ${prev}초입니다.`;
+    try {
+      const d = await db.get('minesweeper_records', diff);
+      const best = d && d.noguess;
+      if (best == null || time < best) { await db.merge('minesweeper_records', diff, { noguess: time }); msg = `${diff} 전체 최고 기록을 새로 세웠습니다.`; }
+    } catch (e) { /* 저장 실패해도 게임은 계속 */ }
+    showRecords();
+    dialog({ title: `${time}초 만에 성공`, text: `${diff}. ${msg}`, actions: [{ label: '닫기' }, { label: '새 판', main: true, onClick: () => setup(diff, true) }] });
+  }
+
+  /* ---------- 입력: 마우스와 터치 ---------- */
+  const board = $('board');
+  let down = null, pressed = [], longT = 0, longFired = false;
+  const cellOf = e => { const el = e.target.closest('.c'); return el ? [+el.dataset.r, +el.dataset.c] : null; };
+  function press(rc) {
+    pressed.forEach(el => el.classList.remove('press')); pressed = [];
+    if (!rc || over) return;
+    const [r, c] = rc, x = cells[r][c];
+    const list = x.o ? around(r, c) : [[r, c]];
+    list.forEach(([a, b]) => { const y = cells[a][b]; if (!y.o && !y.f) { const el = elAt(a, b); el.classList.add('press'); pressed.push(el); } });
+  }
+  board.addEventListener('contextmenu', e => e.preventDefault());
+  board.addEventListener('pointerdown', e => {
+    const rc = cellOf(e); if (!rc) return;
+    if (e.button === 2) { flag(...rc); return; }
+    if (e.button !== 0) return;
+    down = rc; longFired = false; press(rc);
+    if (e.pointerType !== 'mouse') {
+      clearTimeout(longT);
+      longT = setTimeout(() => { longFired = true; press(null); if (navigator.vibrate) navigator.vibrate(15); flag(...rc); }, 380);
     }
+  });
+  board.addEventListener('pointermove', e => {
+    if (!down) return;
+    if (e.pointerType !== 'mouse') return;
+    const rc = cellOf(e); press(rc); down = rc;
+  });
+  window.addEventListener('pointerup', e => {
+    clearTimeout(longT);
+    if (!down) return;
+    const rc = e.pointerType === 'mouse' ? cellOf(e) : down; down = null; press(null);
+    if (!rc || longFired) return;
+    if (flagMode && !cells[rc[0]][rc[1]].o) flag(...rc); else reveal(...rc);
+  });
+  board.addEventListener('pointercancel', () => { clearTimeout(longT); down = null; press(null); });
 
-    function getSaveKey() {
-        return `ms_state_${currentDiff}_noguess`;
-    }
+  $('reset').addEventListener('click', () => setup(diff, true));
+  $('flagmode').addEventListener('click', () => { flagMode = !flagMode; $('flagmode').setAttribute('aria-pressed', String(flagMode)); });
+  $('diffs').innerHTML = NAMES.map(n => `<button type="button" data-d="${n}" aria-pressed="false">${n}</button>`).join('');
+  $('diffs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { if (b.dataset.d !== diff) { save(); setup(b.dataset.d, false); } }));
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(fitCell, 120); });
 
-    function saveGameState() {
-        const gameState = {
-            board, isFirstClick, isGameOver, minesLeft, revealedCount, timeElapsed
-        };
-        localStorage.setItem(getSaveKey(), JSON.stringify(gameState));
-        localStorage.setItem('ms_lastConfig', JSON.stringify({ diff: currentDiff }));
-    }
+  /* ---------- 기록 ---------- */
+  function myBest() { try { return JSON.parse(localStorage.getItem('ms_my_best')) || {}; } catch (e) { return {}; } }
+  async function showRecords() {
+    const mb = myBest();
+    $('mine').innerHTML = `<tbody>${NAMES.map(n => `<tr><td>${n}</td><td>${mb[n] != null ? `<b>${mb[n]}초</b>` : '<span class="when">-</span>'}</td></tr>`).join('')}</tbody>`;
+    try {
+      const all = await db.list('minesweeper_records');
+      const by = Object.fromEntries(all.map(d => [d.id, d.noguess]));
+      $('best').innerHTML = `<tbody>${NAMES.map(n => `<tr class="${n === diff ? 'top' : ''}"><td>${n}</td><td>${by[n] != null ? `<b>${by[n]}초</b>` : '<span class="when">아직 없음</span>'}</td></tr>`).join('')}</tbody>`;
+    } catch (e) { $('best').innerHTML = '<tbody><tr><td class="note">기록을 불러오지 못했습니다.</td></tr></tbody>'; }
+  }
 
-    function loadGameState() {
-        const saved = localStorage.getItem(getSaveKey());
-        if (!saved) return false;
-
-        try {
-            const gameState = JSON.parse(saved);
-            board = gameState.board;
-            isFirstClick = gameState.isFirstClick;
-            isGameOver = gameState.isGameOver;
-            minesLeft = gameState.minesLeft;
-            revealedCount = gameState.revealedCount;
-            timeElapsed = gameState.timeElapsed;
-
-            ROWS = difficulties[currentDiff].r;
-            COLS = difficulties[currentDiff].c;
-            MINES = difficulties[currentDiff].m;
-
-            clearInterval(timerInterval);
-            updateCellSize();
-            boardElement.innerHTML = '';
-            highlightedCells = [];
-            chordingCell = null;
-            isLeftMouseDown = false;
-
-            updateMineCount();
-            timerElement.textContent = String(timeElapsed).padStart(3, '0');
-            
-            if (isGameOver) {
-                resetBtn.textContent = revealedCount === (ROWS * COLS - MINES) ? '😎' : '😵';
-            } else {
-                resetBtn.textContent = '🙂';
-            }
-
-            document.querySelectorAll('.diff-nav button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn-${currentDiff}`).classList.add('active');
-
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c < COLS; c++) {
-                    let cellData = board[r][c];
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.id = `cell-${r}-${c}`;
-
-                    cell.addEventListener('mousedown', (e) => handleMouseDown(e, r, c));
-                    cell.addEventListener('mouseenter', () => handleMouseEnter(r, c));
-                    cell.addEventListener('mouseleave', () => handleMouseLeave(r, c));
-                    cell.addEventListener('mouseup', (e) => handleMouseUp(e, r, c));
-                    cell.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        if(e.button === 2) handleRightClick(r, c);
-                    });
-
-                    if (cellData.isRevealed) {
-                        cell.classList.add('revealed');
-                        if (cellData.isMine) {
-                            cell.innerHTML = '💣';
-                        } else if (cellData.neighborMines > 0) {
-                            cell.textContent = cellData.neighborMines;
-                            cell.style.color = colors[cellData.neighborMines];
-                        }
-                    } else if (cellData.isFlagged) {
-                        if (isGameOver && !cellData.isMine) {
-                            cell.innerHTML = '❌';
-                        } else {
-                            cell.innerHTML = '<span style="color:#f87171; font-size:0.9em;">🚩</span>';
-                        }
-                    } else if (isGameOver && cellData.isMine) {
-                        cell.classList.add('revealed');
-                        cell.innerHTML = '💣';
-                    }
-
-                    boardElement.appendChild(cell);
-                }
-            }
-
-            if (!isGameOver && !isFirstClick) {
-                startTimer();
-            }
-
-            // 🟢 아직 첫 클릭 전이면 시작 칸(X) 표시 및 다른 칸 클릭 차단
-            if (!isGameOver && isFirstClick) {
-                applyPreGameMarker();
-            }
-            return true;
-
-        } catch (e) {
-            console.error("저장된 게임을 불러오는 데 실패했습니다:", e);
-            return false;
-        }
-    }
-
-    function setMenuActive(mode) {
-        document.getElementById('btn-menu-record').classList.remove('active');
-        if(mode === 'record') document.getElementById('btn-menu-record').classList.add('active');
-    }
-
-    function changeDiff(diff) {
-        currentDiff = diff;
-        document.querySelectorAll('.diff-nav button').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`btn-${diff}`).classList.add('active');
-        
-        if (!loadGameState()) {
-            initGame();
-        } else {
-            saveGameState(); 
-        }
-    }
-
-    function initGame() {
-        clearInterval(timerInterval);
-        timeElapsed = 0;
-        timerElement.textContent = '000';
-        
-        ROWS = difficulties[currentDiff].r;
-        COLS = difficulties[currentDiff].c;
-        MINES = difficulties[currentDiff].m;
-
-        updateCellSize();
-        boardElement.innerHTML = '';
-        
-        board = [];
-        isFirstClick = true;
-        isGameOver = false;
-        minesLeft = MINES;
-        revealedCount = 0;
-        isLeftMouseDown = false;
-        chordingCell = null;
-        highlightedCells = [];
-        
-        updateMineCount();
-        resetBtn.textContent = '🙂';
-        document.getElementById(`btn-${currentDiff}`).classList.add('active');
-
-        for (let r = 0; r < ROWS; r++) {
-            let row = [];
-            for (let c = 0; c < COLS; c++) {
-                row.push({ isMine: false, isRevealed: false, isFlagged: false, neighborMines: 0 });
-                
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.id = `cell-${r}-${c}`;
-                
-                cell.addEventListener('mousedown', (e) => handleMouseDown(e, r, c));
-                cell.addEventListener('mouseenter', () => handleMouseEnter(r, c));
-                cell.addEventListener('mouseleave', () => handleMouseLeave(r, c));
-                cell.addEventListener('mouseup', (e) => handleMouseUp(e, r, c));
-                cell.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    if(e.button === 2) handleRightClick(r, c);
-                });
-                
-                boardElement.appendChild(cell);
-            }
-            board.push(row);
-        }
-        
-        // 🟢 시작 칸(X) 표시 및 다른 칸 클릭 차단
-        applyPreGameMarker();
-
-        saveGameState(); 
-    }
-
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            if(timeElapsed < 999) {
-                timeElapsed++;
-                timerElement.textContent = String(timeElapsed).padStart(3, '0');
-                saveGameState(); 
-            }
-        }, 1000);
-    }
-
-    function updateMineCount() {
-        let displayCount = minesLeft < 0 ? `-${String(Math.abs(minesLeft)).padStart(2, '0')}` : String(minesLeft).padStart(3, '0');
-        mineCountElement.textContent = displayCount;
-    }
-
-    function placeMines(firstR, firstC) {
-        let placedMines = 0;
-        while (placedMines < MINES) {
-            let r = Math.floor(Math.random() * ROWS);
-            let c = Math.floor(Math.random() * COLS);
-            
-            if (board[r][c].isMine) continue;
-            // 추측 없이 모드: 첫 클릭 주변 3x3은 항상 안전
-            if (Math.abs(r - firstR) <= 1 && Math.abs(c - firstC) <= 1) continue;
-            board[r][c].isMine = true;
-            placedMines++;
-        }
-        calculateNeighbors();
-    }
-
-    function calculateNeighbors() {
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                if (board[r][c].isMine) continue;
-                let count = 0;
-                getNeighbors(r, c).forEach(n => { if (board[n.r][n.c].isMine) count++; });
-                board[r][c].neighborMines = count;
-            }
-        }
-    }
-
-    function getNeighbors(r, c) {
-        let neighbors = [];
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                if (i === 0 && j === 0) continue;
-                let nr = r + i, nc = c + j;
-                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                    neighbors.push({r: nr, c: nc});
-                }
-            }
-        }
-        return neighbors;
-    }
-
-    function clearAllHighlights() {
-        highlightedCells.forEach(el => { if(el) el.classList.remove('highlight'); });
-        highlightedCells = [];
-    }
-
-    function addHighlight(r, c) {
-        let el = document.getElementById(`cell-${r}-${c}`);
-        if (el && !board[r][c].isRevealed && !board[r][c].isFlagged) {
-            el.classList.add('highlight');
-            highlightedCells.push(el);
-        }
-    }
-
-    function processDragHover(r, c) {
-        clearAllHighlights();
-        let cell = board[r][c];
-        
-        if (cell.isRevealed && cell.neighborMines > 0) {
-            chordingCell = {r, c};
-            getNeighbors(r, c).forEach(n => addHighlight(n.r, n.c));
-        } else if (!cell.isRevealed && !cell.isFlagged) {
-            chordingCell = null;
-            addHighlight(r, c);
-        } else {
-            chordingCell = null;
-        }
-    }
-
-    function handleMouseDown(e, r, c) {
-        if (isGameOver) return;
-        if (e.button === 0) {
-            isLeftMouseDown = true;
-            resetBtn.textContent = '😮';
-            processDragHover(r, c);
-        }
-    }
-
-    function handleMouseEnter(r, c) {
-        if (isGameOver) return;
-        if (isLeftMouseDown) {
-            processDragHover(r, c);
-        }
-    }
-
-    function handleMouseLeave(r, c) {
-        if (isGameOver) return;
-        if (isLeftMouseDown) {
-            clearAllHighlights();
-            chordingCell = null;
-        }
-    }
-
-    function handleMouseUp(e, r, c) {
-        if (isGameOver) return;
-        if (e.button === 0) {
-            let cellData = board[r][c];
-            resetBtn.textContent = '🙂';
-            
-            if (chordingCell && chordingCell.r === r && chordingCell.c === c) {
-                clearAllHighlights();
-                let flags = 0;
-                let neighbors = getNeighbors(r, c);
-                neighbors.forEach(n => { if (board[n.r][n.c].isFlagged) flags++; });
-                
-                if (flags === cellData.neighborMines) {
-                    neighbors.forEach(n => {
-                        if (!board[n.r][n.c].isRevealed && !board[n.r][n.c].isFlagged) {
-                            revealCell(n.r, n.c);
-                        }
-                    });
-                    checkWin();
-                }
-                chordingCell = null;
-                saveGameState(); 
-            } else if (!cellData.isRevealed && !cellData.isFlagged) {
-                clearAllHighlights();
-                if (isFirstClick) {
-                    isFirstClick = false;
-                    startTimer();
-                    placeMines(r, c);
-                    clearPreGameBlocking();
-                }
-                revealCell(r, c);
-                checkWin();
-                saveGameState(); 
-            } else {
-                clearAllHighlights();
-            }
-        }
-    }
-
-    function handleRightClick(r, c) {
-        if (isGameOver || board[r][c].isRevealed) return;
-        if (isFirstClick) return; // 🟢 첫 클릭(시작 칸) 전에는 깃발도 표시할 수 없음
-        let cellData = board[r][c];
-        let cellElement = document.getElementById(`cell-${r}-${c}`);
-
-        if (!cellData.isFlagged) {
-            cellData.isFlagged = true;
-            cellElement.innerHTML = '<span style="color:#f87171; font-size:0.9em;">🚩</span>';
-            minesLeft--;
-        } else {
-            cellData.isFlagged = false;
-            cellElement.innerHTML = '';
-            minesLeft++;
-        }
-        updateMineCount();
-        saveGameState(); 
-    }
-
-    function revealCell(r, c) {
-        let cellData = board[r][c];
-        if (cellData.isRevealed || cellData.isFlagged) return;
-
-        cellData.isRevealed = true;
-        revealedCount++;
-        let cellElement = document.getElementById(`cell-${r}-${c}`);
-        cellElement.classList.remove('start-cell'); // 🟢 X 마커 흔적 제거
-        cellElement.classList.add('revealed');
-        cellElement.textContent = ''; // 🟢 X 텍스트도 확실히 비워줌 (0칸일 때 안 지워지는 버그 방지)
-
-        if (cellData.isMine) {
-            gameOver(false, cellElement);
-            return;
-        }
-
-        if (cellData.neighborMines > 0) {
-            cellElement.textContent = cellData.neighborMines;
-            cellElement.style.color = colors[cellData.neighborMines];
-        } else {
-            getNeighbors(r, c).forEach(n => revealCell(n.r, n.c));
-        }
-    }
-
-    function checkWin() {
-        if (!isGameOver && revealedCount === (ROWS * COLS - MINES)) {
-            gameOver(true);
-        }
-    }
-
-    function gameOver(isWin, triggerCell = null) {
-        isGameOver = true;
-        clearInterval(timerInterval);
-        resetBtn.textContent = isWin ? '😎' : '😵';
-        clearAllHighlights();
-        
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                let cellEl = document.getElementById(`cell-${r}-${c}`);
-                if (board[r][c].isMine) {
-                    if (!board[r][c].isFlagged) {
-                        cellEl.classList.add('revealed');
-                        cellEl.innerHTML = '💣';
-                        if (triggerCell && triggerCell.id === cellEl.id) {
-                            cellEl.classList.add('mine'); 
-                        }
-                    }
-                } else if (board[r][c].isFlagged) {
-                    cellEl.innerHTML = '❌';
-                }
-            }
-        }
-
-        saveGameState(); 
-
-        if (isWin) {
-            setTimeout(() => {
-                alert(`승리하셨습니다! 기록: ${timeElapsed}초`);
-                saveRecordToCloud();
-            }, 100);
-        }
-    }
-
-    /* ---------------------------------
-        🟢 Cloud Firestore 전용 기록실 로직 (추측 없이 모드만 기록)
-    --------------------------------- */
-    function saveRecordToCloud() {
-        const docRef = db.collection('minesweeper_records').doc(currentDiff);
-        
-        docRef.get().then((doc) => {
-            let data = doc.exists ? doc.data() : {};
-            let currentBest = data.noguess;
-            
-            // 기존 기록이 없거나, 현재 기록이 더 빠르면 업데이트
-            if (currentBest === undefined || timeElapsed < currentBest) {
-                docRef.set({
-                    noguess: timeElapsed
-                }, { merge: true })
-                .then(() => console.log("새로운 클라우드 최고 기록 달성! (Firestore)"))
-                .catch((error) => console.error("기록 저장 실패: ", error));
-            }
-        });
-    }
-
-    function openRecords() {
-        document.getElementById('game-view').style.display = 'none';
-        document.getElementById('record-view').style.display = 'flex';
-        setMenuActive('record');
-
-        const tbody = document.getElementById('record-tbody');
-        tbody.innerHTML = '<tr><td colspan="2">클라우드에서 기록을 불러오는 중...</td></tr>';
-
-        // Firestore에서 기록 가져오기
-        db.collection('minesweeper_records').get()
-            .then((querySnapshot) => {
-                let records = {};
-                querySnapshot.forEach((doc) => {
-                    records[doc.id] = doc.data(); 
-                });
-
-                tbody.innerHTML = '';
-                const diffList = ['초급', '중급', '고급', '최상급'];
-
-                diffList.forEach(d => {
-                    let tr = document.createElement('tr');
-                    let tdDiff = document.createElement('td'); tdDiff.textContent = d;
-                    let tdNoG = document.createElement('td'); 
-                    tdNoG.textContent = records[d]?.noguess ? `${records[d].noguess}초` : '-';
-                    
-                    tr.appendChild(tdDiff);
-                    tr.appendChild(tdNoG);
-                    tbody.appendChild(tr);
-                });
-            })
-            .catch((error) => {
-                console.error("불러오기 실패:", error);
-                tbody.innerHTML = '<tr><td colspan="2">기록을 불러오지 못했습니다. DB 설정을 확인해주세요.</td></tr>';
-            });
-    }
-
-    function closeRecords() {
-        document.getElementById('record-view').style.display = 'none';
-        document.getElementById('game-view').style.display = 'flex';
-        setMenuActive(null);
-    }
-
-    window.onload = () => { 
-        const lastConfig = JSON.parse(localStorage.getItem('ms_lastConfig'));
-        if (lastConfig) {
-            currentDiff = lastConfig.diff || '초급';
-        }
-
-        if (!loadGameState()) {
-            initGame(); 
-        }
-    };
+  let last = '초급';
+  try { last = (JSON.parse(localStorage.getItem('ms_lastConfig')) || {}).diff || '초급'; } catch (e) { /* 기본값 */ }
+  setup(DIFF[last] ? last : '초급', false);
+  showRecords();
+  window.MsTest = { get cells() { return cells; }, reveal, flag, get state() { return { over, opened, first }; } };
+})();
 </script>
-
 </body>
 </html>

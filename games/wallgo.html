@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>벽바둑 | cheezetomato</title>
+<meta name="description" content="말을 움직이고 벽을 세워 내 영역을 넓히는 2인·3인 보드게임">
+<meta name="theme-color" content="#09090b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2323272d'/%3E%3Cpath d='M16 6v20M6 16h10' stroke='%23e9e2d3' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='23' r='4' fill='%23e5533d'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="common.css">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js" defer></script>
+<script src="common.js"></script>
+<style>
+  :root { --g: #e9e2d3; --g-ink: #15171a; --slate: #1f2328; --slate-cell: #2b3037; --slate-edge: #171a1e; }
+  .p0 { --pc: #e5533d; } .p1 { --pc: #3f86e8; } .p2 { --pc: #e6b13a; }
+
+  /* 판 */
+  .board-svg { width: 100%; height: auto; display: block; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .bd-cell { fill: var(--slate-cell); }
+  .bd-cell.terr { fill: color-mix(in srgb, var(--pc) 22%, var(--slate-cell)); transition: fill 0.4s ease; }
+  .wall { rx: 3; }
+  .wall.new { animation: wall-in 0.32s cubic-bezier(.2,.9,.3,1.2); transform-box: fill-box; transform-origin: center; }
+  @keyframes wall-in { from { transform: scale(0.2, 0.2); opacity: 0; } to { transform: none; opacity: 1; } }
+  .pc { transition: transform 0.28s cubic-bezier(.3,.8,.3,1); }
+  .pc .stone { fill: var(--pc); }
+  .pc .rim { fill: none; stroke: rgba(0,0,0,0.35); stroke-width: 2; }
+  .pc .shine { fill: rgba(255,255,255,0.22); }
+  .pc.settled .stone { opacity: 0.78; }
+  .pc.mine { cursor: pointer; }
+  .pc.sel .ring { stroke: var(--g); stroke-width: 3; fill: none; }
+  .pc .ring { fill: none; stroke: transparent; }
+  .hint { fill: var(--pc); opacity: 0.6; pointer-events: none; }
+  .hit { fill: transparent; cursor: pointer; }
+  .hit:hover + .hint, .hit:focus + .hint { opacity: 1; }
+  .stay { fill: none; stroke: var(--pc); stroke-width: 2.5; stroke-dasharray: 5 4; pointer-events: none; opacity: 0.8; }
+  .ghost { fill: color-mix(in srgb, var(--pc) 28%, transparent); stroke: var(--pc); stroke-width: 1.5; stroke-dasharray: 4 3; pointer-events: none; transition: fill 0.12s ease; }
+  .ghost-hit { fill: transparent; cursor: pointer; }
+  .ghost-hit:hover + .ghost { fill: var(--pc); stroke-dasharray: none; }
+  .breakable { fill: none; stroke: #f2ead9; stroke-width: 2; stroke-dasharray: 3 3; pointer-events: none; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.35; } }
+  .last-from { fill: none; stroke: rgba(233,226,211,0.28); stroke-width: 2; stroke-dasharray: 2 4; pointer-events: none; }
+  .place-hit { fill: transparent; cursor: pointer; }
+  .place-dot { fill: var(--pc); opacity: 0.32; pointer-events: none; }
+  .place-hit:hover + .place-dot { opacity: 0.85; }
+
+  /* 게임 화면 배치 */
+  .arena { display: grid; grid-template-columns: minmax(0, 600px) minmax(260px, 340px); gap: 28px 40px; justify-content: center; align-items: start; }
+  .board-wrap { background: var(--slate-edge); border-radius: 16px; padding: 10px; box-shadow: 0 30px 60px -30px rgba(0,0,0,0.8), inset 0 0 0 1px #2a2e34; }
+  .side { display: grid; gap: 18px; }
+  .players { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .players li { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 4px 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); transition: border-color 0.2s ease, background-color 0.2s ease; }
+  .players li.turn { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 9%, var(--surface)); }
+  .players .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--pc); box-shadow: inset 0 -2px 0 rgba(0,0,0,0.3); }
+  .players .nm { font-weight: 650; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .players .sc { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.25rem; }
+  .players .sub { grid-column: 2 / span 2; font-size: 0.8rem; color: var(--text-mute); display: flex; gap: 12px; }
+  .players .sub .ham.used { text-decoration: line-through; }
+  .say { margin: 0; padding: 14px 16px; border-radius: var(--radius); background: var(--raise); font-size: 0.98rem; min-height: 3.4em; display: flex; align-items: center; gap: 10px; }
+  .say .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); flex: none; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn.on { border-color: #f2ead9; background: #2a2a30; }
+  .mini-rules { margin: 0; padding: 0 0 0 18px; color: var(--text-mute); font-size: 0.85rem; display: grid; gap: 4px; }
+
+  @media (max-width: 900px) {
+    .arena { grid-template-columns: minmax(0, 560px); }
+    .board-wrap { padding: 6px; border-radius: 12px; }
+  }
+</style>
+</head>
+<body>
+<header class="site-bar"><div class="sb-path"><a class="sb-word" href="./">Games<span class="sb-dot">.</span></a><span class="sb-sep">/</span><span class="sb-here">벽바둑</span></div><nav aria-label="사이트 메뉴"><a href="../films/">Films</a><a href="./" aria-current="page">Games</a></nav></header>
+
+<!-- 로비 -->
+<main id="lobby" class="lobby">
+  <section>
+    <h1 class="lobby-title">벽바둑</h1>
+    <p class="lobby-tag">말을 움직이고 벽을 세워, 나만 들어 있는 구역을 넓게 만드는 게임입니다.</p>
+    <ul class="rules">
+      <li><b>7×7 판</b>에서 합니다. 2인전은 말 4개(2개는 정해진 자리), 3인전은 말 2개를 직접 놓고 시작합니다.</li>
+      <li>내 차례에는 말 하나를 <b>상하좌우로 0~2칸</b> 옮기고, 그 말이 선 칸의 네 변 중 한 곳에 <b>벽을 하나</b> 세웁니다.</li>
+      <li>벽과 다른 말은 지나갈 수 없습니다. 벽은 세운 사람에게도 똑같이 막힙니다.</li>
+      <li>벽으로 막힌 구역 안에 <b>내 말만</b> 있으면 그 구역의 칸 수가 내 점수입니다.</li>
+      <li>3인전에서는 게임마다 한 번, 내 말 옆의 벽 하나를 <b>부술</b> 수 있습니다.</li>
+      <li>모든 말이 각자의 구역에 갇히면 끝납니다. 칸이 가장 많은 사람이 이기고, 같으면 가장 큰 구역 하나로 가립니다.</li>
+    </ul>
+  </section>
+
+  <aside class="lobby-side">
+    <div class="side-block" id="host-block">
+      <h2>인원</h2>
+      <div class="seg" role="group" aria-label="인원">
+        <button type="button" data-n="2" aria-pressed="true">2인전</button>
+        <button type="button" data-n="3" aria-pressed="false">3인전</button>
+      </div>
+    </div>
+
+    <div class="side-block" id="mode-block">
+      <h2>방식</h2>
+      <div class="modes">
+        <button class="mode-btn is-main" type="button" id="btn-local"><span class="m-name">한 기기에서 같이</span><span class="m-desc">화면 하나로 번갈아 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
+        <button class="mode-btn" type="button" id="btn-online"><span class="m-name">친구와 온라인</span><span class="m-desc">초대 링크를 보내 각자 기기로 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
+      </div>
+    </div>
+
+    <div class="side-block" id="online-block" hidden>
+      <h2 id="online-title">온라인 대기실</h2>
+      <div class="field" id="name-field">
+        <label for="my-name">내 이름</label>
+        <input class="input" id="my-name" maxlength="15" autocomplete="nickname" placeholder="친구에게 보일 이름">
+      </div>
+      <div class="invite" id="invite" hidden>
+        <p>이 링크를 친구에게 보내세요. 자리가 다 차면 바로 시작합니다.</p>
+        <div class="invite-row"><input class="input" id="invite-link" readonly aria-label="초대 링크"><button class="btn" type="button" id="btn-copy">복사</button></div>
+        <ul class="seats" id="seats"></ul>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn btn-main" type="button" id="btn-go-online">방 만들기</button>
+        <button class="btn btn-quiet" type="button" id="btn-cancel-online">취소</button>
+      </div>
+      <p class="status" id="online-status" role="status"></p>
+    </div>
+  </aside>
+</main>
+
+<!-- 게임 -->
+<main id="game" class="play" hidden>
+  <div class="arena">
+    <div class="board-wrap"><svg class="board-svg" id="board" viewBox="0 0 484 484" role="img" aria-label="벽바둑 판"></svg></div>
+    <div class="side">
+      <ul class="players" id="players"></ul>
+      <p class="say" id="say" aria-live="polite"></p>
+      <div class="actions">
+        <button class="btn" type="button" id="btn-hammer" hidden>벽 부수기</button>
+        <button class="btn" type="button" id="btn-undo" hidden>되돌리기</button>
+        <button class="btn btn-quiet" type="button" id="btn-leave">나가기</button>
+      </div>
+      <ol class="mini-rules">
+        <li>말을 누르고, 점으로 표시된 칸으로 옮깁니다. 제자리(점선 원)도 됩니다.</li>
+        <li>옮긴 말 둘레에 벽을 하나 세우면 차례가 넘어갑니다.</li>
+        <li>내 말만 있는 막힌 구역은 내 색으로 칠해집니다.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const { T, esc, toast, dialog, Room, copy, savedName, saveName } = window.Kit;
+  const N = 7, S = 64, M = 18, SIZE = M * 2 + N * S;
+  const COLORS = ['빨강', '파랑', '노랑'];
+  const $ = id => document.getElementById(id);
+
+  /* =========================================================
+   * 규칙 (상태는 순수 데이터, 판정은 순수 함수)
+   * ======================================================= */
+  const grid = (r, c, v) => Array.from({ length: r }, () => new Array(c).fill(v));
+  function newGame(n) {
+    const s = { n, pieces: [], walls: { h: grid(N - 1, N, -1), v: grid(N, N - 1, -1) }, hammer: new Array(n).fill(false), phase: 'place', turn: 0, toPlace: [], last: null, moves: 0, scores: null };
+    if (n === 2) {
+      [[1, 1, 0], [5, 5, 0], [1, 5, 1], [5, 1, 1]].forEach(([r, c, p], i) => s.pieces.push({ id: i, p, r, c }));
+      s.toPlace = [0, 1, 1, 0];
+    } else {
+      s.toPlace = [0, 1, 2, 2, 1, 0];
+    }
+    s.turn = s.toPlace[0];
+    return s;
+  }
+  const clone = s => JSON.parse(JSON.stringify(s));
+  const inside = (r, c) => r >= 0 && r < N && c >= 0 && c < N;
+  const pieceAt = (s, r, c) => s.pieces.find(p => p.r === r && p.c === c);
+  // 칸 (r,c)에서 방향 d로 나가는 변: [종류, r, c]  (위/아래는 h, 왼/오른쪽은 v)
+  const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  function edgeOf(r, c, d) {
+    const [dr, dc] = DIRS[d];
+    if (!inside(r + dr, c + dc)) return null; // 바깥 테두리
+    if (dr) return ['h', Math.min(r, r + dr), c];
+    return ['v', r, Math.min(c, c + dc)];
+  }
+  const wallAt = (s, e) => s.walls[e[0]][e[1]][e[2]];
+  const open = (s, r, c, d) => { const e = edgeOf(r, c, d); return !!e && wallAt(s, e) < 0; };
+  const freeEdges = (s, r, c) => [0, 1, 2, 3].map(d => edgeOf(r, c, d)).filter(e => e && wallAt(s, e) < 0);
+
+  // 0~2칸 이동으로 갈 수 있는 칸 (말과 벽은 못 지나감, 도착 칸에 세울 벽이 있어야 함)
+  function reachable(s, piece) {
+    const seen = new Map([[piece.r * N + piece.c, 0]]);
+    let frontier = [[piece.r, piece.c]];
+    for (let step = 1; step <= 2; step++) {
+      const next = [];
+      for (const [r, c] of frontier) for (let d = 0; d < 4; d++) {
+        if (!open(s, r, c, d)) continue;
+        const nr = r + DIRS[d][0], nc = c + DIRS[d][1], k = nr * N + nc;
+        if (seen.has(k) || pieceAt(s, nr, nc)) continue;
+        seen.set(k, step); next.push([nr, nc]);
+      }
+      frontier = next;
+    }
+    return [...seen.keys()].map(k => [Math.floor(k / N), k % N]).filter(([r, c]) => freeEdges(s, r, c).length > 0);
+  }
+
+  // 구역 나누기: 같은 구역 번호, 구역별 칸 수와 말 주인
+  function regions(s) {
+    const id = grid(N, N, -1), info = [];
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      if (id[r][c] >= 0) continue;
+      const k = info.length, cells = [], owners = new Set();
+      id[r][c] = k; const q = [[r, c]];
+      while (q.length) {
+        const [a, b] = q.pop(); cells.push([a, b]);
+        const pc = pieceAt(s, a, b); if (pc) owners.add(pc.p);
+        for (let d = 0; d < 4; d++) {
+          if (!open(s, a, b, d)) continue;
+          const na = a + DIRS[d][0], nb = b + DIRS[d][1];
+          if (id[na][nb] < 0) { id[na][nb] = k; q.push([na, nb]); }
+        }
+      }
+      info.push({ cells, owners: [...owners], size: cells.length });
+    }
+    return { id, info };
+  }
+  const settledOf = (s, R) => s.pieces.map(p => R.info[R.id[p.r][p.c]].owners.length === 1);
+  function scoreOf(s, R) {
+    const sc = new Array(s.n).fill(0), big = new Array(s.n).fill(0);
+    R.info.forEach(g => { if (g.owners.length === 1) { sc[g.owners[0]] += g.size; big[g.owners[0]] = Math.max(big[g.owners[0]], g.size); } });
+    return { sc, big };
+  }
+
+  function nextTurn(s) {
+    const R = regions(s), set = settledOf(s, R);
+    const active = new Array(s.n).fill(false);
+    s.pieces.forEach((p, i) => { if (!set[i]) active[p.p] = true; });
+    if (!active.some(Boolean)) {
+      s.phase = 'over';
+      s.scores = scoreOf(s, R);
+      return;
+    }
+    let t = s.turn;
+    for (let i = 0; i < s.n; i++) { t = (t + 1) % s.n; if (active[t]) break; }
+    s.turn = t;
+  }
+
+  // 행동 적용. 잘못된 행동이면 null
+  function apply(prev, seat, a) {
+    const s = clone(prev);
+    if (s.phase === 'place' && a.k === 'place') {
+      if (seat !== s.toPlace[0] || !inside(a.r, a.c) || pieceAt(s, a.r, a.c)) return null;
+      s.pieces.push({ id: s.pieces.length, p: seat, r: a.r, c: a.c });
+      s.toPlace.shift();
+      s.last = { place: [a.r, a.c] };
+      if (s.toPlace.length) s.turn = s.toPlace[0];
+      else { s.phase = 'move'; s.turn = 0; }
+      return s;
+    }
+    if (s.phase === 'move' && a.k === 'move') {
+      if (seat !== s.turn) return null;
+      const pc = s.pieces.find(p => p.id === a.id);
+      if (!pc || pc.p !== seat) return null;
+      if (a.hammer) {
+        if (s.n !== 3 || s.hammer[seat]) return null;
+        const e = a.hammer;
+        const adj = [0, 1, 2, 3].map(d => edgeOf(pc.r, pc.c, d)).some(x => x && x[0] === e[0] && x[1] === e[1] && x[2] === e[2]);
+        if (!adj || wallAt(s, e) < 0) return null;
+        s.walls[e[0]][e[1]][e[2]] = -1; s.hammer[seat] = true;
+      }
+      if (!reachable(s, pc).some(([r, c]) => r === a.r && c === a.c)) return null;
+      const from = [pc.r, pc.c];
+      pc.r = a.r; pc.c = a.c;
+      const w = a.wall;
+      if (!freeEdges(s, pc.r, pc.c).some(e => e[0] === w[0] && e[1] === w[1] && e[2] === w[2])) return null;
+      s.walls[w[0]][w[1]][w[2]] = seat;
+      s.moves++;
+      s.last = { id: pc.id, from, to: [pc.r, pc.c], wall: w, hammer: a.hammer || null };
+      nextTurn(s);
+      return s;
+    }
+    return null;
+  }
+
+  /* =========================================================
+   * 화면 상태
+   * ======================================================= */
+  let N_PLAYERS = 2;
+  let state = null;
+  let mode = 'local';           // local | host | guest
+  let mySeat = -1;              // 온라인에서 내 자리
+  let names = [];
+  let room = null;
+  let ui = { sel: null, to: null, breaking: false, broke: null, history: [] };
+
+  const canAct = () => state && state.phase !== 'over' && (mode === 'local' || state.turn === mySeat);
+  const playerName = i => (names[i] ? names[i] : COLORS[i]);
+
+  /* ---------- 판 그리기 ---------- */
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+  const cx = c => M + c * S + S / 2, cy = r => M + r * S + S / 2;
+  function wallRect(e, pad = 5, th = 8) {
+    const [o, r, c] = e;
+    if (o === 'h') return { x: M + c * S + pad, y: M + (r + 1) * S - th / 2, width: S - pad * 2, height: th };
+    return { x: M + (c + 1) * S - th / 2, y: M + r * S + pad, width: th, height: S - pad * 2 };
+  }
+
+  const svg = $('board');
+  let layer = {};
+  function buildBoard() {
+    svg.innerHTML = '';
+    el('rect', { x: 0, y: 0, width: SIZE, height: SIZE, rx: 12, fill: 'var(--slate)' }, svg);
+    layer.cells = el('g', {}, svg);
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) el('rect', { class: 'bd-cell', x: M + c * S + 3, y: M + r * S + 3, width: S - 6, height: S - 6, rx: 6, 'data-r': r, 'data-c': c }, layer.cells);
+    layer.marks = el('g', {}, svg);
+    layer.walls = el('g', {}, svg);
+    layer.pieces = el('g', {}, svg);
+    layer.hints = el('g', {}, svg);
+    layer.pieceEls = new Map();
+    layer.wallKeys = new Set();
+  }
+
+  function render(animate = true) {
+    if (!state) return;
+    const R = regions(state), settled = settledOf(state, R);
+    const view = viewState();
+
+    // 영역 칠하기
+    [...layer.cells.children].forEach(rect => {
+      const r = +rect.dataset.r, c = +rect.dataset.c, g = R.info[R.id[r][c]];
+      const owned = g.owners.length === 1 ? g.owners[0] : -1;
+      rect.setAttribute('class', 'bd-cell' + (owned >= 0 ? ` terr p${owned}` : ''));
+    });
+
+    // 벽
+    const keys = new Set();
+    ['h', 'v'].forEach(o => view.walls[o].forEach((row, r) => row.forEach((w, c) => { if (w >= 0) keys.add(`${o}${r}-${c}-${w}`); })));
+    [...layer.walls.children].forEach(n => { if (!keys.has(n.dataset.k)) n.remove(); });
+    keys.forEach(k => {
+      if (layer.walls.querySelector(`[data-k="${k}"]`)) return;
+      const [o, rest] = [k[0], k.slice(1)]; const [r, c, w] = rest.split('-').map(Number);
+      const rect = el('rect', { ...wallRect([o, r, c]), class: `wall p${w}` + (animate && layer.wallKeys.size ? ' new' : ''), fill: 'var(--pc)', 'data-k': k }, layer.walls);
+      rect.style.fill = 'var(--pc)';
+    });
+    layer.wallKeys = keys;
+
+    // 마지막 수 표시
+    layer.marks.innerHTML = '';
+    if (state.last && state.last.from && (state.last.from[0] !== state.last.to[0] || state.last.from[1] !== state.last.to[1]) && !ui.to) {
+      const [r, c] = state.last.from;
+      el('circle', { class: 'last-from', cx: cx(c), cy: cy(r), r: 14 }, layer.marks);
+    }
+
+    // 말
+    const seen = new Set();
+    view.pieces.forEach(p => {
+      seen.add(p.id);
+      let g = layer.pieceEls.get(p.id);
+      if (!g) {
+        g = el('g', { class: `pc p${p.p}`, 'data-id': p.id }, layer.pieces);
+        el('circle', { class: 'ring', r: 26 }, g);
+        el('circle', { class: 'stone', r: 21 }, g);
+        el('circle', { class: 'rim', r: 20 }, g);
+        el('ellipse', { class: 'shine', cx: -6, cy: -8, rx: 8, ry: 5 }, g);
+        g.addEventListener('click', () => onPiece(p.id));
+        layer.pieceEls.set(p.id, g);
+        g.style.transition = 'none';
+        g.style.transform = `translate(${cx(p.c)}px, ${cy(p.r)}px)`;
+        g.getBoundingClientRect();
+        g.style.transition = '';
+      }
+      g.style.transform = `translate(${cx(p.c)}px, ${cy(p.r)}px)`;
+      const idx = state.pieces.findIndex(x => x.id === p.id);
+      const mine = canAct() && state.phase === 'move' && p.p === state.turn && !ui.to && movable(p);
+      g.classList.toggle('mine', mine);
+      g.classList.toggle('sel', ui.sel === p.id);
+      g.classList.toggle('settled', idx >= 0 && settled[idx] && state.phase !== 'place');
+    });
+    layer.pieceEls.forEach((g, id) => { if (!seen.has(id)) { g.remove(); layer.pieceEls.delete(id); } });
+
+    renderHints(view);
+    renderSide(R);
+  }
+
+  // 아직 보내지 않은 내 수(이동, 부순 벽)를 반영한 화면용 상태
+  function viewState() {
+    if (ui.sel == null && !ui.broke) return state;
+    const v = clone(state);
+    if (ui.broke) { const e = ui.broke; v.walls[e[0]][e[1]][e[2]] = -1; }
+    if (ui.to) { const p = v.pieces.find(x => x.id === ui.sel); p.r = ui.to[0]; p.c = ui.to[1]; }
+    return v;
+  }
+
+  function renderHints(view) {
+    const H = layer.hints; H.innerHTML = '';
+    if (!canAct()) return;
+    const turn = state.turn, cls = `p${turn}`;
+    if (state.phase === 'place') {
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+        if (pieceAt(state, r, c)) continue;
+        const g = el('g', { class: cls }, H);
+        const hit = el('rect', { class: 'place-hit', x: M + c * S, y: M + r * S, width: S, height: S, tabindex: 0, role: 'button', 'aria-label': `${r + 1}행 ${c + 1}열에 놓기` }, g);
+        el('circle', { class: 'place-dot', cx: cx(c), cy: cy(r), r: 9 }, g);
+        const go = () => act({ k: 'place', r, c });
+        hit.addEventListener('click', go); hit.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      }
+      return;
+    }
+    if (ui.sel == null) return;
+    const pc = view.pieces.find(p => p.id === ui.sel);
+    if (ui.breaking) {
+      for (let d = 0; d < 4; d++) {
+        const e = edgeOf(pc.r, pc.c, d);
+        if (!e || wallAt(view, e) < 0) continue;
+        const g = el('g', { class: cls }, H);
+        const hit = el('rect', { ...wallRect(e, 0, 22), class: 'ghost-hit', tabindex: 0, role: 'button', 'aria-label': '이 벽 부수기' }, g);
+        el('rect', { ...wallRect(e, 3, 14), class: 'breakable', rx: 4 }, g);
+        const go = () => { ui.broke = e; ui.breaking = false; render(); };
+        hit.addEventListener('click', go); hit.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); });
+      }
+      return;
+    }
+    if (!ui.to) {
+      const tmp = clone(view); // 부순 벽 반영된 상태에서 이동 범위
+      reachable(tmp, tmp.pieces.find(p => p.id === ui.sel)).forEach(([r, c]) => {
+        const g = el('g', { class: cls }, H);
+        const hit = el('rect', { class: 'hit', x: M + c * S, y: M + r * S, width: S, height: S, tabindex: 0, role: 'button', 'aria-label': `${r + 1}행 ${c + 1}열로 이동` }, g);
+        if (r === pc.r && c === pc.c) el('circle', { class: 'stay', cx: cx(c), cy: cy(r), r: 27 }, g);
+        else el('circle', { class: 'hint', cx: cx(c), cy: cy(r), r: 8 }, g);
+        const go = () => { ui.to = [r, c]; render(); };
+        hit.addEventListener('click', go); hit.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      });
+      return;
+    }
+    // 벽 세울 곳
+    freeEdges(view, pc.r, pc.c).forEach(e => {
+      const g = el('g', { class: cls }, H);
+      const hit = el('rect', { ...wallRect(e, 0, 26), class: 'ghost-hit', tabindex: 0, role: 'button', 'aria-label': '여기에 벽 세우기' }, g);
+      el('rect', { ...wallRect(e, 5, 8), class: 'ghost', rx: 3 }, g);
+      const go = () => act({ k: 'move', id: ui.sel, r: pc.r, c: pc.c, wall: e, hammer: ui.broke || undefined });
+      hit.addEventListener('click', go); hit.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
+    });
+  }
+
+  function renderSide(R) {
+    const { sc } = scoreOf(state, R);
+    $('players').innerHTML = Array.from({ length: state.n }, (_, i) => {
+      const left = state.phase === 'place' ? state.toPlace.filter(x => x === i).length : 0;
+      const sub = [];
+      if (state.phase === 'place' && left) sub.push(`<span>놓을 말 ${left}개</span>`);
+      if (state.n === 3 && state.phase !== 'place') sub.push(`<span class="ham${state.hammer[i] ? ' used' : ''}">${state.hammer[i] ? '벽 부수기 씀' : '벽 부수기 남음'}</span>`);
+      if (mode !== 'local' && i === mySeat) sub.push('<span>나</span>');
+      return `<li class="p${i}${state.phase !== 'over' && state.turn === i ? ' turn' : ''}"><span class="dot"></span><span class="nm">${esc(playerName(i))}</span><span class="sc">${sc[i]}</span>${sub.length ? `<span class="sub">${sub.join('')}</span>` : ''}</li>`;
+    }).join('');
+
+    const say = $('say');
+    const who = playerName(state.turn);
+    let msg;
+    if (state.phase === 'over') msg = '게임이 끝났습니다';
+    else if (!canAct()) msg = `${who} 차례를 기다리는 중`;
+    else if (state.phase === 'place') msg = `${who}: 말을 놓을 칸을 고르세요`;
+    else if (ui.breaking) msg = `${who}: 부술 벽을 고르세요`;
+    else if (ui.sel == null) msg = `${who}: 움직일 말을 고르세요`;
+    else if (!ui.to) msg = `${who}: 갈 칸을 고르세요`;
+    else msg = `${who}: 벽을 세울 곳을 고르세요`;
+    say.className = `say p${state.turn}`;
+    say.innerHTML = `<span class="dot"></span><span></span>`;
+    say.lastChild.textContent = msg;
+
+    const hb = $('btn-hammer');
+    hb.hidden = !(canAct() && state.phase === 'move' && state.n === 3 && !state.hammer[state.turn] && ui.sel != null && !ui.to && !ui.broke);
+    hb.classList.toggle('on', ui.breaking);
+    hb.textContent = ui.breaking ? '부수기 취소' : '벽 부수기';
+    $('btn-undo').hidden = !(canAct() && state.phase === 'move' && (ui.to || ui.broke));
+  }
+
+  /* ---------- 입력 ---------- */
+  // 움직일 수 있는 말: 갈 칸이 있거나, 3인전에서 옆 벽을 부술 수 있음
+  function movable(p) {
+    const real = state.pieces.find(x => x.id === p.id);
+    if (reachable(state, real).length) return true;
+    return state.n === 3 && !state.hammer[state.turn] && [0, 1, 2, 3].some(d => { const e = edgeOf(real.r, real.c, d); return e && wallAt(state, e) >= 0; });
+  }
+  function onPiece(id) {
+    if (!canAct() || state.phase !== 'move' || ui.to) return;
+    const p = state.pieces.find(x => x.id === id);
+    if (!p || p.p !== state.turn || !movable(p)) return;
+    if (ui.broke && ui.sel !== id) return; // 벽을 부순 말로 움직여야 함
+    ui.sel = ui.sel === id && !ui.broke ? null : id;
+    // 갈 칸이 없으면 벽 부수기부터
+    ui.breaking = ui.sel != null && !ui.broke && !reachable(state, p).length;
+    render();
+  }
+  $('btn-hammer').addEventListener('click', () => { ui.breaking = !ui.breaking; render(); });
+  $('btn-undo').addEventListener('click', () => {
+    if (ui.to) ui.to = null; else if (ui.broke) ui.broke = null;
+    render();
+  });
+
+  function act(a) {
+    const seat = mode === 'local' ? state.turn : mySeat;
+    if (mode === 'guest') {
+      room.send(a);
+      // 방장이 확인해서 돌려줄 때까지 내 수를 미리 보여 줌
+      const s = apply(state, seat, a);
+      if (s) { state = s; resetUi(); render(); }
+      return;
+    }
+    const s = apply(state, seat, a);
+    if (!s) { toast(T('그곳에는 둘 수 없습니다.')); return; }
+    commit(s);
+  }
+
+  function commit(s) {
+    state = s; resetUi(); render();
+    if (mode === 'host') room.broadcast({ t: 'state', s: state, names });
+    if (state.phase === 'over') setTimeout(showResult, 450);
+  }
+  function resetUi() { ui = { sel: null, to: null, breaking: false, broke: null }; }
+
+  function showResult() {
+    const { sc, big } = state.scores;
+    const order = Array.from({ length: state.n }, (_, i) => i).sort((a, b) => sc[b] - sc[a] || big[b] - big[a]);
+    const top = order.filter(i => sc[i] === sc[order[0]] && big[i] === big[order[0]]);
+    const title = top.length > 1 ? '무승부' : `${playerName(top[0])} 승리`;
+    const tieByBig = top.length === 1 && order.length > 1 && sc[order[1]] === sc[order[0]];
+    const list = `<ul class="score-list">${order.map(i => `<li class="p${i}"><span class="dot" style="width:12px;height:12px;border-radius:50%;background:var(--pc)"></span><span>${esc(playerName(i))}</span><span class="n">${sc[i]}칸</span></li>`).join('')}</ul>`;
+    const actions = [];
+    if (mode !== 'guest') actions.push({ label: '다시 하기', main: true, onClick: () => commit(newGame(state.n)) });
+    actions.push({ label: '판 보기' });
+    actions.push({ label: '나가기', onClick: leave });
+    dialog({ title, text: tieByBig ? '칸 수가 같아 가장 큰 구역으로 가렸습니다.' : (mode === 'guest' ? '방장이 다시 하기를 누르면 새 판이 시작됩니다.' : ''), html: list, actions });
+  }
+
+  /* ---------- 화면 전환 ---------- */
+  function startPlay() {
+    $('lobby').hidden = true; $('game').hidden = false;
+    buildBoard(); resetUi(); render(false);
+    window.scrollTo(0, 0);
+  }
+  function leave() {
+    if (room) { room.close(); room = null; }
+    const u = new URL(location.href); u.search = '';
+    location.href = u.pathname;
+  }
+  $('btn-leave').addEventListener('click', () => {
+    if (state && state.phase !== 'over' && state.moves > 0 && !confirm(T('게임을 그만두고 나갈까요?'))) return;
+    leave();
+  });
+
+  /* ---------- 로비 ---------- */
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    N_PLAYERS = +b.dataset.n;
+    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  $('btn-local').addEventListener('click', () => { mode = 'local'; names = []; state = newGame(N_PLAYERS); startPlay(); });
+  $('my-name').value = savedName();
+
+  $('btn-online').addEventListener('click', () => {
+    $('mode-block').hidden = true; $('online-block').hidden = false;
+    $('online-title').textContent = `온라인 대기실 (${N_PLAYERS}인전)`;
+    $('my-name').focus();
+  });
+  $('btn-cancel-online').addEventListener('click', () => {
+    if (room) { room.close(); room = null; }
+    $('online-block').hidden = true; $('mode-block').hidden = false; $('host-block').hidden = false;
+    $('invite').hidden = true; $('btn-go-online').hidden = false; $('name-field').hidden = false; $('online-status').textContent = '';
+  });
+  $('btn-copy').addEventListener('click', () => copy($('invite-link').value));
+
+  function setStatus(msg, err) { const s = $('online-status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+  function myName() { const n = $('my-name').value.trim().slice(0, 15); saveName(n); return n; }
+
+
+  $('btn-go-online').addEventListener('click', () => {
+    if (!window.Peer) { setStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true); return; }
+    if ($('btn-go-online').dataset.join) return joinRoom($('btn-go-online').dataset.join);
+    mode = 'host'; mySeat = 0;
+    const me = myName();
+    setStatus('방을 만드는 중입니다…');
+    $('btn-go-online').hidden = true; $('host-block').hidden = true;
+    let occ = [true];
+    let seatNames = [me];
+    const seatLabel = i => seatNames[i] || COLORS[i];
+    const drawSeats = () => $('seats').innerHTML = Array.from({ length: N_PLAYERS }, (_, i) => `<li class="p${i}${occ[i] ? ' on' : ''}" style="${occ[i] ? 'color:var(--pc)' : ''}"><span class="seat-dot"></span><span>${occ[i] ? esc(seatLabel(i)) + (i === 0 ? ' (나)' : '') : '빈자리'}</span></li>`).join('');
+    room = Room.host({
+      seats: N_PLAYERS, name: me,
+      onReady(r) {
+        $('invite').hidden = false; $('invite-link').value = r.link; drawSeats();
+        setStatus('친구를 기다리는 중입니다.');
+      },
+      onJoin(seat, list, o) {
+        occ = o; seatNames = list; seatNames[0] = me;
+        if (state) {
+          // 끊겼던 사람이 다시 들어옴: 이름만 새로 받고 지금 판을 보냄
+          names[seat] = list[seat] || COLORS[seat];
+          room.broadcast({ t: 'state', s: state, names }); render();
+          toast(T(`${playerName(seat)} 다시 들어왔습니다.`));
+          return;
+        }
+        drawSeats();
+        if (occ.filter(Boolean).length === N_PLAYERS) {
+          names = Array.from({ length: N_PLAYERS }, (_, i) => seatLabel(i));
+          state = newGame(N_PLAYERS);
+          room.broadcast({ t: 'state', s: state, names });
+          startPlay();
+        }
+      },
+      onAction(seat, a) {
+        if (!state) return;
+        const s = apply(state, seat, a);
+        if (s) commit(s); else room.sendTo(seat, { t: 'state', s: state, names });
+      },
+      onLeave(seat, list, o) {
+        occ = o; seatNames = list; seatNames[0] = me;
+        if (state) toast(T(`${playerName(seat)} 연결이 끊겼습니다. 같은 링크로 다시 들어오면 이어서 둡니다.`), 4000);
+        else drawSeats();
+      },
+      onError(e) { setStatus(`연결 오류: ${e.type || e.message || e}`, true); }
+    });
+  });
+
+  function joinRoom(id) {
+    if (!window.Peer) { setStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true); return; }
+    mode = 'guest';
+    const me = myName();
+    $('btn-go-online').hidden = true; $('name-field').hidden = true;
+    setStatus('방에 들어가는 중입니다…');
+    room = Room.join(id, {
+      name: me,
+      onMessage(msg) {
+        if (msg.t === 'full') { setStatus('자리가 다 찼습니다.', true); return; }
+        if (msg.t === 'seat') { mySeat = msg.seat; N_PLAYERS = msg.seats; setStatus(`${COLORS[mySeat]} 자리에 앉았습니다. 다른 사람을 기다리는 중입니다.`); return; }
+        if (msg.t === 'state') {
+          const first = !state;
+          const wasOver = state && state.phase === 'over';
+          state = msg.s; names = msg.names || [];
+          if (first) startPlay(); else { resetUi(); render(); }
+          if (state.phase === 'over' && !wasOver) setTimeout(showResult, 450);
+          if (wasOver && state.phase !== 'over') document.querySelectorAll('dialog[open]').forEach(d => d.close());
+        }
+      },
+      onClose() {
+        if (state) dialog({ title: '연결이 끊겼습니다', text: '방장과의 연결이 끊어졌습니다.', actions: [{ label: '나가기', main: true, onClick: leave }] });
+        else setStatus('방장과 연결할 수 없습니다. 링크를 다시 확인해 주세요.', true);
+      },
+      onError(e) { setStatus(e && e.type === 'peer-unavailable' ? '방을 찾을 수 없습니다. 방장이 나갔거나 링크가 틀렸습니다.' : `연결 오류: ${e.type || e.message || e}`, true); }
+    });
+  }
+
+  // 초대 링크로 들어온 경우
+  const roomId = new URLSearchParams(location.search).get('room');
+  if (roomId) {
+    $('mode-block').hidden = true; $('host-block').hidden = true; $('online-block').hidden = false;
+    $('online-title').textContent = '초대받은 방';
+    $('btn-go-online').textContent = '입장하기';
+    $('btn-go-online').dataset.join = roomId;
+    $('btn-cancel-online').hidden = true;
+    $('my-name').focus();
+  }
+
+  // 로비 그림: 진행 중인 판 예시
+  window.WallGo = { newGame, apply, regions, reachable, scoreOf };
+})();
+</script>
+</body>
+</html>
