@@ -216,13 +216,17 @@
     return [...seen.keys()].map(k => [Math.floor(k / N), k % N]).filter(ok);
   }
   // 움직일 수 있는 말이 있는가 (3인전은 벽을 부숴서 길이 생기는 경우도)
-  function canMove(s, player) {
-    return s.pieces.some(p => {
-      if (p.p !== player) return false;
-      if (reachable(s, p).length) return true;
-      if (s.n !== 3 || s.hammer[player]) return false;
-      return [0, 1, 2, 3].some(d => { const e = edgeOf(p.r, p.c, d); if (!e || wallAt(s, e) < 0) return false; const t = clone(s); t.walls[e[0]][e[1]][e[2]] = -1; return reachable(t, t.pieces.find(x => x.id === p.id)).length > 0; });
+  // 부수면 갈 곳이 생기는 옆 벽들
+  function breakable(s, p) {
+    if (s.n !== 3 || s.hammer[p.p]) return [];
+    return [0, 1, 2, 3].map(d => edgeOf(p.r, p.c, d)).filter(e => {
+      if (!e || wallAt(s, e) < 0) return false;
+      const t = clone(s); t.walls[e[0]][e[1]][e[2]] = -1;
+      return reachable(t, t.pieces.find(x => x.id === p.id)).length > 0;
     });
+  }
+  function canMove(s, player) {
+    return s.pieces.some(p => p.p === player && (reachable(s, p).length > 0 || breakable(s, p).length > 0));
   }
 
   // 구역 나누기: 같은 구역 번호, 구역별 칸 수와 말 주인
@@ -446,9 +450,7 @@
     if (ui.sel == null) return;
     const pc = view.pieces.find(p => p.id === ui.sel);
     if (ui.breaking) {
-      for (let d = 0; d < 4; d++) {
-        const e = edgeOf(pc.r, pc.c, d);
-        if (!e || wallAt(view, e) < 0) continue;
+      for (const e of breakable(view, pc)) {
         const g = el('g', { class: cls }, H);
         const hit = el('rect', { ...wallRect(e, 0, 22), class: 'ghost-hit', tabindex: 0, role: 'button', 'aria-label': '이 벽 부수기' }, g);
         el('rect', { ...wallRect(e, 3, 14), class: 'breakable', rx: 4 }, g);
@@ -514,8 +516,7 @@
   // 움직일 수 있는 말: 갈 칸이 있거나, 3인전에서 옆 벽을 부술 수 있음
   function movable(p) {
     const real = state.pieces.find(x => x.id === p.id);
-    if (reachable(state, real).length) return true;
-    return state.n === 3 && !state.hammer[state.turn] && [0, 1, 2, 3].some(d => { const e = edgeOf(real.r, real.c, d); return e && wallAt(state, e) >= 0; });
+    return reachable(state, real).length > 0 || breakable(state, real).length > 0;
   }
   function onPiece(id) {
     if (!canAct() || state.phase !== 'move' || ui.to) return;
