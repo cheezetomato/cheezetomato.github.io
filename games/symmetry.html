@@ -11,59 +11,12 @@
 <link rel="stylesheet" href="common.css">
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js" defer></script>
 <script src="common.js"></script>
+<script src="rooms.js"></script>
 <style>
   :root {
     --g: #2f8f68; --g-ink: #f3f8f2;
     --stone: #241c14; --stone-2: #2e2419; --stone-line: #3b2f22; --gold: #d9b25c; --sand: #e9d8b4;
   }
-  .s0 { --pc: #e5533d; } .s1 { --pc: #3f86e8; } .s2 { --pc: #e6b13a; } .s3 { --pc: #4fb07a; }
-
-  /* ---------- 입구 ---------- */
-  .entry-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .entry-tabs .mode-btn { grid-template-columns: 1fr; }
-  .entry-tabs .mode-btn[aria-pressed="true"] { border-color: var(--g); background: var(--raise); }
-  .panel { display: grid; gap: 14px; padding: 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
-  .check { display: flex; align-items: center; gap: 10px; font-size: 0.93rem; cursor: pointer; }
-  .check input { width: 18px; height: 18px; accent-color: var(--g); }
-  .check small { color: var(--text-mute); }
-  .room-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 340px; overflow: auto; }
-  .room-list li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 12px; padding: 10px 12px; border-radius: 8px; background: var(--raise); }
-  .room-list .rn { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .room-list .rh { grid-column: 1; font-size: 0.8rem; color: var(--text-mute); }
-  .room-list .rc { grid-column: 2; grid-row: 1 / span 2; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text-dim); }
-  .room-list .rc.playing { color: var(--text-mute); font-weight: 500; font-size: 0.82rem; }
-  .room-list .btn { grid-column: 3; grid-row: 1 / span 2; min-height: 36px; padding: 6px 14px; }
-  .empty { color: var(--text-mute); font-size: 0.92rem; padding: 18px 4px; text-align: center; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .row .input { flex: 1; min-width: 160px; }
-
-  /* ---------- 대기실 ---------- */
-  .wait { max-width: 1080px; margin: 0 auto; padding: 36px 28px 56px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px 40px; }
-  .wait-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
-  .wait-head h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.04em; line-height: 1.1; overflow-wrap: anywhere; }
-  .wait-head .tag { display: inline-block; margin-left: 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); vertical-align: middle; letter-spacing: 0; }
-  .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .slot { position: relative; min-height: 112px; padding: 18px; border-radius: 12px; border: 1px dashed var(--line); display: flex; flex-direction: column; justify-content: space-between; color: var(--text-mute); }
-  .slot.on { border: 1px solid color-mix(in srgb, var(--pc) 45%, var(--line)); background: color-mix(in srgb, var(--pc) 8%, var(--surface)); color: var(--text); }
-  .slot .who { font-size: 1.25rem; font-weight: 750; letter-spacing: -0.03em; overflow-wrap: anywhere; }
-  .slot .role { font-size: 0.82rem; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
-  .slot .chip { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); }
-  .slot .kick { position: absolute; top: 10px; right: 10px; min-height: 30px; padding: 4px 10px; font-size: 0.8rem; }
-  .wait-foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
-
-  /* ---------- 채팅 ---------- */
-  .chat { display: grid; grid-template-rows: auto 1fr auto auto; gap: 10px; padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); min-height: 280px; max-height: 520px; }
-  .chat h2 { margin: 0; font-size: 0.9rem; color: var(--text-dim); font-weight: 600; }
-  .chat-log { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; min-height: 120px; padding-right: 4px; }
-  .chat-log .m { line-height: 1.45; overflow-wrap: anywhere; }
-  .chat-log .m b { color: var(--pc); font-weight: 700; margin-right: 6px; }
-  .chat-log .sys { color: var(--text-mute); font-size: 0.82rem; }
-  .emojis { display: flex; gap: 4px; flex-wrap: wrap; }
-  .emojis button { border: 1px solid var(--line); background: var(--raise); border-radius: 8px; width: 38px; height: 34px; font-size: 18px; cursor: pointer; line-height: 1; }
-  .emojis button:hover { border-color: var(--g); }
-  .chat form { display: flex; gap: 6px; }
-  .chat form .input { min-height: 38px; padding: 7px 10px; font-size: 0.9rem; }
-  .chat form .btn { min-height: 38px; padding: 6px 12px; font-size: 0.88rem; }
 
   /* ---------- 경기 ---------- */
   .match { max-width: 1240px; margin: 0 auto; padding: 18px 24px 40px; }
@@ -82,8 +35,6 @@
   .pips i.off { background: transparent; box-shadow: inset 0 0 0 1.5px #4a4650; }
   .pchip.done .st { color: #f2d48a; }
   .pchip.out { opacity: 0.6; }
-  .float-emoji { position: absolute; left: 50%; top: -6px; font-size: 30px; pointer-events: none; animation: rise 2.2s ease-out forwards; z-index: 5; }
-  @keyframes rise { 0% { transform: translate(-50%, 6px) scale(0.6); opacity: 0; } 15% { transform: translate(-50%, -14px) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -54px) scale(1); opacity: 0; } }
 
   .arena { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 20px; align-items: start; }
   /* 나무 테두리 + 초록 펠트 책상 */
@@ -179,58 +130,13 @@
   </section>
 
   <aside class="lobby-side">
-    <div class="field">
-      <label for="nick">닉네임</label>
-      <input class="input" id="nick" maxlength="12" autocomplete="nickname" placeholder="게임에서 쓸 이름">
-    </div>
-
-    <div id="invited" class="panel" hidden>
-      <p class="status">초대받은 방에 들어갑니다.</p>
-      <button class="btn btn-main" type="button" id="btn-enter-link">입장하기</button>
-    </div>
-
-    <div id="choose">
-      <div class="entry-tabs">
-        <button class="mode-btn" type="button" id="tab-make" aria-pressed="true"><span class="m-name">방 만들기</span><span class="m-desc">방장이 되어 친구를 부릅니다</span></button>
-        <button class="mode-btn" type="button" id="tab-join" aria-pressed="false"><span class="m-name">참가하기</span><span class="m-desc">열려 있는 방에 들어갑니다</span></button>
-      </div>
-
-      <div class="panel" id="panel-make" style="margin-top:12px">
-        <div class="field"><label for="room-name">방 이름</label><input class="input" id="room-name" maxlength="24" placeholder="예: 대칭 고수만"></div>
-        <div class="field"><label>최대 인원</label>
-          <div class="seg" role="group" aria-label="최대 인원" id="max-seg"><button type="button" data-n="2" aria-pressed="false">2명</button><button type="button" data-n="3" aria-pressed="false">3명</button><button type="button" data-n="4" aria-pressed="true">4명</button></div>
-        </div>
-        <label class="check"><input type="checkbox" id="private"> 비공개 방 <small>목록에 안 뜨고 링크로만 들어옵니다</small></label>
-        <button class="btn btn-main" type="button" id="btn-make">방 만들기</button>
-      </div>
-
-      <div class="panel" id="panel-join" style="margin-top:12px" hidden>
-        <div class="row"><b style="font-size:0.95rem">열린 방</b><span class="status" id="list-status" style="margin-left:auto"></span><button class="btn btn-quiet" type="button" id="btn-refresh">새로고침</button></div>
-        <ul class="room-list" id="room-list"></ul>
-        <div class="row"><input class="input" id="code" placeholder="초대 링크 붙여넣기"><button class="btn" type="button" id="btn-code">들어가기</button></div>
-      </div>
-    </div>
-    <button class="mode-btn" type="button" id="btn-practice" style="margin-top:4px"><span class="m-name">혼자 연습</span><span class="m-desc">친구 없이 3라운드를 혼자 풀어 봅니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
-    <p class="status" id="entry-status" role="status"></p>
+    <div id="lobby-box" style="display:grid;gap:12px"></div>
+    <button class="mode-btn" type="button" id="btn-practice"><span class="m-name">혼자 연습</span><span class="m-desc">친구 없이 3라운드를 혼자 풀어 봅니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
   </aside>
 </main>
 
 <!-- ============ 대기실 ============ -->
-<main id="waiting" class="wait" hidden>
-  <div class="wait-head">
-    <h1><span id="w-name"></span><span class="tag" id="w-tag"></span></h1>
-    <div class="row"><input class="input" id="w-link" readonly aria-label="초대 링크" style="min-width:260px"><button class="btn" type="button" id="btn-w-copy">링크 복사</button></div>
-  </div>
-  <section>
-    <div class="slots" id="slots"></div>
-    <div class="wait-foot">
-      <button class="btn btn-main" type="button" id="btn-start" hidden>게임 시작</button>
-      <p class="status" id="w-status"></p>
-      <button class="btn btn-quiet" type="button" id="btn-w-leave" style="margin-left:auto">나가기</button>
-    </div>
-  </section>
-  <div class="chat" data-chat></div>
-</main>
+<main id="waiting" class="wait" hidden></main>
 
 <!-- ============ 경기 ============ -->
 <main id="match" class="match" hidden>
@@ -703,78 +609,43 @@
   }
 
   /* =========================================================
-   * 방 (방장이 모든 판정을 맡음)
+   * 방 (rooms.js가 입구, 대기실, 채팅을 맡고 여기서는 게임만)
    * ======================================================= */
-  let room = null, isHost = false, mySeat = -1;
-  let roomInfo = { name: '', max: 4, priv: false };
-  let members = [];         // [{ seat, name }]
+  let isHost = false, mySeat = -1, members = [];
   let game = null;          // 방장이 보내는 경기 상태
-  let beat = null;
-  const nameOf = seat => (members.find(m => m.seat === seat) || {}).name || COLORS[seat];
+  let practice = false;
+  const lobby = window.Lobby({
+    game: 'symmetry', entry: $('lobby-box'), waiting: $('waiting'), entryScreen: $('entry'), otherScreens: [$('match')],
+    max: [2, 3, 4], min: 2,
+    onStart() { pull(); startMatch(); },
+    onAction(seat, a) { if (a.k === 'buzz') onBuzz(seat, a.layout); },
+    onMessage(msg) {
+      pull();
+      if (msg.t === 'game') { game = msg.g; renderAll(); }
+      else if (msg.t === 'buzz') buzzFeedback(msg.seat, msg.ok, msg.place, msg.chances);
+    },
+    onLeave(seat) {
+      pull();
+      if (game && game.phase !== 'lobby') {
+        const pl = game.players.find(p => p.seat === seat);
+        if (pl && pl.status === 'play') { pl.status = 'left'; checkRoundEnd(); }
+        else if (pl && pl.status !== 'done') pl.status = 'left';
+        hostSync();
+      }
+    },
+    onInvited() { $('btn-practice').hidden = true; }
+  });
+  function pull() { if (practice) return; isHost = lobby.isHost; mySeat = lobby.mySeat; members = lobby.members; }
+  const nameOf = seat => (practice ? (members[0] || {}).name : lobby.nameOf(seat)) || COLORS[seat];
+  const sys = text => lobby.sys(text);
 
   function show(id) { ['entry', 'waiting', 'match'].forEach(x => { $(x).hidden = x !== id; }); $('overlay').hidden = true; window.scrollTo(0, 0); }
 
   // ----- 방장 쪽 -----
   function hostSync() {
-    room.broadcast({ t: 'lobby', info: roomInfo, members });
-    if (game) room.broadcast({ t: 'game', g: game });
+    if (!practice) { lobby.broadcast({ t: 'game', g: game }); lobby.setPlaying(!!game); }
     renderAll();
-    publish();
   }
-  async function publish() {
-    if (!isHost || roomInfo.priv || !room || !room.peer.id) return;
-    try {
-      await db.merge(ROOMS, room.peer.id, { name: roomInfo.name, host: members[0] ? members[0].name : '', count: members.length, max: roomInfo.max, playing: !!(game && game.phase !== 'lobby'), ts: Date.now() });
-    } catch (e) { /* 목록 등록 실패: 링크로는 계속 들어올 수 있음 */ }
-  }
-  function unpublish() { if (isHost && !roomInfo.priv && room && room.peer.id) db.del(ROOMS, room.peer.id).catch(() => {}); }
-
-  function createRoom() {
-    const nick = myNick(); if (!nick) return;
-    if (!window.Peer) return entryStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true);
-    roomInfo = { name: $('room-name').value.trim().slice(0, 24) || `${nick}의 방`, max: maxSel, priv: $('private').checked };
-    isHost = true; mySeat = 0; members = [{ seat: 0, name: nick }];
-    entryStatus('방을 만드는 중입니다…');
-    room = Room.host({
-      seats: roomInfo.max, name: nick,
-      onReady(r) {
-        $('w-link').value = r.link;
-        show('waiting'); renderAll(); sys('방을 만들었습니다. 링크를 보내 친구를 부르세요.');
-        publish(); beat = setInterval(publish, 15000);
-      },
-      onJoin(seat, names) {
-        if (game && game.phase !== 'lobby') { room.sendTo(seat, { t: 'busy' }); room.kick(seat); return; }
-        const nm = (names[seat] || '').trim() || COLORS[seat];
-        members = members.filter(m => m.seat !== seat).concat({ seat, name: nm }).sort((a, b) => a.seat - b.seat);
-        hostSync(); hostChat(-1, `${nm} 님이 들어왔습니다.`);
-      },
-      onLeave(seat) {
-        const m = members.find(x => x.seat === seat); if (!m) return;
-        members = members.filter(x => x.seat !== seat);
-        hostChat(-1, `${m.name} 님이 나갔습니다.`);
-        if (game && game.phase !== 'lobby') {
-          const pl = game.players.find(p => p.seat === seat);
-          if (pl && (pl.status === 'play')) { pl.status = 'left'; checkRoundEnd(); }
-          else if (pl) pl.status = pl.status === 'done' ? 'done' : 'left';
-        }
-        hostSync();
-      },
-      onAction(seat, a) { handle(seat, a); },
-      onError(e) { entryStatus(`연결 오류: ${e.type || e.message || e}`, true); }
-    });
-  }
-  function handle(seat, a) {
-    if (!a) return;
-    if (a.k === 'chat') return hostChat(seat, String(a.text || '').slice(0, 120));
-    if (a.k === 'emoji') { const e = String(a.e || '').slice(0, 4); room && room.broadcast({ t: 'emoji', seat, e }); popEmoji(seat, e); return; }
-    if (a.k === 'buzz') return onBuzz(seat, a.layout);
-  }
-  function hostChat(seat, text) {
-    if (!text) return;
-    const msg = { t: 'chat', seat, name: seat >= 0 ? nameOf(seat) : '', text };
-    room && room.broadcast(msg); addChat(msg);
-  }
-
   function startMatch() {
     if (members.length < 2 && !practice) return;
     game = { phase: 'round', round: 0, players: members.map(m => ({ seat: m.seat, name: m.name, score: 0, chances: 3, status: 'play', place: 0, gain: 0, hist: [] })), puzzle: null, finished: [] };
@@ -798,7 +669,7 @@
     if (v === 'overlap' || v === 'apart') return; // 화면에서 미리 막지만 혹시 몰라 무시
     if (v === 'ok') { game.finished.push(seat); pl.status = 'done'; pl.place = game.finished.length; }
     else { pl.chances--; if (pl.chances <= 0) pl.status = 'out'; }
-    room.broadcast({ t: 'buzz', seat, ok: v === 'ok', place: pl.place, chances: pl.chances });
+    lobby.broadcast({ t: 'buzz', seat, ok: v === 'ok', place: pl.place, chances: pl.chances });
     buzzFeedback(seat, v === 'ok', pl.place, pl.chances);
     checkRoundEnd();
     hostSync();
@@ -830,74 +701,26 @@
     game.until = Date.now() + 7000;
     if (game.phase === 'result') setTimeout(() => { if (game && game.phase === 'result') nextRound(); }, 7000);
   }
-  function backToLobby() { game = null; hostSync(); room.broadcast({ t: 'game', g: null }); }
+  function backToLobby() { game = null; hostSync(); }
 
-  // ----- 손님 쪽 -----
-  function joinRoom(id) {
-    const nick = myNick(); if (!nick) return;
-    if (!window.Peer) return entryStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true);
-    isHost = false;
-    entryStatus('방에 들어가는 중입니다…');
-    room = Room.join(id, {
-      name: nick,
-      onMessage(msg) {
-        if (msg.t === 'full') return entryStatus('자리가 다 찼습니다.', true);
-        if (msg.t === 'busy') return entryStatus('이미 게임이 진행 중인 방입니다.', true);
-        if (msg.t === 'kicked') { kicked = true; return; }
-        if (msg.t === 'seat') { mySeat = msg.seat; const u = new URL(location.href); u.search = ''; u.searchParams.set('room', id); $('w-link').value = u.toString(); return; }
-        if (msg.t === 'lobby') { roomInfo = msg.info; members = msg.members; if (!game || game.phase === 'lobby') { if ($('waiting').hidden && !$('entry').hidden) { show('waiting'); sys(`${roomInfo.name}에 들어왔습니다.`); } } renderAll(); return; }
-        if (msg.t === 'game') { game = msg.g; renderAll(); return; }
-        if (msg.t === 'chat') return addChat(msg);
-        if (msg.t === 'emoji') return popEmoji(msg.seat, msg.e);
-        if (msg.t === 'buzz') return buzzFeedback(msg.seat, msg.ok, msg.place, msg.chances);
-      },
-      onClose() {
-        if (kicked) { dialog({ title: '방에서 나가게 되었습니다', text: '방장이 내보냈습니다.', actions: [{ label: '확인', main: true, onClick: () => location.replace(location.pathname) }] }); return; }
-        if (!$('entry').hidden) return entryStatus('방에 들어갈 수 없습니다.', true);
-        dialog({ title: '연결이 끊겼습니다', text: '방장이 나갔거나 연결이 끊어졌습니다.', actions: [{ label: '처음으로', main: true, onClick: () => location.replace(location.pathname) }] });
-      },
-      onError(e) { entryStatus(e && e.type === 'peer-unavailable' ? '방을 찾을 수 없습니다. 방장이 나갔거나 링크가 틀렸습니다.' : `연결 오류: ${e.type || e.message || e}`, true); }
-    });
-  }
-  let kicked = false, practice = false;
   function startPractice() {
-    const nick = $('nick').value.trim().slice(0, 12) || '나';
+    const nick = ($('lb-nick') && $('lb-nick').value.trim().slice(0, 12)) || '나';
     practice = true; isHost = true; mySeat = 0;
     members = [{ seat: 0, name: nick }];
-    roomInfo = { name: '혼자 연습', max: 1, priv: true };
-    room = { peer: {}, broadcast() {}, sendTo() {}, kick() {}, close() {} };
     document.body.classList.add('solo');
     startMatch();
   }
   $('btn-practice').addEventListener('click', startPractice);
-  function send(a) { if (isHost) handle(0, a); else room && room.send(a); }
+  function send(a) { if (practice) { if (a.k === 'buzz') onBuzz(0, a.layout); return; } lobby.send(a); }
+  function leave() { lobby.leave(); }
 
   /* =========================================================
    * 화면 그리기
    * ======================================================= */
   function renderAll() {
-    if (!room) return;
-    if (!game) { workRound = 0; shownPhase = ''; }
-    if (game && game.phase !== 'lobby') { renderMatch(); return; }
-    if ($('waiting').hidden) show('waiting');
-    renderWaiting();
-  }
-  function renderWaiting() {
-    $('w-name').textContent = roomInfo.name;
-    $('w-tag').textContent = roomInfo.priv ? '비공개' : '공개';
-    $('slots').innerHTML = Array.from({ length: roomInfo.max }, (_, seat) => {
-      const m = members.find(x => x.seat === seat);
-      if (!m) return `<div class="slot"><span class="who" style="color:var(--text-mute);font-weight:500;font-size:1rem">빈자리</span><span class="role">초대 링크로 들어올 수 있습니다</span></div>`;
-      const kick = isHost && seat !== 0 ? `<button class="btn kick" type="button" data-kick="${seat}">강퇴</button>` : '';
-      return `<div class="slot on s${seat}"><span class="who">${esc(m.name)}</span><span class="role"><span class="chip"></span>${seat === 0 ? '방장' : '참가자'}${seat === mySeat ? ' · 나' : ''}</span>${kick}</div>`;
-    }).join('');
-    $('slots').querySelectorAll('[data-kick]').forEach(b => b.addEventListener('click', () => {
-      const seat = +b.dataset.kick, m = members.find(x => x.seat === seat);
-      if (m && confirm(`${m.name} 님을 내보낼까요?`)) room.kick(seat);
-    }));
-    $('btn-start').hidden = !isHost;
-    $('btn-start').disabled = members.length < 2;
-    $('w-status').textContent = isHost ? (members.length < 2 ? '2명 이상 모이면 시작할 수 있습니다.' : `${members.length}명이 모였습니다.`) : '방장이 시작하기를 기다리는 중입니다.';
+    pull();
+    if (!game) { workRound = 0; shownPhase = ''; if (!practice) lobby.showWaiting(); return; }
+    renderMatch();
   }
   let shownRound = 0, shownPhase = '';
   function renderMatch() {
@@ -990,99 +813,6 @@
     if (v === 'apart') return toast('조각을 모두 맞닿게 붙여야 버저를 누를 수 있습니다.');
     send({ k: 'buzz', layout: layout() });
   });
-
-  /* ---------- 채팅과 이모지 ---------- */
-  const EMOJI = ['👍', '😂', '😮', '😭', '🔥', '👏'];
-  const chatLog = [];
-  document.querySelectorAll('[data-chat]').forEach(box => {
-    box.innerHTML = `<h2>채팅</h2><div class="chat-log" aria-live="polite"></div><div class="emojis">${EMOJI.map(e => `<button type="button" data-e="${e}" aria-label="${e} 보내기">${e}</button>`).join('')}</div><form><input class="input" maxlength="120" placeholder="메시지 입력" aria-label="채팅 메시지"><button class="btn" type="submit">보내기</button></form>`;
-    box.querySelector('form').addEventListener('submit', e => {
-      e.preventDefault();
-      const inp = box.querySelector('input'); const text = inp.value.trim(); if (!text) return;
-      inp.value = ''; send({ k: 'chat', text });
-    });
-    box.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', () => send({ k: 'emoji', e: b.dataset.e })));
-  });
-  function addChat(msg) { chatLog.push(msg); if (chatLog.length > 80) chatLog.shift(); drawChat(); }
-  function sys(text) { addChat({ seat: -1, text }); }
-  function drawChat() {
-    document.querySelectorAll('.chat-log').forEach(log => {
-      log.innerHTML = '';
-      chatLog.forEach(m => {
-        const d = document.createElement('div');
-        if (m.seat < 0) { d.className = 'm sys'; d.textContent = m.text; }
-        else { d.className = `m s${m.seat}`; const b = document.createElement('b'); b.textContent = m.name; d.append(b, document.createTextNode(m.text)); }
-        log.appendChild(d);
-      });
-      log.scrollTop = log.scrollHeight;
-    });
-  }
-  function popEmoji(seat, e) {
-    const host = document.querySelector(`.pchip[data-seat="${seat}"]`) || document.querySelector(`.slot.s${seat}`);
-    if (!host) return;
-    const f = document.createElement('span'); f.className = 'float-emoji'; f.textContent = e;
-    host.appendChild(f); setTimeout(() => f.remove(), 2300);
-  }
-
-  /* =========================================================
-   * 입구
-   * ======================================================= */
-  function entryStatus(msg, err) { const s = $('entry-status'); s.textContent = msg; s.classList.toggle('err', !!err); }
-  function myNick() {
-    const n = $('nick').value.trim().slice(0, 12);
-    if (!n) { entryStatus('닉네임을 먼저 정해 주세요.', true); $('nick').focus(); return ''; }
-    saveName(n); return n;
-  }
-  $('nick').value = savedName().slice(0, 12);
-  let maxSel = 4;
-  $('max-seg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { maxSel = +b.dataset.n; $('max-seg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }));
-  function tab(which) {
-    $('tab-make').setAttribute('aria-pressed', String(which === 'make')); $('tab-join').setAttribute('aria-pressed', String(which === 'join'));
-    $('panel-make').hidden = which !== 'make'; $('panel-join').hidden = which !== 'join';
-    if (which === 'join') loadRooms();
-  }
-  $('tab-make').addEventListener('click', () => tab('make'));
-  $('tab-join').addEventListener('click', () => tab('join'));
-  $('btn-make').addEventListener('click', createRoom);
-  $('btn-refresh').addEventListener('click', loadRooms);
-  $('btn-code').addEventListener('click', () => {
-    const v = $('code').value.trim(); if (!v) return;
-    let id = v; try { id = new URL(v).searchParams.get('room') || v; } catch (e) { /* 코드만 붙여넣음 */ }
-    joinRoom(id);
-  });
-  let listTimer = null;
-  async function loadRooms() {
-    const ul = $('room-list');
-    $('list-status').textContent = '불러오는 중';
-    try {
-      const all = await db.list(ROOMS);
-      const live = all.filter(r => Date.now() - (r.ts || 0) < 45000).sort((a, b) => (a.playing - b.playing) || (b.ts - a.ts));
-      ul.innerHTML = live.length ? live.map(r => {
-        const full = r.count >= r.max;
-        return `<li><span class="rn">${esc(r.name)}</span><span class="rh">방장 ${esc(r.host)}</span><span class="rc${r.playing ? ' playing' : ''}">${r.playing ? '게임 중' : `${r.count}/${r.max}`}</span><button class="btn" type="button" data-room="${esc(r.id)}"${full || r.playing ? ' disabled' : ''}>참가</button></li>`;
-      }).join('') : '<li class="empty" style="display:block;background:none">열린 방이 없습니다. 방을 만들어 보세요.</li>';
-      ul.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => joinRoom(b.dataset.room)));
-      $('list-status').textContent = '';
-    } catch (e) {
-      ul.innerHTML = '<li class="empty" style="display:block;background:none">방 목록을 불러오지 못했습니다. 초대 링크로 들어가 주세요.</li>';
-      $('list-status').textContent = '';
-    }
-    clearTimeout(listTimer);
-    listTimer = setTimeout(() => { if (!$('panel-join').hidden && !$('entry').hidden) loadRooms(); }, 8000);
-  }
-
-  $('btn-start').addEventListener('click', () => { if (isHost) startMatch(); });
-  $('btn-w-copy').addEventListener('click', () => copy($('w-link').value));
-  $('btn-w-leave').addEventListener('click', leave);
-  function leave() { unpublish(); clearInterval(beat); if (room) room.close(); location.replace(location.pathname); }
-  window.addEventListener('pagehide', unpublish);
-
-  const invited = new URLSearchParams(location.search).get('room');
-  if (invited) {
-    $('choose').hidden = true; $('invited').hidden = false;
-    $('btn-enter-link').addEventListener('click', () => joinRoom(invited));
-    $('nick').focus();
-  }
 
   // 시험용
   window.Sym = { makePuzzle, judge, rotate, symmetric, connected, key, normalize, geomOf, get mine() { return mine; }, get pieces() { return puzzle && puzzle.pieces; }, get layout() { return layout(); } };

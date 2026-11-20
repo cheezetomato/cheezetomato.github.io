@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="common.css">
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js" defer></script>
 <script src="common.js"></script>
+<script src="rooms.js"></script>
 <style>
   :root { --g: #e9e2d3; --g-ink: #15171a; --slate: #1f2328; --slate-cell: #2b3037; --slate-edge: #171a1e; }
   .p0 { --pc: #e5533d; } .p1 { --pc: #3f86e8; } .p2 { --pc: #e6b13a; }
@@ -61,6 +62,9 @@
   .say .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); flex: none; }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn.on { border-color: #f2ead9; background: #2a2a30; }
+  .timer { margin: -8px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+  .timer.low { color: #ff7b62; }
+  #game-chat { min-height: 220px; max-height: 340px; }
   .mini-rules { margin: 0; padding: 0 0 0 18px; color: var(--text-mute); font-size: 0.85rem; display: grid; gap: 4px; }
 
   @media (max-width: 900px) {
@@ -88,41 +92,26 @@
   </section>
 
   <aside class="lobby-side">
-    <div class="side-block" id="host-block">
-      <h2>인원</h2>
-      <div class="seg" role="group" aria-label="인원">
+    <div class="side-block">
+      <h2>혼자 또는 한 기기에서</h2>
+      <div class="seg" role="group" aria-label="인원" id="n-seg">
         <button type="button" data-n="2" aria-pressed="true">2인전</button>
         <button type="button" data-n="3" aria-pressed="false">3인전</button>
       </div>
-    </div>
-
-    <div class="side-block" id="mode-block">
-      <h2>방식</h2>
-      <div class="modes">
-        <button class="mode-btn is-main" type="button" id="btn-local"><span class="m-name">한 기기에서 같이</span><span class="m-desc">화면 하나로 번갈아 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
-        <button class="mode-btn" type="button" id="btn-online"><span class="m-name">친구와 온라인</span><span class="m-desc">초대 링크를 보내 각자 기기로 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
+      <div class="modes" style="margin-top:10px">
+        <button class="mode-btn is-main" type="button" id="btn-ai"><span class="m-name">AI와 두기</span><span class="m-desc">나머지 자리는 컴퓨터가 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
+        <button class="mode-btn" type="button" id="btn-local"><span class="m-name">한 기기에서 같이</span><span class="m-desc">화면 하나로 번갈아 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
       </div>
     </div>
-
-    <div class="side-block" id="online-block" hidden>
-      <h2 id="online-title">온라인 대기실</h2>
-      <div class="field" id="name-field">
-        <label for="my-name">내 이름</label>
-        <input class="input" id="my-name" maxlength="15" autocomplete="nickname" placeholder="친구에게 보일 이름">
-      </div>
-      <div class="invite" id="invite" hidden>
-        <p>이 링크를 친구에게 보내세요. 자리가 다 차면 바로 시작합니다.</p>
-        <div class="invite-row"><input class="input" id="invite-link" readonly aria-label="초대 링크"><button class="btn" type="button" id="btn-copy">복사</button></div>
-        <ul class="seats" id="seats"></ul>
-      </div>
-      <div class="actions" style="margin-top:12px">
-        <button class="btn btn-main" type="button" id="btn-go-online">방 만들기</button>
-        <button class="btn btn-quiet" type="button" id="btn-cancel-online">취소</button>
-      </div>
-      <p class="status" id="online-status" role="status"></p>
+    <div class="side-block">
+      <h2>친구와 온라인</h2>
+      <p class="note" style="margin:-4px 0 12px">모인 사람 수에 맞춰 2인전이나 3인전으로 시작합니다.</p>
+      <div id="lobby-box" style="display:grid;gap:12px"></div>
     </div>
   </aside>
 </main>
+
+<main id="waiting" class="wait" hidden></main>
 
 <!-- 게임 -->
 <main id="game" class="play" hidden>
@@ -131,6 +120,7 @@
     <div class="side">
       <ul class="players" id="players"></ul>
       <p class="say" id="say" aria-live="polite"></p>
+      <p class="timer" id="timer" hidden></p>
       <div class="actions">
         <button class="btn" type="button" id="btn-hammer" hidden>벽 부수기</button>
         <button class="btn" type="button" id="btn-undo" hidden>되돌리기</button>
@@ -141,6 +131,7 @@
         <li>옮긴 말 둘레에 벽을 하나 세우면 차례가 넘어갑니다.</li>
         <li>내 말만 있는 막힌 구역은 내 색으로 칠해집니다.</li>
       </ol>
+      <div class="chat" data-chat id="game-chat" hidden></div>
     </div>
   </div>
 </main>
@@ -318,17 +309,83 @@
   }
 
   /* =========================================================
+   * AI: 놓을 수 있는 모든 수를 두어 보고, 각 칸에 누가 먼저 닿는지로 땅을 어림해서 고름
+   * ======================================================= */
+  function reachCounts(s) {
+    const INF = 99, dist = [];
+    for (let p = 0; p < s.n; p++) {
+      const d = new Array(N * N).fill(INF), q = [];
+      s.pieces.filter(x => x.p === p).forEach(x => { d[x.r * N + x.c] = 0; q.push([x.r, x.c]); });
+      for (let h = 0; h < q.length; h++) {
+        const [r, c] = q[h], k = r * N + c;
+        for (let dd = 0; dd < 4; dd++) {
+          if (!open(s, r, c, dd)) continue;
+          const nr = r + DIRS[dd][0], nc = c + DIRS[dd][1], nk = nr * N + nc;
+          if (d[nk] > d[k] + 1) { d[nk] = d[k] + 1; q.push([nr, nc]); }
+        }
+      }
+      dist.push(d);
+    }
+    const cnt = new Array(s.n).fill(0);
+    for (let k = 0; k < N * N; k++) {
+      let best = 99, who = -1, tie = false;
+      for (let p = 0; p < s.n; p++) { if (dist[p][k] < best) { best = dist[p][k]; who = p; tie = false; } else if (dist[p][k] === best) tie = true; }
+      if (who >= 0 && !tie && best < 99) cnt[who]++;
+    }
+    return cnt;
+  }
+  function evalFor(s, me) {
+    if (s.phase === 'over') { const { sc } = s.scores; return (sc[me] - Math.max(...sc.filter((_, i) => i !== me))) * 10; }
+    const R = regions(s), v = reachCounts(s), { sc } = scoreOf(s, R), set = settledOf(s, R);
+    // 갇히지 않은 말이 움직일 곳이 많을수록 좋음 (같이 갇혀 버리는 것 피하기)
+    const mob = new Array(s.n).fill(0);
+    const late = s.walls.h.flat().concat(s.walls.v.flat()).filter(x => x >= 0).length / 84; // 벽이 많을수록 가두기를 서두름
+    s.pieces.forEach((p, i) => { if (!set[i]) { const k = reachable(s, p).length; mob[p.p] += Math.min(k, 6) * 0.35 - (k === 0 ? 3 : 0) - late * 4; } });
+    const val = i => v[i] + sc[i] * 0.9 + mob[i];
+    let other = -Infinity; for (let i = 0; i < s.n; i++) if (i !== me) other = Math.max(other, val(i));
+    return val(me) - other;
+  }
+  function aiAction(s) {
+    const me = s.turn, cands = [];
+    if (s.phase === 'place') {
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!pieceAt(s, r, c)) cands.push({ k: 'place', r, c });
+    } else {
+      s.pieces.filter(p => p.p === me).forEach(p => {
+        reachable(s, p).forEach(([r, c]) => {
+          const t = clone(s); const q = t.pieces.find(x => x.id === p.id); q.r = r; q.c = c;
+          freeEdges(t, r, c).forEach(w => cands.push({ k: 'move', id: p.id, r, c, wall: w }));
+        });
+      });
+      if (!cands.length) {
+        // 갈 곳이 없으면 벽을 부숨 (3인전)
+        s.pieces.filter(p => p.p === me).forEach(p => breakable(s, p).forEach(e => {
+          const t = clone(s); t.walls[e[0]][e[1]][e[2]] = -1;
+          const q = t.pieces.find(x => x.id === p.id);
+          reachable(t, q).forEach(([r, c]) => { const u = clone(t); const z = u.pieces.find(x => x.id === p.id); z.r = r; z.c = c; freeEdges(u, r, c).forEach(w => cands.push({ k: 'move', id: p.id, r, c, wall: w, hammer: e })); });
+        }));
+      }
+    }
+    let best = null, bv = -Infinity;
+    cands.forEach(a => {
+      const t = apply(s, me, a); if (!t) return;
+      const v = evalFor(t, me) + Math.random() * 0.6;
+      if (v > bv) { bv = v; best = a; }
+    });
+    return best;
+  }
+
+  /* =========================================================
    * 화면 상태
    * ======================================================= */
   let N_PLAYERS = 2;
   let state = null;
-  let mode = 'local';           // local | host | guest
-  let mySeat = -1;              // 온라인에서 내 자리
+  let mode = 'local';           // local | ai | host | guest
+  let myIdx = -1;               // 온라인/AI에서 내 번호
   let names = [];
-  let room = null;
+  let ai = [];                  // AI가 두는 자리
   let ui = { sel: null, to: null, breaking: false, broke: null, history: [] };
 
-  const canAct = () => state && state.phase !== 'over' && (mode === 'local' || state.turn === mySeat);
+  const canAct = () => state && state.phase !== 'over' && (mode === 'local' || (mode === 'ai' ? !ai[state.turn] : state.turn === myIdx));
   const playerName = i => (names[i] ? names[i] : COLORS[i]);
 
   /* ---------- 판 그리기 ---------- */
@@ -489,15 +546,15 @@
       const sub = [];
       if (state.phase === 'place' && left) sub.push(`<span>놓을 말 ${left}개</span>`);
       if (state.n === 3 && state.phase !== 'place') sub.push(`<span class="ham${state.hammer[i] ? ' used' : ''}">${state.hammer[i] ? '벽 부수기 씀' : '벽 부수기 남음'}</span>`);
-      if (mode !== 'local' && i === mySeat) sub.push('<span>나</span>');
-      return `<li class="p${i}${state.phase !== 'over' && state.turn === i ? ' turn' : ''}"><span class="dot"></span><span class="nm">${esc(playerName(i))}</span><span class="sc">${sc[i]}</span>${sub.length ? `<span class="sub">${sub.join('')}</span>` : ''}</li>`;
+      if ((mode === 'host' || mode === 'guest' || mode === 'ai') && i === myIdx) sub.push('<span>나</span>');
+      return `<li data-seat="${seatOf[i] != null && (mode === 'host' || mode === 'guest') ? seatOf[i] : 'x' + i}" class="p${i}${state.phase !== 'over' && state.turn === i ? ' turn' : ''}"><span class="dot"></span><span class="nm">${esc(playerName(i))}</span><span class="sc">${sc[i]}</span>${sub.length ? `<span class="sub">${sub.join('')}</span>` : ''}</li>`;
     }).join('');
 
     const say = $('say');
     const who = playerName(state.turn);
     let msg;
     if (state.phase === 'over') msg = '게임이 끝났습니다';
-    else if (!canAct()) msg = `${who} 차례를 기다리는 중`;
+    else if (!canAct()) msg = mode === 'ai' && ai[state.turn] ? `${who}가 생각하는 중` : `${who} 차례를 기다리는 중`;
     else if (state.phase === 'place') msg = `${who}: ${state.n === 2 || state.pieces.some(x => x.p === state.turn) ? '차(네모 말)' : '돌(동그란 말)'}를 놓을 칸을 고르세요`;
     else if (ui.breaking) msg = `${who}: 부술 벽을 고르세요`;
     else if (ui.sel == null) msg = `${who}: 움직일 말을 고르세요`;
@@ -537,9 +594,9 @@
   });
 
   function act(a) {
-    const seat = mode === 'local' ? state.turn : mySeat;
+    const seat = mode === 'local' || mode === 'ai' ? state.turn : myIdx;
     if (mode === 'guest') {
-      room.send(a);
+      lobby.send(a);
       // 방장이 확인해서 돌려줄 때까지 내 수를 미리 보여 줌
       const s = apply(state, seat, a);
       if (s) { state = s; resetUi(); render(); }
@@ -552,8 +609,18 @@
 
   function commit(s) {
     state = s; resetUi(); render();
-    if (mode === 'host') room.broadcast({ t: 'state', s: state, names });
+    if (mode === 'host') { armTimer(); lobby.broadcast(stateMsg()); }
     if (state.phase === 'over') setTimeout(showResult, 450);
+    else maybeAi();
+  }
+  function maybeAi() {
+    if (mode !== 'ai' || !state || state.phase === 'over' || !ai[state.turn]) return;
+    const turn = state.turn, mv = state.moves, pl = state.toPlace.length;
+    setTimeout(() => {
+      if (!state || state.turn !== turn || state.moves !== mv || state.toPlace.length !== pl) return;
+      const a = aiAction(state); const t = a && apply(state, state.turn, a);
+      if (t) commit(t);
+    }, 550);
   }
   function resetUi() { ui = { sel: null, to: null, breaking: false, broke: null }; }
 
@@ -566,144 +633,128 @@
     const list = `<ul class="score-list">${order.map(i => `<li class="p${i}"><span class="dot" style="width:12px;height:12px;border-radius:50%;background:var(--pc)"></span><span>${esc(playerName(i))}</span><span class="n">${sc[i]}칸</span></li>`).join('')}</ul>`;
     const actions = [];
     if (mode !== 'guest') actions.push({ label: '다시 하기', main: true, onClick: () => commit(newGame(state.n)) });
+    if (mode === 'host') actions.push({ label: '대기실로', onClick: backToRoom });
     actions.push({ label: '판 보기' });
     actions.push({ label: '나가기', onClick: leave });
     const notes = [];
     if (state.stuck) notes.push('더 움직일 수 있는 말이 없어 끝났습니다. 함께 갇힌 구역은 말이 선 칸만 셌습니다.');
     if (tieByBig) notes.push('칸 수가 같아 가장 큰 구역으로 가렸습니다.');
     if (mode === 'guest') notes.push('방장이 다시 하기를 누르면 새 판이 시작됩니다.');
+    if (mode === 'ai') { const w = top.length === 1 && top[0] === 0; saveAiStat(state.n, w); }
     dialog({ title, text: notes.join(' '), html: list, actions });
   }
 
   /* ---------- 화면 전환 ---------- */
   function startPlay() {
-    $('lobby').hidden = true; $('game').hidden = false;
+    $('lobby').hidden = true; $('waiting').hidden = true; $('game').hidden = false;
+    $('game-chat').hidden = !(mode === 'host' || mode === 'guest');
+    if (!$('game-chat').hidden) lobby.mountChats();
     buildBoard(); resetUi(); render(false);
     window.scrollTo(0, 0);
   }
   function leave() {
-    if (room) { room.close(); room = null; }
-    const u = new URL(location.href); u.search = '';
-    location.href = u.pathname;
+    if (mode === 'host' || mode === 'guest') return lobby.leave();
+    location.href = location.pathname;
   }
   $('btn-leave').addEventListener('click', () => {
-    if (state && state.phase !== 'over' && state.moves > 0 && !confirm(T('게임을 그만두고 나갈까요?'))) return;
+    if (state && state.phase !== 'over' && state.moves > 0 && !confirm('게임을 그만두고 나갈까요?')) return;
     leave();
   });
+  // AI 전적 (이 기기)
+  function saveAiStat(n, win) {
+    try { const k = 'wallgo-ai-stats', o = JSON.parse(localStorage.getItem(k)) || {}; const r = o[n] || { w: 0, l: 0 }; if (win) r.w++; else r.l++; o[n] = r; localStorage.setItem(k, JSON.stringify(o)); } catch (e) { /* 저장 공간 없음 */ }
+  }
 
-  /* ---------- 로비 ---------- */
-  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  /* ---------- 혼자 / 한 기기 ---------- */
+  document.querySelectorAll('#n-seg button').forEach(b => b.addEventListener('click', () => {
     N_PLAYERS = +b.dataset.n;
-    document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll('#n-seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   }));
-  $('btn-local').addEventListener('click', () => { mode = 'local'; names = []; state = newGame(N_PLAYERS); startPlay(); });
-  $('my-name').value = savedName();
-
-  $('btn-online').addEventListener('click', () => {
-    $('mode-block').hidden = true; $('online-block').hidden = false;
-    $('online-title').textContent = `온라인 대기실 (${N_PLAYERS}인전)`;
-    $('my-name').focus();
-  });
-  $('btn-cancel-online').addEventListener('click', () => {
-    if (room) { room.close(); room = null; }
-    $('online-block').hidden = true; $('mode-block').hidden = false; $('host-block').hidden = false;
-    $('invite').hidden = true; $('btn-go-online').hidden = false; $('name-field').hidden = false; $('online-status').textContent = '';
-  });
-  $('btn-copy').addEventListener('click', () => copy($('invite-link').value));
-
-  function setStatus(msg, err) { const s = $('online-status'); s.textContent = msg; s.classList.toggle('err', !!err); }
-  function myName() { const n = $('my-name').value.trim().slice(0, 15); saveName(n); return n; }
-
-
-  $('btn-go-online').addEventListener('click', () => {
-    if (!window.Peer) { setStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true); return; }
-    if ($('btn-go-online').dataset.join) return joinRoom($('btn-go-online').dataset.join);
-    mode = 'host'; mySeat = 0;
-    const me = myName();
-    setStatus('방을 만드는 중입니다…');
-    $('btn-go-online').hidden = true; $('host-block').hidden = true;
-    let occ = [true];
-    let seatNames = [me];
-    const seatLabel = i => seatNames[i] || COLORS[i];
-    const drawSeats = () => $('seats').innerHTML = Array.from({ length: N_PLAYERS }, (_, i) => `<li class="p${i}${occ[i] ? ' on' : ''}" style="${occ[i] ? 'color:var(--pc)' : ''}"><span class="seat-dot"></span><span>${occ[i] ? esc(seatLabel(i)) + (i === 0 ? ' (나)' : '') : '빈자리'}</span></li>`).join('');
-    room = Room.host({
-      seats: N_PLAYERS, name: me,
-      onReady(r) {
-        $('invite').hidden = false; $('invite-link').value = r.link; drawSeats();
-        setStatus('친구를 기다리는 중입니다.');
-      },
-      onJoin(seat, list, o) {
-        occ = o; seatNames = list; seatNames[0] = me;
-        if (state) {
-          // 끊겼던 사람이 다시 들어옴: 이름만 새로 받고 지금 판을 보냄
-          names[seat] = list[seat] || COLORS[seat];
-          room.broadcast({ t: 'state', s: state, names }); render();
-          toast(T(`${playerName(seat)} 다시 들어왔습니다.`));
-          return;
-        }
-        drawSeats();
-        if (occ.filter(Boolean).length === N_PLAYERS) {
-          names = Array.from({ length: N_PLAYERS }, (_, i) => seatLabel(i));
-          state = newGame(N_PLAYERS);
-          room.broadcast({ t: 'state', s: state, names });
-          startPlay();
-        }
-      },
-      onAction(seat, a) {
-        if (!state) return;
-        const s = apply(state, seat, a);
-        if (s) commit(s); else room.sendTo(seat, { t: 'state', s: state, names });
-      },
-      onLeave(seat, list, o) {
-        occ = o; seatNames = list; seatNames[0] = me;
-        if (state) toast(T(`${playerName(seat)} 연결이 끊겼습니다. 같은 링크로 다시 들어오면 이어서 둡니다.`), 4000);
-        else drawSeats();
-      },
-      onError(e) { setStatus(`연결 오류: ${e.type || e.message || e}`, true); }
-    });
+  $('btn-local').addEventListener('click', () => { mode = 'local'; names = []; ai = []; state = newGame(N_PLAYERS); startPlay(); });
+  $('btn-ai').addEventListener('click', () => {
+    mode = 'ai'; myIdx = 0;
+    const me = (savedName() || '나').slice(0, 12);
+    names = [me, ...Array.from({ length: N_PLAYERS - 1 }, (_, i) => `AI ${COLORS[i + 1]}`)];
+    ai = names.map((_, i) => i > 0);
+    state = newGame(N_PLAYERS); startPlay(); maybeAi();
   });
 
-  function joinRoom(id) {
-    if (!window.Peer) { setStatus('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true); return; }
-    mode = 'guest';
-    const me = myName();
-    $('btn-go-online').hidden = true; $('name-field').hidden = true;
-    setStatus('방에 들어가는 중입니다…');
-    room = Room.join(id, {
-      name: me,
-      onMessage(msg) {
-        if (msg.t === 'full') { setStatus('자리가 다 찼습니다.', true); return; }
-        if (msg.t === 'seat') { mySeat = msg.seat; N_PLAYERS = msg.seats; setStatus(`${COLORS[mySeat]} 자리에 앉았습니다. 다른 사람을 기다리는 중입니다.`); return; }
-        if (msg.t === 'state') {
-          const first = !state;
-          const wasOver = state && state.phase === 'over';
-          state = msg.s; names = msg.names || [];
-          if (first) startPlay(); else { resetUi(); render(); }
-          if (state.phase === 'over' && !wasOver) setTimeout(showResult, 450);
-          if (wasOver && state.phase !== 'over') document.querySelectorAll('dialog[open]').forEach(d => d.close());
-        }
-      },
-      onClose() {
-        if (state) dialog({ title: '연결이 끊겼습니다', text: '방장과의 연결이 끊어졌습니다.', actions: [{ label: '나가기', main: true, onClick: leave }] });
-        else setStatus('방장과 연결할 수 없습니다. 링크를 다시 확인해 주세요.', true);
-      },
-      onError(e) { setStatus(e && e.type === 'peer-unavailable' ? '방을 찾을 수 없습니다. 방장이 나갔거나 링크가 틀렸습니다.' : `연결 오류: ${e.type || e.message || e}`, true); }
-    });
+  /* ---------- 친구와 온라인 (rooms.js) ---------- */
+  let seatOf = [], timerSec = 0, deadline = 0, tmr = 0;
+  const lobby = window.Lobby({
+    game: 'wallgo', entry: $('lobby-box'), waiting: $('waiting'), entryScreen: $('lobby'), otherScreens: [$('game')],
+    max: [2, 3], min: 2,
+    options: [{ key: 'timer', label: '턴 시간', choices: [[0, '없음'], [30, '30초'], [60, '60초']], def: 0 }],
+    onStart(api) {
+      const mem = api.members;
+      mode = 'host'; myIdx = 0; ai = [];
+      seatOf = mem.map(m => m.seat); names = mem.map(m => m.name);
+      timerSec = +(api.info.opts.timer || 0);
+      lobby.setPlaying(true);
+      startPlay();
+      commit(newGame(mem.length));
+    },
+    onAction(seat, a) {
+      const i = seatOf.indexOf(seat);
+      if (i < 0 || !state) return;
+      const s = apply(state, i, a);
+      if (s) commit(s); else lobby.sendTo(seat, stateMsg());
+    },
+    onMessage(msg) {
+      if (msg.t === 'state') {
+        const first = mode !== 'guest' || !state;
+        const wasOver = state && state.phase === 'over';
+        mode = 'guest';
+        state = msg.s; names = msg.names; seatOf = msg.seats; timerSec = msg.timer || 0;
+        myIdx = seatOf.indexOf(lobby.mySeat);
+        deadline = msg.left ? Date.now() + msg.left : 0;
+        if (first) startPlay(); else { resetUi(); render(); }
+        if (state.phase === 'over' && !wasOver) setTimeout(showResult, 450);
+        if (wasOver && state.phase !== 'over') document.querySelectorAll('dialog[open]').forEach(d => d.close());
+      } else if (msg.t === 'back') {
+        state = null; mode = 'guest'; clearTimeout(tmr);
+        document.querySelectorAll('dialog[open]').forEach(d => d.close());
+        lobby.showWaiting();
+      }
+    },
+    lateJoin(seat) { return !!state && seatOf.includes(seat); },
+    onJoin(seat, m) {
+      if (!state) return;
+      const i = seatOf.indexOf(seat); if (i >= 0) names[i] = m.name;
+      lobby.broadcast(stateMsg()); render();
+      toast(`${m.name} 님이 다시 들어왔습니다.`);
+    },
+    onLeave(seat, m) {
+      if (state && seatOf.includes(seat)) toast(`${m.name} 님 연결이 끊겼습니다. 같은 링크로 다시 들어오면 이어서 둡니다.`, 4000);
+    }
+  });
+  const stateMsg = () => ({ t: 'state', s: state, names, seats: seatOf, timer: timerSec, left: deadline ? Math.max(0, deadline - Date.now()) : 0 });
+  function backToRoom() {
+    state = null; clearTimeout(tmr); deadline = 0;
+    lobby.setPlaying(false); lobby.broadcast({ t: 'back' }); lobby.showWaiting();
   }
 
-  // 초대 링크로 들어온 경우
-  const roomId = new URLSearchParams(location.search).get('room');
-  if (roomId) {
-    $('mode-block').hidden = true; $('host-block').hidden = true; $('online-block').hidden = false;
-    $('online-title').textContent = '초대받은 방';
-    $('btn-go-online').textContent = '입장하기';
-    $('btn-go-online').dataset.join = roomId;
-    $('btn-cancel-online').hidden = true;
-    $('my-name').focus();
+  // 턴 시간 (방장만 잼): 시간이 지나면 AI가 대신 둠
+  function armTimer() {
+    clearTimeout(tmr); deadline = 0;
+    if (mode !== 'host' || !timerSec || !state || state.phase === 'over') return;
+    deadline = Date.now() + timerSec * 1000;
+    const turnAt = state.turn, movesAt = state.moves, placeAt = state.toPlace.length;
+    tmr = setTimeout(() => {
+      if (!state || state.turn !== turnAt || state.moves !== movesAt || state.toPlace.length !== placeAt) return;
+      const a = aiAction(state); if (!a) return;
+      const s = apply(state, state.turn, a);
+      if (s) { toast(`${playerName(turnAt)} 시간 초과: 대신 두었습니다.`); commit(s); }
+    }, timerSec * 1000 + 300);
   }
+  setInterval(() => {
+    const t = $('timer');
+    if (!state || !deadline || state.phase === 'over') { t.hidden = true; return; }
+    const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    t.hidden = false; t.textContent = `남은 시간 ${left}초`; t.classList.toggle('low', left <= 10);
+  }, 250);
 
-  // 로비 그림: 진행 중인 판 예시
-  window.WallGo = { newGame, apply, regions, reachable, scoreOf };
+  window.WallGo = { newGame, apply, regions, reachable, scoreOf, aiAction, evalFor };
 })();
 </script>
 </body>

@@ -116,6 +116,7 @@ a { color: inherit; }
 
 .field { display: grid; gap: 6px; }
 .field label { font-size: 0.86rem; color: var(--text-dim); }
+.field .seg { justify-self: start; }
 .input {
   width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 8px;
   background: var(--surface); border: 1px solid var(--line); color: var(--text); outline: none;
@@ -177,6 +178,62 @@ a { color: inherit; }
 .play-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .play-head h1 { margin: 0; font-size: 1.35rem; letter-spacing: -0.03em; }
 .play-tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+
+/* ---------- 온라인 방: 입구, 대기실, 채팅 (rooms.js) ---------- */
+.s0 { --pc: #e5533d; } .s1 { --pc: #3f86e8; } .s2 { --pc: #e6b13a; } .s3 { --pc: #4fb07a; }
+/* ---------- 입구 ---------- */
+.entry-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.entry-tabs .mode-btn { grid-template-columns: 1fr; }
+.entry-tabs .mode-btn[aria-pressed="true"] { border-color: var(--g); background: var(--raise); }
+.panel { display: grid; gap: 14px; padding: 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.check { display: flex; align-items: center; gap: 10px; font-size: 0.93rem; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--g); }
+.check small { color: var(--text-mute); }
+.room-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 340px; overflow: auto; }
+.room-list li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 12px; padding: 10px 12px; border-radius: 8px; background: var(--raise); }
+.room-list .rn { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-list .rh { grid-column: 1; font-size: 0.8rem; color: var(--text-mute); }
+.room-list .rc { grid-column: 2; grid-row: 1 / span 2; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text-dim); }
+.room-list .rc.playing { color: var(--text-mute); font-weight: 500; font-size: 0.82rem; }
+.room-list .btn { grid-column: 3; grid-row: 1 / span 2; min-height: 36px; padding: 6px 14px; }
+.empty { color: var(--text-mute); font-size: 0.92rem; padding: 18px 4px; text-align: center; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row .input { flex: 1; min-width: 160px; }
+
+/* ---------- 대기실 ---------- */
+.wait { max-width: 1080px; margin: 0 auto; padding: 36px 28px 56px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px 40px; }
+.wait-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+.wait-head h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.04em; line-height: 1.1; overflow-wrap: anywhere; }
+.wait-head .tag { display: inline-block; margin-left: 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); vertical-align: middle; letter-spacing: 0; }
+.slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.slot { position: relative; min-height: 112px; padding: 18px; border-radius: 12px; border: 1px dashed var(--line); display: flex; flex-direction: column; justify-content: space-between; color: var(--text-mute); }
+.slot.on { border: 1px solid color-mix(in srgb, var(--pc) 45%, var(--line)); background: color-mix(in srgb, var(--pc) 8%, var(--surface)); color: var(--text); }
+.slot .who { font-size: 1.25rem; font-weight: 750; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.slot .role { font-size: 0.82rem; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
+.slot .chip { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); }
+.slot .kick { position: absolute; top: 10px; right: 10px; min-height: 30px; padding: 4px 10px; font-size: 0.8rem; }
+.wait-foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+
+/* ---------- 채팅 ---------- */
+.chat { display: grid; grid-template-rows: auto 1fr auto auto; gap: 10px; padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); min-height: 280px; max-height: 520px; }
+.chat h2 { margin: 0; font-size: 0.9rem; color: var(--text-dim); font-weight: 600; }
+.chat-log { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; min-height: 120px; padding-right: 4px; }
+.chat-log .m { line-height: 1.45; overflow-wrap: anywhere; }
+.chat-log .m b { color: var(--pc); font-weight: 700; margin-right: 6px; }
+.chat-log .sys { color: var(--text-mute); font-size: 0.82rem; }
+.emojis { display: flex; gap: 4px; flex-wrap: wrap; }
+.emojis button { border: 1px solid var(--line); background: var(--raise); border-radius: 8px; width: 38px; height: 34px; font-size: 18px; cursor: pointer; line-height: 1; }
+.emojis button:hover { border-color: var(--g); }
+.chat form { display: flex; gap: 6px; }
+.chat form .input { min-height: 38px; padding: 7px 10px; font-size: 0.9rem; }
+.chat form .btn { min-height: 38px; padding: 6px 12px; font-size: 0.88rem; }
+
+.float-emoji { position: absolute; left: 50%; top: -6px; font-size: 30px; pointer-events: none; animation: rise 2.2s ease-out forwards; z-index: 5; }
+@keyframes rise { 0% { transform: translate(-50%, 6px) scale(0.6); opacity: 0; } 15% { transform: translate(-50%, -14px) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -54px) scale(1); opacity: 0; } }
+.slot[data-seat] { position: relative; }
+@media (max-width: 980px) { .wait { grid-template-columns: minmax(0, 1fr); } .chat { max-height: 360px; } }
+@media (max-width: 560px) { .slots { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }

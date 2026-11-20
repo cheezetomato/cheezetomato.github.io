@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="common.css">
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js" defer></script>
 <script src="common.js"></script>
+<script src="rooms.js"></script>
 <style>
   :root { --g: #c89a5e; --g-ink: #1c130a; --red: #b5402f; --green: #2f7a52; --wood: #c89a5e; --wood-dark: #6b4a2c; --ivory: #f3e6cc; }
   .lobby-art { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -58,8 +59,12 @@
   .hand .pc { --s: 60px; cursor: pointer; }
   .pc.mine { cursor: pointer; }
 
-  .turnbar { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto 18px; font-weight: 700; font-size: 1.05rem; }
+  .turnbar-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto 18px; }
+  .turnbar { display: flex; align-items: center; justify-content: center; gap: 12px; font-weight: 700; font-size: 1.05rem; }
   .turnbar .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .timer { font-variant-numeric: tabular-nums; color: var(--text-dim); padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 0.92rem; }
+  .timer.low { color: #ff7b62; border-color: #ff7b62; }
+  #game-chat { max-width: 980px; margin: 22px auto 0; min-height: 200px; max-height: 300px; }
   .flash { position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(0.6); z-index: 5000; pointer-events: none; font-size: clamp(3rem, 9vw, 5.5rem); font-weight: 900; letter-spacing: -0.05em; color: #fff3d6; text-shadow: 0 8px 30px rgba(0,0,0,0.8); opacity: 0; transition: transform 0.35s cubic-bezier(.2,.9,.3,1.3), opacity 0.25s ease; }
   .flash.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
@@ -88,25 +93,16 @@
     <div class="legend" id="legend"></div>
   </section>
   <aside class="lobby-side">
-    <div class="side-block" id="mode-block">
-      <h2>방식</h2>
+    <div class="side-block">
+      <h2>혼자 또는 한 기기에서</h2>
       <div class="modes">
         <button class="mode-btn is-main" type="button" data-mode="ai"><span class="m-name">AI와 두기</span><span class="m-desc">혼자 컴퓨터와 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
         <button class="mode-btn" type="button" data-mode="local"><span class="m-name">한 기기에서 둘이</span><span class="m-desc">화면 하나로 번갈아 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
-        <button class="mode-btn" type="button" data-mode="online"><span class="m-name">친구와 온라인</span><span class="m-desc">초대 링크를 보내 각자 기기로 둡니다</span><span class="m-go" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span></button>
       </div>
     </div>
-    <div class="side-block" id="online-block" hidden>
-      <h2 id="online-title">온라인 대전</h2>
-      <div class="invite" id="invite" hidden>
-        <p>이 링크를 친구에게 보내세요. 친구가 들어오면 바로 시작합니다. 내가 빨강(먼저 둠)입니다.</p>
-        <div class="invite-row"><input class="input" id="invite-link" readonly aria-label="초대 링크"><button class="btn" type="button" id="btn-copy">복사</button></div>
-      </div>
-      <div class="actions" style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn btn-main" type="button" id="btn-join" hidden>입장하기</button>
-        <button class="btn btn-quiet" type="button" id="btn-cancel">취소</button>
-      </div>
-      <p class="status" id="online-status" role="status"></p>
+    <div class="side-block">
+      <h2>친구와 온라인</h2>
+      <div id="lobby-box" style="display:grid;gap:12px"></div>
     </div>
     <div class="side-block">
       <h2>내 AI 전적</h2>
@@ -116,14 +112,17 @@
   </aside>
 </main>
 
+<main id="waiting" class="wait" hidden></main>
+
 <main id="game" class="play" hidden>
-  <div class="turnbar" id="turnbar" aria-live="polite"></div>
+  <div class="turnbar-wrap"><div class="turnbar" id="turnbar" aria-live="polite"></div><span class="timer" id="timer" hidden></span></div>
   <div class="table">
     <section class="hand" id="hand-top"></section>
     <div class="board"><div class="grid" id="grid"><span class="zone top"></span><span class="zone bot"></span></div></div>
     <section class="hand" id="hand-bot"></section>
   </div>
   <div style="display:flex;justify-content:center;margin-top:18px"><button class="btn btn-quiet" type="button" id="btn-leave">나가기</button></div>
+  <div class="chat" data-chat id="game-chat" hidden></div>
 </main>
 <div class="flash" id="flash"></div>
 
@@ -223,7 +222,7 @@
   }
 
   /* ---------- 화면 상태 ---------- */
-  let pieces = START(), turn = 'p1', mode = 'local', me = 'both', active = false, sel = null, last = null, room = null;
+  let pieces = START(), turn = 'p1', mode = 'local', me = 'both', active = false, sel = null, last = null;
   const flipped = () => mode === 'online' && me === 'p2';
   const canMove = () => active && (me === 'both' || me === turn) && !(mode === 'ai' && turn === 'p2');
   const NAME = { p1: '빨강', p2: '초록' };
@@ -269,7 +268,8 @@
       const box = $(id);
       box.className = `hand${active && turn === owner ? ' turn' : ''}`;
       box.style.setProperty('--side', COLOR[owner]);
-      const who = mode === 'ai' ? (owner === 'p1' ? '나' : 'AI') : mode === 'online' ? (owner === me ? '나' : '상대') : NAME[owner];
+      const who = mode === 'ai' ? (owner === 'p1' ? '나' : 'AI') : mode === 'online' ? (owner === me ? '나' : opp || '상대') : NAME[owner];
+      box.dataset.seat = mode === 'online' ? (owner === 'p1' ? 0 : 1) : 'x';
       box.innerHTML = `<h2><span class="dot" style="background:${COLOR[owner]}"></span>${who} 손패</h2><div class="hand-row"></div>`;
       const row = box.querySelector('.hand-row');
       const hand = pieces.filter(p => p.owner === owner && p.pos < 0);
@@ -284,7 +284,7 @@
       });
     });
     const tb = $('turnbar');
-    const label = mode === 'ai' ? (turn === 'p1' ? '내 차례' : 'AI가 생각하는 중') : mode === 'online' ? (turn === me ? '내 차례' : '상대 차례') : `${NAME[turn]} 차례`;
+    const label = mode === 'ai' ? (turn === 'p1' ? '내 차례' : 'AI가 생각하는 중') : mode === 'online' ? (turn === me ? '내 차례' : `${opp || '상대'} 차례`) : `${NAME[turn]} 차례`;
     tb.innerHTML = `<span class="dot" style="background:${COLOR[turn]}"></span><span></span>`;
     tb.lastChild.textContent = active ? label : '게임 종료';
   }
@@ -308,6 +308,7 @@
     pieces = r.pcs; last = { from: m.drop ? -1 : before, to: m.to }; sel = null;
     const mover = turn;
     turn = other(turn);
+    if (mode === 'online' && lobby.isHost) armTimer();
     if (mode === 'online' && !remote) send({ t: 'move', m });
     render();
     if (r.captured === '王') return end(mover, '상대 왕을 잡았습니다.');
@@ -332,60 +333,102 @@
     let title = `${NAME[winner]} 승리`;
     if (mode === 'ai') { title = winner === 'p1' ? '이겼습니다' : 'AI가 이겼습니다'; saveStat(winner === 'p1'); }
     if (mode === 'online') title = winner === me ? '이겼습니다' : '졌습니다';
-    const again = mode === 'online' ? () => { send({ t: 'again' }); reset(); } : () => start(mode);
-    setTimeout(() => dialog({ title, text: why, actions: [{ label: '판 보기' }, { label: '나가기', onClick: leave }, { label: '한 판 더', main: true, onClick: again }] }), 500);
+    clearTimeout(tmr); deadline = 0;
+    if (mode === 'online' && lobby.isHost) lobby.broadcast(syncMsg());
+    const again = mode === 'online' ? () => { if (lobby.isHost) { reset(); armTimer(); lobby.broadcast({ t: 'again', left: deadline ? deadline - Date.now() : 0 }); } else lobby.send({ k: 'again' }); } : () => start(mode);
+    const acts = [{ label: '판 보기' }, { label: '나가기', onClick: leave }];
+    if (mode === 'online' && lobby.isHost) acts.push({ label: '대기실로', onClick: backToRoom });
+    acts.push({ label: '한 판 더', main: true, onClick: again });
+    setTimeout(() => dialog({ title, text: why, actions: acts }), 500);
   }
 
   function reset() { pieces = START(); turn = 'p1'; sel = null; last = null; active = true; document.querySelectorAll('dialog[open]').forEach(d => d.close()); render(); }
   function start(m) {
     mode = m; me = m === 'ai' ? 'p1' : m === 'local' ? 'both' : me;
-    $('lobby').hidden = true; $('game').hidden = false; window.scrollTo(0, 0);
+    $('lobby').hidden = true; $('waiting').hidden = true; $('game').hidden = false; window.scrollTo(0, 0);
+    $('game-chat').hidden = m !== 'online';
+    if (m === 'online') lobby.mountChats();
     reset();
   }
-  function leave() { if (room) room.close(); location.replace(location.pathname); }
+  function leave() { if (mode === 'online') return lobby.leave(); location.replace(location.pathname); }
   $('btn-leave').addEventListener('click', () => { if (active && last && !confirm('게임을 그만두고 나갈까요?')) return; leave(); });
 
-  /* ---------- 온라인 (방장 = 빨강) ---------- */
-  function send(msg) { if (!room) return; if (me === 'p1') room.broadcast(msg); else room.send(msg); }
-  function onNet(msg) {
-    if (!msg) return;
-    if (msg.t === 'move') { if (turn !== me) doMove(msg.m, true); }
-    if (msg.t === 'again') reset();
+  /* ---------- 온라인 (rooms.js, 방장 = 빨강) ---------- */
+  let timerSec = 0, deadline = 0, tmr = 0, opp = '';
+  const syncMsg = () => ({ t: 'sync', pieces, turn, last, active, left: deadline ? Math.max(0, deadline - Date.now()) : 0 });
+  function send(msg) {
+    if (lobby.isHost) lobby.broadcast({ ...msg, left: deadline ? Math.max(0, deadline - Date.now()) : 0 });
+    else lobby.send({ k: msg.t, m: msg.m });
   }
-  function status(t, err) { const s = $('online-status'); s.textContent = t; s.classList.toggle('err', !!err); }
-  function hostOnline() {
-    if (!window.Peer) return status('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true);
-    me = 'p1'; status('방을 만드는 중입니다…');
-    room = Room.host({
-      seats: 2,
-      onReady(r) { $('invite').hidden = false; $('invite-link').value = r.link; status('친구를 기다리는 중입니다.'); },
-      onJoin() { start('online'); toast('친구가 들어왔습니다. 빨강이 먼저 둡니다.'); },
-      onAction(seat, a) { onNet(a); },
-      onLeave() { if (active) dialog({ title: '상대가 나갔습니다', actions: [{ label: '나가기', main: true, onClick: leave }] }); },
-      onError(e) { status(`연결 오류: ${e.type || e}`, true); }
-    });
+  const lobby = window.Lobby({
+    game: 'janggi', entry: $('lobby-box'), waiting: $('waiting'), entryScreen: $('lobby'), otherScreens: [$('game')],
+    max: [2], min: 2,
+    options: [{ key: 'timer', label: '턴 시간', choices: [[0, '없음'], [30, '30초'], [60, '60초']], def: 0 }],
+    onStart(api) {
+      me = 'p1'; timerSec = +(api.info.opts.timer || 0);
+      opp = (api.members.find(m => m.seat !== 0) || {}).name || '상대';
+      lobby.setPlaying(true);
+      start('online');
+      armTimer();
+      lobby.broadcast({ t: 'start', timer: timerSec, names: api.members.map(m => m.name), left: deadline ? deadline - Date.now() : 0 });
+    },
+    onAction(seat, a) {
+      if (!a) return;
+      if (a.k === 'move') {
+        if (!active || turn !== 'p2') { lobby.broadcast(syncMsg()); return; }
+        doMove(a.m, true);
+        lobby.broadcast(syncMsg());
+      } else if (a.k === 'again') { reset(); armTimer(); lobby.broadcast({ t: 'again', left: deadline ? deadline - Date.now() : 0 }); }
+    },
+    onMessage(msg) {
+      if (msg.t === 'start') { me = 'p2'; timerSec = msg.timer || 0; opp = (msg.names || [])[0] || '상대'; start('online'); setLeft(msg.left); toast('나는 초록, 빨강이 먼저 둡니다.'); }
+      else if (msg.t === 'move') { if (turn !== me) doMove(msg.m, true); setLeft(msg.left); }
+      else if (msg.t === 'sync') {
+        const wasActive = active;
+        pieces = msg.pieces; turn = msg.turn; last = msg.last; active = msg.active; sel = null; render(); setLeft(msg.left);
+        if (wasActive && msg.auto) toast('시간 초과: 대신 두었습니다.');
+        if (wasActive && (msg.auto || !msg.active)) checkAfterSync();
+      }
+      else if (msg.t === 'again') { reset(); setLeft(msg.left); }
+      else if (msg.t === 'back') { active = false; clearTimeout(tmr); deadline = 0; document.querySelectorAll('dialog[open]').forEach(d => d.close()); lobby.showWaiting(); }
+    },
+    onLeave() { if (active && mode === 'online') dialog({ title: '상대가 나갔습니다', text: '대기실로 돌아가 다른 사람을 기다릴 수 있습니다.', actions: [{ label: '대기실로', main: true, onClick: backToRoom }] }); }
+  });
+  function setLeft(ms) { deadline = ms ? Date.now() + ms : 0; }
+  // 동기화로 받은 판에서 끝났는지 확인 (방장이 대신 둔 수 등)
+  function checkAfterSync() {
+    const k1 = pieces.some(p => p.type === '王' && p.owner === 'p1' && p.pos >= 0), k2 = pieces.some(p => p.type === '王' && p.owner === 'p2' && p.pos >= 0);
+    if (!k1) return end('p2', '상대 왕을 잡았습니다.');
+    if (!k2) return end('p1', '상대 왕을 잡았습니다.');
+    afterMove(other(turn));
   }
-  function joinOnline(id) {
-    if (!window.Peer) return status('온라인 연결 도구를 불러오지 못했습니다. 새로고침해 주세요.', true);
-    me = 'p2'; status('방에 들어가는 중입니다…');
-    room = Room.join(id, {
-      onMessage(msg) { if (msg.t === 'seat') { start('online'); toast('입장했습니다. 나는 초록, 빨강이 먼저 둡니다.'); } else if (msg.t === 'full') status('이미 두 명이 들어와 있습니다.', true); else onNet(msg); },
-      onClose() { if (active) dialog({ title: '상대가 나갔습니다', actions: [{ label: '나가기', main: true, onClick: leave }] }); },
-      onError(e) { status(e && e.type === 'peer-unavailable' ? '방을 찾을 수 없습니다. 링크를 다시 확인해 주세요.' : `연결 오류: ${e.type || e}`, true); }
-    });
+  function backToRoom() {
+    active = false; clearTimeout(tmr); deadline = 0;
+    document.querySelectorAll('dialog[open]').forEach(d => d.close());
+    if (lobby.isHost) { lobby.setPlaying(false); lobby.broadcast({ t: 'back' }); }
+    lobby.showWaiting();
   }
-  document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
-    const m = b.dataset.mode;
-    if (m !== 'online') return start(m);
-    $('mode-block').hidden = true; $('online-block').hidden = false; hostOnline();
-  }));
-  $('btn-copy').addEventListener('click', () => copy($('invite-link').value));
-  $('btn-cancel').addEventListener('click', () => { if (room) room.close(); room = null; $('online-block').hidden = true; $('mode-block').hidden = false; $('invite').hidden = true; status(''); history.replaceState(null, '', location.pathname); });
-  const invited = new URLSearchParams(location.search).get('room');
-  if (invited) {
-    $('mode-block').hidden = true; $('online-block').hidden = false; $('online-title').textContent = '초대받은 대국';
-    $('btn-join').hidden = false; $('btn-join').addEventListener('click', () => { $('btn-join').hidden = true; joinOnline(invited); });
+  // 턴 시간 (방장만 잼): 시간이 지나면 AI가 대신 둠
+  function armTimer() {
+    clearTimeout(tmr); deadline = 0;
+    if (mode !== 'online' || !lobby.isHost || !timerSec || !active) return;
+    deadline = Date.now() + timerSec * 1000;
+    const turnAt = turn, lastAt = JSON.stringify(last);
+    tmr = setTimeout(() => {
+      if (!active || turn !== turnAt || JSON.stringify(last) !== lastAt) return;
+      const m = aiMove(pieces, turn, 3); if (!m) return;
+      doMove(m, true);
+      lobby.broadcast({ ...syncMsg(), auto: true });
+      toast('시간 초과: 대신 두었습니다.');
+    }, timerSec * 1000 + 300);
   }
+  setInterval(() => {
+    const t = $('timer');
+    if (!deadline || !active || mode !== 'online') { t.hidden = true; return; }
+    const s = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    t.hidden = false; t.textContent = `${s}초`; t.classList.toggle('low', s <= 10);
+  }, 250);
+  document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => start(b.dataset.mode)));
 
   /* ---------- 전적과 말 설명 ---------- */
   const SK = 'janggi-ai-stats';

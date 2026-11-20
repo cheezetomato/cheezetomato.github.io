@@ -21,11 +21,11 @@ Films는 맨 아래 Language에서 한국어, English, 日本語를 고를 수 �
 | 게임 | 파일 | 내용 |
 |---|---|---|
 | 대칭 퍼즐 | [`games/symmetry.html`](games/symmetry.html) | 2~4인 온라인. 같은 조각으로 좌우 대칭을 먼저 만드는 3라운드 게임 |
-| 벽바둑 | [`games/wallgo.html`](games/wallgo.html) | 2인/3인. 0~2칸 이동 후 벽 세우기, 한 기기 또는 온라인 |
+| 벽바둑 | [`games/wallgo.html`](games/wallgo.html) | 2인/3인. 돌과 차를 옮기고 벽 세우기, AI 대전, 한 기기, 온라인 |
 | 사과 게임 | [`games/apple.html`](games/apple.html) | 합이 10이 되도록 사과를 묶어 120초 안에 수확 |
-| 지뢰찾기 | [`games/minesweeper.html`](games/minesweeper.html) | 네 가지 난이도, 휴대폰에서는 길게 눌러 깃발 |
+| 지뢰찾기 | [`games/minesweeper.html`](games/minesweeper.html) | 추리만으로 풀리는 판, 네 가지 난이도, 휴대폰에서는 길게 눌러 깃발 |
 | 십이장기 | [`games/janggi.html`](games/janggi.html) | 3×4 판 미니 장기, AI 대전과 온라인 대전 |
 
 - 공용 스타일과 도우미는 [`games/common.css`](games/common.css), [`games/common.js`](games/common.js)에 있습니다.
-- 온라인 대전은 PeerJS로 브라우저끼리 직접 연결하고, 방을 만든 사람이 판을 관리합니다.
-- 기록(사과 게임, 지뢰찾기)과 대칭 퍼즐의 공개 방 목록(`symRooms`)은 Films와 같은 Firebase에 저장합니다.
+- 온라인 방(방 목록, 닉네임, 비공개, 강퇴, 채팅, 턴 시간)은 [`games/rooms.js`](games/rooms.js) 하나를 세 게임이 같이 씁니다. PeerJS로 브라우저끼리 직접 연결하고, 방을 만든 사람이 판을 관리합니다.
+- 기록(사과 게임, 지뢰찾기)과 공개 방 목록(`gameRooms`)은 Films와 같은 Firebase에 저장합니다.
