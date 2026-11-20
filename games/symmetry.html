@@ -13,7 +13,7 @@
 <script src="common.js"></script>
 <style>
   :root {
-    --g: #d9b25c; --g-ink: #1b140a;
+    --g: #2f8f68; --g-ink: #f3f8f2;
     --stone: #241c14; --stone-2: #2e2419; --stone-line: #3b2f22; --gold: #d9b25c; --sand: #e9d8b4;
   }
   .s0 { --pc: #e5533d; } .s1 { --pc: #3f86e8; } .s2 { --pc: #e6b13a; } .s3 { --pc: #4fb07a; }
@@ -85,39 +85,40 @@
   .float-emoji { position: absolute; left: 50%; top: -6px; font-size: 30px; pointer-events: none; animation: rise 2.2s ease-out forwards; z-index: 5; }
   @keyframes rise { 0% { transform: translate(-50%, 6px) scale(0.6); opacity: 0; } 15% { transform: translate(-50%, -14px) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -54px) scale(1); opacity: 0; } }
 
-  .arena { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
-  .booth { position: relative; border-radius: 18px; padding: 14px; background: linear-gradient(180deg, #31261a, #241c14); box-shadow: inset 0 0 0 1px #4a3a26, 0 30px 60px -30px rgba(0,0,0,0.9); }
-  .booth-plate { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px 12px; color: var(--sand); }
-  .booth-plate .owner { display: flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -0.02em; }
-  .booth-plate .owner .chip { width: 14px; height: 14px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 0 3px rgba(0,0,0,0.25); }
-  .booth-plate .help { font-size: 0.8rem; color: #b8a585; }
-  .booth-plate kbd { font-family: inherit; font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; border: 1px solid #5b4a33; color: var(--sand); }
+  .arena { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 20px; align-items: start; }
+  /* 나무 테두리 + 초록 펠트 책상 */
+  .booth { position: relative; border-radius: 22px; padding: 14px 14px 16px; background: linear-gradient(180deg, #5b3c25 0%, #47301d 55%, #3b2717 100%); box-shadow: inset 0 1px 0 rgba(255,225,180,0.18), inset 0 0 0 1px #2a1b0f, 0 34px 70px -34px rgba(0,0,0,0.95); }
+  .booth-plate { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 2px 6px 12px; }
+  .booth-plate .owner { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 10px; border-radius: 6px; background: linear-gradient(180deg, #d9bf86, #b8954f); color: #2b1d0c; font-weight: 800; letter-spacing: -0.02em; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 2px 0 #6e5226; }
+  .booth-plate .owner .chip { width: 12px; height: 12px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 0 2px rgba(43,29,12,0.35); }
+  .booth-plate .help { font-size: 0.8rem; color: #e2cfae; opacity: 0.85; }
+  .booth-plate kbd { font-family: inherit; font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; background: rgba(0,0,0,0.25); border: 1px solid #7a5a3a; color: #f1e6cf; }
   .banner { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; z-index: 4; animation: banner 1.8s ease forwards; }
-  .banner b { font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: -0.05em; color: #f2d48a; text-shadow: 0 6px 30px rgba(0,0,0,0.8); line-height: 1; }
-  .banner span { color: var(--sand); font-size: 1.05rem; margin-top: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+  .banner b { font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: -0.05em; color: #f4efe0; text-shadow: 0 6px 30px rgba(0,0,0,0.8); line-height: 1; }
+  .banner span { color: #e2ecdf; font-size: 1.05rem; margin-top: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
   @keyframes banner { 0% { opacity: 0; transform: scale(1.15); } 15%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-  .work { width: 100%; height: auto; max-height: calc(100dvh - 330px); min-height: 220px; display: block; border-radius: 10px; touch-action: none; user-select: none; -webkit-user-select: none; background: var(--stone); }
+  .work { --ar: 1.714; width: min(100%, max(420px, calc((100dvh - 370px) * var(--ar)))); height: auto; aspect-ratio: var(--ar); margin: 0 auto; display: block; border-radius: 12px; touch-action: none; user-select: none; -webkit-user-select: none; background: #1c5a41; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.35); }
   .piece { cursor: grab; outline: none; }
-  .piece.drag { cursor: grabbing; }
-  .piece .tri { stroke-width: 0.6; stroke-linejoin: round; }
-  .piece .edge { fill: none; stroke: rgba(15, 10, 5, 0.75); stroke-width: 2; stroke-linecap: round; pointer-events: none; }
-  .piece.sel .edge { stroke: #fff6df; stroke-width: 2.6; }
-  .piece:focus-visible .edge { stroke: #fff6df; stroke-width: 3; }
-  .piece.bad .tri { opacity: 0.55; }
-  .booth-bar { display: flex; align-items: center; gap: 10px; padding-top: 14px; flex-wrap: wrap; }
-  .booth-bar .btn { background: #3a2e20; border-color: #574631; color: var(--sand); }
-  .booth-bar .btn:hover { border-color: var(--gold); }
-  .booth-msg { flex: 1; min-width: 160px; font-size: 0.92rem; color: #d8c7a6; }
-  .buzzer { margin-left: auto; position: relative; width: 104px; height: 104px; border-radius: 50%; border: 0; cursor: pointer; padding: 0; background: radial-gradient(circle at 50% 38%, #ff7b62, #d2341c 60%, #9e2412); box-shadow: 0 8px 0 #6e180b, 0 12px 26px rgba(0,0,0,0.6), inset 0 -6px 12px rgba(0,0,0,0.25); color: #fff3e8; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; transition: transform 0.08s ease, box-shadow 0.08s ease; }
-  .buzzer:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 #6e180b, 0 6px 14px rgba(0,0,0,0.6), inset 0 -6px 12px rgba(0,0,0,0.25); }
+  .piece.lift { cursor: grabbing; }
+  .piece .edge { fill: none; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+  .piece.sel .edge { stroke: #fffaf0; stroke-width: 3; }
+  .piece:focus-visible .edge { stroke: #fffaf0; stroke-width: 3.4; }
+  .knob { cursor: grab; }
+  #knob > line, #knob > circle { pointer-events: none; }
+  .booth-bar { display: flex; align-items: center; gap: 8px; padding-top: 14px; flex-wrap: wrap; }
+  .booth-bar .btn { background: linear-gradient(180deg, #5a3d26, #4a311d); border-color: #6f4c2f; color: #f1e6cf; touch-action: none; }
+  .booth-bar .btn:hover { border-color: #b8954f; }
+  .booth-msg { flex: 1; min-width: 160px; font-size: 0.92rem; color: #ecdcbc; }
+  .buzzer { margin-left: auto; position: relative; width: 104px; height: 104px; border-radius: 50%; border: 0; cursor: pointer; padding: 0; background: radial-gradient(circle at 50% 38%, #ff7b62, #d2341c 60%, #9e2412); box-shadow: 0 0 0 7px #2a1b0f, 0 8px 0 7px #1d1209, 0 18px 30px rgba(0,0,0,0.6), inset 0 -6px 12px rgba(0,0,0,0.25); color: #fff3e8; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; transition: transform 0.08s ease; }
+  .buzzer:active:not(:disabled) { transform: translateY(5px); }
   .buzzer:disabled { filter: grayscale(0.85) brightness(0.6); cursor: not-allowed; }
   .buzzer small { display: block; font-size: 0.72rem; font-weight: 600; opacity: 0.85; }
-  .lock { position: absolute; inset: 14px; border-radius: 12px; display: grid; place-content: center; text-align: center; background: rgba(20, 14, 8, 0.66); color: var(--sand); pointer-events: none; }
+  .lock { position: absolute; inset: 14px; border-radius: 12px; display: grid; place-content: center; text-align: center; background: rgba(8, 24, 17, 0.62); color: #e2ecdf; pointer-events: none; }
   .lock b { font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: -0.04em; color: #f2d48a; }
   .lock span { font-size: 1rem; }
   .flash-ok { animation: ok 0.6s ease; }
   .flash-no { animation: no 0.45s ease; }
-  @keyframes ok { 0% { box-shadow: inset 0 0 0 1px #4a3a26, 0 0 0 0 rgba(242,212,138,0.9); } 100% { box-shadow: inset 0 0 0 1px #4a3a26, 0 0 0 26px rgba(242,212,138,0); } }
+  @keyframes ok { 0% { box-shadow: 0 0 0 0 rgba(242,212,138,0.9); } 100% { box-shadow: 0 0 0 26px rgba(242,212,138,0); } }
   @keyframes no { 0%, 100% { transform: none; } 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-4px); } }
 
   /* ---------- 결과와 시상식 ---------- */
@@ -153,7 +154,7 @@
     .slots { grid-template-columns: 1fr; }
     .round-badge { min-width: 0; flex: 1 1 100%; grid-auto-flow: column; gap: 8px; align-items: baseline; padding: 6px 12px; }
     .pchip { padding: 8px 10px; }
-    .work { max-height: none; }
+    .work { width: 100%; }
     .booth { padding: 8px; border-radius: 12px; }
     .buzzer { width: 84px; height: 84px; }
     .booth-plate .help { display: none; }
@@ -167,10 +168,10 @@
 <main id="entry" class="lobby">
   <section>
     <h1 class="lobby-title">대칭 퍼즐</h1>
-    <p class="lobby-tag">같은 조각을 나눠 받고, 각자 자리에서 좌우 대칭 도형을 먼저 완성하는 게임입니다.</p>
+    <p class="lobby-tag">같은 조각을 나눠 받고, 각자 책상에서 대칭 도형을 먼저 완성하는 게임입니다.</p>
     <ul class="rules">
-      <li>라운드마다 모두 <b>같은 조각 2~3개</b>를 받습니다. 조각은 옮기고 <b>돌릴 수만</b> 있고 뒤집을 수는 없습니다.</li>
-      <li>조각을 전부 써서 서로 맞닿게 붙이고, 전체 모양이 <b>좌우 대칭</b>이 되면 <b>버저</b>를 누릅니다.</li>
+      <li>라운드마다 모두 <b>같은 조각 2~3개</b>를 받습니다. 조각은 책상 위에서 자유롭게 옮기고 <b>돌릴 수</b> 있지만 뒤집을 수는 없습니다.</li>
+      <li>조각을 전부 써서 서로 맞닿게 붙이고, 전체 모양이 <b>선대칭</b>이 되면 <b>버저</b>를 누릅니다. 변끼리 가까이 대면 자석처럼 딱 붙습니다.</li>
       <li>정답이면 누른 순서대로 1등, 2등, 3등이 됩니다. 틀리면 기회가 줄고, <b>3번</b> 틀리면 그 라운드 꼴찌입니다.</li>
       <li>꼴찌가 정해지는 순간 라운드가 끝납니다. 1등 <b>+5</b>, 2등 <b>+3</b>, 3등 <b>+1</b>, 꼴찌 <b>-1</b>.</li>
       <li>3라운드 합계가 가장 높은 사람이 이깁니다. 2명부터 4명까지 할 수 있습니다.</li>
@@ -238,12 +239,12 @@
     <section class="booth" id="booth">
       <div class="booth-plate">
         <div class="owner" id="owner"></div>
-        <div class="help">끌어서 이동 <kbd>Q</kbd> 시계 <kbd>E</kbd> 반시계 우클릭·휠로도 회전</div>
+        <div class="help">끌어서 옮기고, 손잡이를 돌리거나 <kbd>Q</kbd> <kbd>E</kbd>를 누르고 있으면 돌아갑니다</div>
       </div>
       <svg class="work" id="work" role="application" aria-label="내 작업 공간"></svg>
       <div class="booth-bar">
-        <button class="btn" type="button" id="rot-ccw" aria-label="반시계로 돌리기">↺ 반시계</button>
-        <button class="btn" type="button" id="rot-cw" aria-label="시계로 돌리기">↻ 시계</button>
+        <button class="btn" type="button" id="rot-ccw" aria-label="반시계로 돌리기 (누르고 있기)">↺ 반시계</button>
+        <button class="btn" type="button" id="rot-cw" aria-label="시계로 돌리기 (누르고 있기)">↻ 시계</button>
         <button class="btn" type="button" id="btn-reset">조각 처음 자리로</button>
         <span class="booth-msg" id="booth-msg"></span>
         <button class="buzzer" type="button" id="buzzer">버저<small id="buzz-left"></small></button>
@@ -302,16 +303,126 @@
     if (!Number.isInteger(sum)) return false;
     return arr.every(([r, c, q]) => set.has(key(r, sum - 1 - c, q === 1 ? 3 : q === 3 ? 1 : q)));
   }
-  // 놓인 조각들 → 판정
-  function judge(pieces, layout) {
-    const all = new Set(); let overlap = false;
-    layout.forEach(L => {
-      const p = pieces[L.id];
-      rotate(p, L.rot).forEach(([r, c, q]) => { const k = key(r + L.r, c + L.c, q); if (all.has(k)) overlap = true; all.add(k); });
+  // 놓인 조각들 → 판정 (자유 배치: 위치와 각도가 실수)
+  // 조각 모양을 그림으로 그려서 겹침, 맞닿음, 대칭을 잽니다.
+  const S = 40;                 // 칸 하나의 크기(px)
+  const TOUCH = 3;              // 이 거리 안이면 맞닿은 것으로 봄
+  const OVERLAP_MAX = 0.02;     // 겹친 넓이가 2%를 넘으면 겹침
+  const SYM_TOL = 0.04;         // 거울에 비춰 어긋난 넓이가 4% 이하면 대칭
+  const AXIS_ANY = true;        // 대칭선 방향: true면 어느 방향이든, false면 세로만
+  const geomCache = new Map();
+  function geomOf(cells) {
+    const k = JSON.stringify(cells);
+    if (geomCache.has(k)) return geomCache.get(k);
+    const tris = cells.map(([r, c, q]) => { const P = [[c, r], [c + 1, r], [c + 1, r + 1], [c, r + 1]]; return [P[q], P[(q + 1) % 4], [c + 0.5, r + 0.5]]; });
+    let cx = 0, cy = 0;
+    tris.forEach(t => t.forEach(p => { cx += p[0]; cy += p[1]; }));
+    cx /= tris.length * 3; cy /= tris.length * 3;
+    const set = new Set(cells.map(x => key(...x)));
+    const raw = [];
+    cells.forEach(([r, c, q]) => {
+      const P = [[c, r], [c + 1, r], [c + 1, r + 1], [c, r + 1]], a = P[q], b = P[(q + 1) % 4], m = [c + 0.5, r + 0.5];
+      const [o1, o2, o3] = nbrs(r, c, q);
+      if (!set.has(key(...o3))) raw.push([a, b]);
+      if (!set.has(key(...o1))) raw.push([b, m]);
+      if (!set.has(key(...o2))) raw.push([a, m]);
     });
-    if (overlap) return 'overlap';
-    if (!connected(all)) return 'apart';
-    return symmetric(all) ? 'ok' : 'wrong';
+    const sh = p => [(p[0] - cx) * S, (p[1] - cy) * S];
+    const g = { tris: tris.map(t => t.map(sh)), edges: mergeEdges(raw.map(e => e.map(sh))), cx, cy };
+    g.rad = Math.max(...g.tris.flat().map(([x, y]) => Math.hypot(x, y)));
+    geomCache.set(k, g);
+    return g;
+  }
+  // 한 줄로 이어지는 변은 하나로 합침 (자석 붙이기를 정확하게)
+  function mergeEdges(E) {
+    const same = (p, q) => Math.abs(p[0] - q[0]) < 1e-6 && Math.abs(p[1] - q[1]) < 1e-6;
+    const dir = e => { const dx = e[1][0] - e[0][0], dy = e[1][1] - e[0][1], l = Math.hypot(dx, dy); return [dx / l, dy / l]; };
+    let list = E.slice(), changed = true;
+    while (changed) {
+      changed = false;
+      outer: for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+        const a = list[i], b = list[j], da = dir(a), db = dir(b);
+        if (Math.abs(da[0] * db[1] - da[1] * db[0]) > 1e-6) continue;
+        let m = null;
+        if (same(a[1], b[0])) m = [a[0], b[1]]; else if (same(a[0], b[1])) m = [b[0], a[1]];
+        else if (same(a[0], b[0])) m = [a[1], b[1]]; else if (same(a[1], b[1])) m = [a[0], b[0]];
+        if (m) { list.splice(j, 1); list[i] = m; changed = true; break outer; }
+      }
+    }
+    return list;
+  }
+  const xf = (p, L) => { const t = (L.a * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t); return [L.x + p[0] * c - p[1] * s, L.y + p[0] * s + p[1] * c]; };
+  const worldEdges = (g, L) => g.edges.map(e => e.map(p => xf(p, L)));
+  // 두 변이 거의 나란하고 가까우며 일정 길이 이상 겹치면 맞닿음
+  function edgeContact(a, b, tolAng = 4, tolDist = TOUCH) {
+    const ax = a[1][0] - a[0][0], ay = a[1][1] - a[0][1], la = Math.hypot(ax, ay);
+    const bx = b[1][0] - b[0][0], by = b[1][1] - b[0][1], lb = Math.hypot(bx, by);
+    const ux = ax / la, uy = ay / la;
+    const sin = Math.abs(ux * by - uy * bx) / lb;
+    if (sin > Math.sin((tolAng * Math.PI) / 180)) return null;
+    const mx = (b[0][0] + b[1][0]) / 2 - a[0][0], my = (b[0][1] + b[1][1]) / 2 - a[0][1];
+    const dist = Math.abs(mx * uy - my * ux);
+    if (dist > tolDist) return null;
+    const t0 = (b[0][0] - a[0][0]) * ux + (b[0][1] - a[0][1]) * uy, t1 = (b[1][0] - a[0][0]) * ux + (b[1][1] - a[0][1]) * uy;
+    const ov = Math.min(la, Math.max(t0, t1)) - Math.max(0, Math.min(t0, t1));
+    return ov > 4 ? { dist, ov } : null;
+  }
+  let judgeCanvas = null;
+  function judge(pieces, layout) {
+    let W, H;
+    const gs = layout.map(L => ({ L, g: geomOf(pieces[L.id]) }));
+    // 맞닿음
+    const n = gs.length, adj = Array.from({ length: n }, () => []);
+    const ws = gs.map(({ L, g }) => worldEdges(g, L));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      if (ws[i].some(a => ws[j].some(b => edgeContact(a, b)))) { adj[i].push(j); adj[j].push(i); }
+    }
+    // 그림으로 그리기 (조각들이 있는 곳만)
+    const pts = gs.flatMap(({ L, g }) => g.tris.map(t => t.map(q => xf(q, L))));
+    const all = pts.flat();
+    const ox = Math.min(...all.map(p => p[0])) - 6, oy = Math.min(...all.map(p => p[1])) - 6;
+    W = Math.min(2000, Math.ceil(Math.max(...all.map(p => p[0])) - ox + 6)); H = Math.min(2000, Math.ceil(Math.max(...all.map(p => p[1])) - oy + 6));
+    if (!judgeCanvas) judgeCanvas = document.createElement('canvas');
+    const cv = judgeCanvas; cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    let ti = 0;
+    gs.forEach(({ g }) => { ctx.beginPath(); g.tris.forEach(() => { const p = pts[ti++]; ctx.moveTo(p[0][0] - ox, p[0][1] - oy); ctx.lineTo(p[1][0] - ox, p[1][1] - oy); ctx.lineTo(p[2][0] - ox, p[2][1] - oy); ctx.closePath(); }); ctx.fill('nonzero'); });
+    const img = ctx.getImageData(0, 0, W, H).data;
+    const mask = new Uint8Array(W * H); const px = [];
+    let over = 0, sx = 0, sy = 0;
+    for (let i = 0, k = 3; i < W * H; i++, k += 4) {
+      const a = img[k];
+      if (a >= 100) { mask[i] = 1; const x = i % W, y = (i / W) | 0; px.push(x, y); sx += x; sy += y; if (a > 170) over++; }
+    }
+    const N = px.length / 2;
+    if (!N) return { v: 'apart', sym: 1 };
+    if (over / N > OVERLAP_MAX) return { v: 'overlap', sym: 1 };
+    const seen = new Set([0]), st = [0];
+    while (st.length) { const i = st.pop(); adj[i].forEach(j => { if (!seen.has(j)) { seen.add(j); st.push(j); } }); }
+    if (seen.size !== n) return { v: 'apart', sym: 1 };
+    // 대칭선은 무게중심을 지남: 방향만 찾으면 됨
+    const cx = sx / N, cy = sy / N;
+    const miss = (deg, step) => {
+      const t = (deg * Math.PI) / 180, dx = Math.cos(t), dy = Math.sin(t);
+      let m = 0, cnt = 0;
+      for (let i = 0; i < px.length; i += 2 * step) {
+        const vx = px[i] - cx, vy = px[i + 1] - cy, d = vx * dx + vy * dy;
+        const qx = Math.round(cx + 2 * d * dx - vx), qy = Math.round(cy + 2 * d * dy - vy);
+        cnt++;
+        if (qx < 0 || qy < 0 || qx >= W || qy >= H || !mask[qy * W + qx]) m++;
+      }
+      return m / cnt;
+    };
+    let best = 1, bestA = 90;
+    if (AXIS_ANY) {
+      for (let a = 0; a < 180; a += 1) { const m = miss(a, 3); if (m < best) { best = m; bestA = a; } }
+      for (let a = bestA - 1; a <= bestA + 1; a += 0.1) { const m = miss(a, 1); if (m < best || a === bestA - 1) { if (m < best) { best = m; bestA = a; } } }
+      best = miss(bestA, 1);
+    } else {
+      for (let a = 85; a <= 95; a += 0.25) { const m = miss(a, 1); if (m < best) { best = m; bestA = a; } }
+    }
+    return { v: best <= SYM_TOL ? 'ok' : 'wrong', sym: best, axis: { cx: cx + ox, cy: cy + oy, deg: bestA } };
   }
 
   /* ---------- 문제 만들기: 대칭 도형을 먼저 만들고 잘라서 나눔 ---------- */
@@ -379,168 +490,216 @@
       if (pieces.every(selfSymmetric)) continue;
       const turns = pieces.map(() => rnd(4));
       // sol: 원래 자리 (시험용, 다른 사람에게는 보내지 않음)
-      const sol = pieces.map((p, id) => ({ id, rot: (4 - turns[id]) % 4, r: Math.min(...p.map(x => x[0])), c: Math.min(...p.map(x => x[1])) }));
+      const sol = pieces.map((p, id) => { const g = geomOf(p); return { id, x: g.cx * S + 160, y: g.cy * S + 90, a: (360 - 90 * turns[id]) % 360 }; });
       return { pieces: pieces.map((p, i) => rotate(normalize(p), turns[i])), sol };
     }
     return makePuzzle(k);
   }
 
   /* =========================================================
-   * 내 작업 공간 (조각 끌기, 돌리기)
+   * 내 자리 (조각을 자유롭게 끌고 돌리기)
    * ======================================================= */
-  let GW = 18, GH = 10;
-  const S = 34;
+  const COLORS_P = [['#e5b93f', '#a87f17'], ['#e3664d', '#9e3a26'], ['#5b98dc', '#2c5f9c']];
+  let TW = 960, TH = 560;
   const svg = $('work');
   const NS = 'http://www.w3.org/2000/svg';
   const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
   let puzzle = null, mine = [], home = [], selected = 0, locked = false, workRound = 0;
 
-  function triPts(r, c, q) {
-    const x = c * S, y = r * S, cx = x + S / 2, cy = y + S / 2;
-    const P = [[x, y], [x + S, y], [x + S, y + S], [x, y + S]];
-    const a = P[q], b = P[(q + 1) % 4];
-    return `${a[0]},${a[1]} ${b[0]},${b[1]} ${cx},${cy}`;
+  function drawTable() {
+    svg.innerHTML = `
+      <defs>
+        <filter id="felt" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 0.22 0"/></filter>
+        <radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.38"/></radialGradient>
+        <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#06140d" flood-opacity="0.55"/></filter>
+        <filter id="sh2" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="14" stdDeviation="9" flood-color="#06140d" flood-opacity="0.5"/></filter>
+      </defs>
+      <rect width="${TW}" height="${TH}" fill="#1c5a41"/>
+      <rect width="${TW}" height="${TH}" filter="url(#felt)"/>
+      <rect width="${TW}" height="${TH}" fill="url(#vig)"/>
+      <rect x="22" y="22" width="${TW - 44}" height="${TH - 44}" rx="4" fill="none" stroke="#e9efe6" stroke-opacity="0.55" stroke-width="3"/>
+      <g id="axis"></g><g id="pieces"></g><g id="knob"></g>`;
   }
-  function drawGrid() {
-    svg.innerHTML = '';
-    const defs = mk('defs', {}, svg);
-    const pat = mk('pattern', { id: 'g', width: S, height: S, patternUnits: 'userSpaceOnUse' }, defs);
-    mk('path', { d: `M ${S} 0 L 0 0 0 ${S}`, fill: 'none', stroke: '#3b2f22', 'stroke-width': 1 }, pat);
-    mk('path', { d: `M 0 0 L ${S} ${S} M ${S} 0 L 0 ${S}`, fill: 'none', stroke: '#2c2318', 'stroke-width': 0.7 }, pat);
-    mk('rect', { x: 0, y: 0, width: GW * S, height: GH * S, fill: 'url(#g)' }, svg);
-    mk('g', { id: 'pieces' }, svg);
-  }
-  function pieceCells(p) { return rotate(puzzle.pieces[p.id], p.rot); }
-  function cellsAt(p) { return pieceCells(p).map(([r, c, q]) => key(r + p.r, c + p.c, q)); }
-  function overlapping() {
-    const seen = new Map(), bad = new Set();
-    mine.forEach(p => cellsAt(p).forEach(k => { if (seen.has(k)) { bad.add(p.id); bad.add(seen.get(k)); } else seen.set(k, p.id); }));
-    return bad;
-  }
+  const geom = p => geomOf(puzzle.pieces[p.id]);
   function renderPieces() {
     const layer = svg.querySelector('#pieces');
-    const bad = overlapping();
     mine.forEach(p => {
       let g = layer.querySelector(`[data-id="${p.id}"]`);
       if (!g) {
         g = mk('g', { class: 'piece', 'data-id': p.id, tabindex: 0, role: 'button', 'aria-label': `조각 ${p.id + 1}` }, layer);
+        const [fill, dark] = COLORS_P[p.id % COLORS_P.length];
+        const gg = geom(p);
+        const inner = mk('g', { class: 'body', filter: 'url(#sh)' }, g);
+        // 삼각형을 한 도형으로 칠해서 이음선이 안 보이게
+        const tri = `<path d="${gg.tris.map(t => `M${t[0].join(' ')}L${t[1].join(' ')}L${t[2].join(' ')}Z`).join('')}" fill="${fill}"/>`;
+        inner.innerHTML = tri + `<path class="edge" d="${gg.edges.map(e => `M${e[0][0]} ${e[0][1]}L${e[1][0]} ${e[1][1]}`).join('')}" stroke="${dark}"/>`;
         g.addEventListener('pointerdown', e => startDrag(e, p.id));
-        g.addEventListener('contextmenu', e => { e.preventDefault(); if (!locked) { select(p.id); turn(1); } });
-        g.addEventListener('wheel', e => { if (locked) return; e.preventDefault(); select(p.id); turn(e.deltaY > 0 ? 1 : -1); }, { passive: false });
-        g.addEventListener('focus', () => select(p.id));
+        g.addEventListener('contextmenu', e => e.preventDefault());
+        g.addEventListener('wheel', e => { if (locked) return; e.preventDefault(); select(p.id); spin((e.deltaY > 0 ? 1 : -1) * (e.shiftKey ? 1 : 6)); scheduleSnap(); }, { passive: false });
+        g.addEventListener('focus', () => { if (selected !== p.id) select(p.id); });
       }
-      const cells = pieceCells(p), set = new Set(cells.map(x => key(...x)));
-      const col = PIECE_COLORS[p.id % PIECE_COLORS.length];
-      let html = '';
-      cells.forEach(([r, c, q]) => { html += `<polygon class="tri" points="${triPts(r, c, q)}" fill="${col}" stroke="${col}"/>`; });
-      // 바깥 테두리
-      let d = '';
-      cells.forEach(([r, c, q]) => {
-        const x = c * S, y = r * S, cx = x + S / 2, cy = y + S / 2;
-        const P = [[x, y], [x + S, y], [x + S, y + S], [x, y + S]];
-        const a = P[q], b = P[(q + 1) % 4];
-        const [o1, o2, o3] = nbrs(r, c, q); // 같은 칸 이웃 두 개, 다른 칸 이웃 하나
-        if (!set.has(key(...o3))) d += `M${a[0]} ${a[1]}L${b[0]} ${b[1]}`;
-        if (!set.has(key(...o1))) d += `M${b[0]} ${b[1]}L${cx} ${cy}`;
-        if (!set.has(key(...o2))) d += `M${a[0]} ${a[1]}L${cx} ${cy}`;
-      });
-      html += `<path class="edge" d="${d}"/>`;
-      g.innerHTML = html;
-      if (!g.classList.contains('drag')) g.setAttribute('transform', `translate(${p.c * S} ${p.r * S})`);
+      g.setAttribute('transform', `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.a.toFixed(2)})`);
       g.classList.toggle('sel', p.id === selected);
-      g.classList.toggle('bad', bad.has(p.id));
-      layer.appendChild(layer.querySelector(`[data-id="${selected}"]`) || g);
+      g.classList.toggle('lift', !!(drag && drag.p === p));
+      g.querySelector('.body').setAttribute('filter', drag && drag.p === p ? 'url(#sh2)' : 'url(#sh)');
     });
-    updateMsg();
+    const sel = layer.querySelector(`[data-id="${selected}"]`); if (sel) layer.appendChild(sel);
+    renderKnob();
   }
-  function clampPiece(p) {
-    const [h, w] = sizeOf(pieceCells(p));
-    p.r = Math.max(0, Math.min(GH - h, p.r)); p.c = Math.max(0, Math.min(GW - w, p.c));
+  // 회전 손잡이: 고른 조각 위에 작은 원
+  function renderKnob() {
+    const k = svg.querySelector('#knob'); k.innerHTML = '';
+    const p = mine.find(x => x.id === selected);
+    if (!p || locked || (drag && drag.kind === 'move')) return;
+    const r = geom(p).rad + 24;
+    let t = ((p.a - 90) * Math.PI) / 180, kx = p.x + r * Math.cos(t), ky = p.y + r * Math.sin(t);
+    // 책상 밖으로 나가면 반대쪽에
+    if (kx < 16 || ky < 16 || kx > TW - 16 || ky > TH - 16) { t += Math.PI; kx = p.x + r * Math.cos(t); ky = p.y + r * Math.sin(t); }
+    k.innerHTML = `<line x1="${p.x}" y1="${p.y}" x2="${kx}" y2="${ky}" stroke="#f4efe0" stroke-opacity="0.45" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="${p.x}" cy="${p.y}" r="3" fill="#f4efe0" fill-opacity="0.7"/><g class="knob" transform="translate(${kx} ${ky})"><circle r="15" fill="#f4efe0"/><path d="M-6 2a6 6 0 1 0 2-7" fill="none" stroke="#1c5a41" stroke-width="2.2" stroke-linecap="round"/><path d="M-6 -9l2 4-4.5 0.8z" fill="#1c5a41"/></g>`;
+    k.querySelector('.knob').addEventListener('pointerdown', e => startTurn(e, p));
+  }
+  function clamp(p) {
+    const r = Math.min(geom(p).rad, Math.min(TW, TH) / 2 - 30);
+    p.x = Math.max(r + 8, Math.min(TW - r - 8, p.x)); p.y = Math.max(r + 8, Math.min(TH - r - 8, p.y));
   }
   function select(id) { selected = id; renderPieces(); }
-  function turn(dir) {
+  function spin(deg) {
     if (locked) return;
     const p = mine.find(x => x.id === selected); if (!p) return;
-    const [h0, w0] = sizeOf(pieceCells(p));
-    p.rot = (p.rot + dir + 4) % 4;
-    const [h1, w1] = sizeOf(pieceCells(p));
-    p.r += Math.round((h0 - h1) / 2); p.c += Math.round((w0 - w1) / 2);
-    clampPiece(p); renderPieces();
+    p.a = (((p.a + deg) % 360) + 360) % 360; clamp(p); renderPieces(); updateMsg();
   }
-  function moveBy(dr, dc) {
-    if (locked) return;
-    const p = mine.find(x => x.id === selected); if (!p) return;
-    p.r += dr; p.c += dc; clampPiece(p); renderPieces();
+
+  // 자석: 놓을 때 다른 조각의 변과 거의 맞으면 딱 붙임
+  function snap(p) {
+    const g = geom(p);
+    let best = null;
+    mine.forEach(o => {
+      if (o === p) return;
+      const ob = worldEdges(geom(o), o);
+      g.edges.forEach((e, ei) => {
+        const a = e.map(q => xf(q, p));
+        ob.forEach(b => {
+          const ang = d => Math.atan2(d[1][1] - d[0][1], d[1][0] - d[0][0]) * 180 / Math.PI;
+          let diff = ((ang(a) - ang(b)) % 180 + 180) % 180; if (diff > 90) diff -= 180;
+          if (Math.abs(diff) > 9) return;
+          const c = edgeContact(a, b, 9, 14); if (!c) return;
+          const score = c.dist + Math.abs(diff) * 1.2 - Math.min(c.ov, 40) * 0.05;
+          if (!best || score < best.score) best = { score, ei, b, diff };
+        });
+      });
+    });
+    if (!best) return false;
+    p.a -= best.diff;
+    const a = g.edges[best.ei].map(q => xf(q, p)), b = best.b;
+    // 변을 같은 직선 위로
+    const bx = b[1][0] - b[0][0], by = b[1][1] - b[0][1], lb = Math.hypot(bx, by), ux = bx / lb, uy = by / lb;
+    const mx = (a[0][0] + a[1][0]) / 2 - b[0][0], my = (a[0][1] + a[1][1]) / 2 - b[0][1];
+    const perp = mx * -uy + my * ux;
+    p.x -= -uy * perp; p.y -= ux * perp;
+    // 꼭짓점이 가까우면 맞춤
+    const a2 = g.edges[best.ei].map(q => xf(q, p));
+    let slide = null;
+    a2.forEach(pa => b.forEach(pb => { const d = (pb[0] - pa[0]) * ux + (pb[1] - pa[1]) * uy; if (Math.abs(d) < 10 && (slide === null || Math.abs(d) < Math.abs(slide))) slide = d; }));
+    if (slide !== null) { p.x += ux * slide; p.y += uy * slide; }
+    return true;
   }
+  let snapT = 0;
+  function scheduleSnap() { clearTimeout(snapT); snapT = setTimeout(() => { const p = mine.find(x => x.id === selected); if (p && snap(p)) { clamp(p); renderPieces(); } updateMsg(); }, 260); }
 
   let drag = null;
   function svgPoint(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
   function startDrag(e, id) {
     if (locked || e.button === 2) return;
     e.preventDefault();
-    select(id);
-    const p = mine.find(x => x.id === id), g = svg.querySelector(`[data-id="${id}"]`);
-    const pt = svgPoint(e);
-    drag = { p, g, dx: pt.x - p.c * S, dy: pt.y - p.r * S, pid: e.pointerId };
-    g.classList.add('drag'); g.setPointerCapture(e.pointerId);
-    g.addEventListener('pointermove', onDrag);
-    g.addEventListener('pointerup', endDrag, { once: true });
-    g.addEventListener('pointercancel', endDrag, { once: true });
+    const p = mine.find(x => x.id === id), pt = svgPoint(e);
+    selected = id;
+    drag = { kind: 'move', p, dx: pt.x - p.x, dy: pt.y - p.y };
+    svg.setPointerCapture(e.pointerId);
+    renderPieces();
   }
-  function onDrag(e) {
+  function startTurn(e, p) {
+    if (locked) return;
+    e.preventDefault(); e.stopPropagation();
+    const pt = svgPoint(e);
+    drag = { kind: 'turn', p, a0: p.a, t0: Math.atan2(pt.y - p.y, pt.x - p.x) };
+    svg.setPointerCapture(e.pointerId);
+  }
+  svg.addEventListener('pointermove', e => {
     if (!drag) return;
-    const pt = svgPoint(e);
-    drag.g.setAttribute('transform', `translate(${pt.x - drag.dx} ${pt.y - drag.dy})`);
-  }
-  function endDrag(e) {
+    const pt = svgPoint(e), p = drag.p;
+    if (drag.kind === 'move') { p.x = pt.x - drag.dx; p.y = pt.y - drag.dy; }
+    else { const t = Math.atan2(pt.y - p.y, pt.x - p.x); let a = drag.a0 + ((t - drag.t0) * 180) / Math.PI; if (e.shiftKey) a = Math.round(a / 15) * 15; p.a = ((a % 360) + 360) % 360; }
+    renderPieces();
+  });
+  const endDrag = () => {
     if (!drag) return;
-    const pt = svgPoint(e);
-    drag.p.c = Math.round((pt.x - drag.dx) / S); drag.p.r = Math.round((pt.y - drag.dy) / S);
-    clampPiece(drag.p);
-    drag.g.removeEventListener('pointermove', onDrag);
-    drag.g.classList.remove('drag');
-    drag = null; renderPieces();
+    const p = drag.p; drag = null;
+    clamp(p); snap(p); clamp(p);
+    renderPieces(); updateMsg();
+  };
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+  svg.addEventListener('pointerdown', e => { if (e.target === svg || e.target.closest('rect')) { /* 빈 곳: 선택 유지 */ } });
+
+  // 키보드: Q 시계, E 반시계 (누르고 있으면 계속 돔), 방향키 이동
+  const held = new Set(); let spinRaf = 0, lastT = 0;
+  function spinLoop(t) {
+    if (!held.size) { spinRaf = 0; scheduleSnap(); return; }
+    const dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0.016; lastT = t;
+    spin((held.has('q') ? 1 : 0) * 140 * dt - (held.has('e') ? 1 : 0) * 140 * dt);
+    spinRaf = requestAnimationFrame(spinLoop);
   }
+  function hold(k) { if (locked) return; held.add(k); if (!spinRaf) { lastT = 0; spinRaf = requestAnimationFrame(spinLoop); } }
   document.addEventListener('keydown', e => {
     if ($('match').hidden || locked || e.target.closest('input, textarea')) return;
     const k = e.key.toLowerCase();
-    if (k === 'q') { turn(1); e.preventDefault(); }
-    else if (k === 'e') { turn(-1); e.preventDefault(); }
-    else if (e.target.closest('.piece')) {
-      const m = { arrowup: [-1, 0], arrowdown: [1, 0], arrowleft: [0, -1], arrowright: [0, 1] }[k];
-      if (m) { moveBy(...m); e.preventDefault(); }
-    }
+    if (k === 'q' || k === 'e') { hold(k); e.preventDefault(); return; }
+    const m = { arrowup: [0, -1], arrowdown: [0, 1], arrowleft: [-1, 0], arrowright: [1, 0] }[k];
+    if (m && e.target.closest('.piece')) { const p = mine.find(x => x.id === selected); p.x += m[0] * (e.shiftKey ? 10 : 2); p.y += m[1] * (e.shiftKey ? 10 : 2); clamp(p); renderPieces(); scheduleSnap(); e.preventDefault(); }
+    if (k === 'tab' && !e.shiftKey && e.target.closest('.piece')) { /* 기본 동작 */ }
   });
-  $('rot-cw').addEventListener('click', () => turn(1));
-  $('rot-ccw').addEventListener('click', () => turn(-1));
-  $('btn-reset').addEventListener('click', () => { if (locked) return; mine = home.map(x => ({ ...x })); renderPieces(); });
+  document.addEventListener('keyup', e => { held.delete(e.key.toLowerCase()); });
+  window.addEventListener('blur', () => held.clear());
+  // 화면 버튼: 누르고 있으면 계속 돔
+  [['rot-cw', 'q'], ['rot-ccw', 'e']].forEach(([id, k]) => {
+    const b = $(id);
+    b.addEventListener('pointerdown', e => { e.preventDefault(); hold(k); b.setPointerCapture(e.pointerId); });
+    const stop = () => held.delete(k);
+    b.addEventListener('pointerup', stop); b.addEventListener('pointercancel', stop); b.addEventListener('lostpointercapture', stop);
+  });
+  $('btn-reset').addEventListener('click', () => { if (locked) return; mine = home.map(x => ({ ...x })); svg.querySelector('#pieces').innerHTML = ''; renderPieces(); updateMsg(); });
 
   function setupWork(pz, round) {
     puzzle = pz; workRound = round; locked = false;
-    // 좁은 화면에서는 세로로 긴 작업 공간
-    if (window.innerWidth < 640) { GW = 11; GH = 13; } else { GW = 18; GH = 10; }
-    svg.setAttribute('viewBox', `0 0 ${GW * S} ${GH * S}`);
-    drawGrid();
-    // 조각을 아래쪽에 띄엄띄엄 펼쳐 둠
-    let x = 1, y = GH - 1, rowH = 0; const placed = [];
-    pz.pieces.forEach((cells, id) => {
-      const [h, w] = sizeOf(cells);
-      if (x + w > GW - 1) { x = 1; y -= rowH + 1; rowH = 0; }
-      rowH = Math.max(rowH, h);
-      placed.push({ id, rot: 0, r: 0, c: x, h });
-      x += w + 2;
+    if (window.innerWidth < 640) { TW = 560; TH = 820; } else { TW = 960; TH = 560; }
+    svg.setAttribute('viewBox', `0 0 ${TW} ${TH}`);
+    svg.style.setProperty('--ar', (TW / TH).toFixed(4));
+    drawTable();
+    // 조각을 아래쪽에 띄엄띄엄, 각도는 아무렇게나
+    const gs = pz.pieces.map(c => geomOf(c));
+    const total = gs.reduce((s, g) => s + g.rad * 2, 0) + (gs.length - 1) * 40;
+    let x = (TW - Math.min(total, TW - 80)) / 2;
+    const placed = gs.map((g, id) => {
+      const r = g.rad, p = { id, x: x + r, y: TH - r - 40, a: Math.round(Math.random() * 360) };
+      x += r * 2 + 40;
+      if (x > TW - 40) x = 60;
+      return p;
     });
-    placed.forEach(p => { p.r = GH - 1 - p.h; delete p.h; });
+    placed.forEach(p => clamp(p));
     home = placed.map(p => ({ ...p }));
     mine = placed; selected = 0;
-    renderPieces();
+    renderPieces(); updateMsg();
   }
-  const layout = () => mine.map(p => ({ id: p.id, r: p.r, c: p.c, rot: p.rot }));
+  const layout = () => mine.map(p => ({ id: p.id, x: +p.x.toFixed(2), y: +p.y.toFixed(2), a: +p.a.toFixed(3) }));
+  let msgT = 0;
   function updateMsg() {
-    const m = $('booth-msg');
-    if (!puzzle || locked) { m.textContent = ''; return; }
-    const v = judge(puzzle.pieces, layout());
-    m.textContent = v === 'overlap' ? '조각이 겹쳐 있습니다.' : v === 'apart' ? '조각을 모두 맞닿게 붙이세요.' : '대칭이라고 생각되면 버저를 누르세요.';
+    clearTimeout(msgT);
+    msgT = setTimeout(() => {
+      const m = $('booth-msg');
+      if (!puzzle || locked) { m.textContent = ''; return; }
+      const v = judge(puzzle.pieces, layout()).v;
+      m.textContent = v === 'overlap' ? '조각이 겹쳐 있습니다.' : v === 'apart' ? '조각을 모두 맞닿게 붙이세요. 가까이 대면 자석처럼 붙습니다.' : '대칭이라고 생각되면 버저를 누르세요.';
+    }, 120);
   }
 
   /* =========================================================
@@ -635,7 +794,7 @@
     if (!game || game.phase !== 'round') return;
     const pl = game.players.find(p => p.seat === seat);
     if (!pl || pl.status !== 'play' || !Array.isArray(lay) || lay.length !== game.puzzle.pieces.length) return;
-    const v = judge(game.puzzle.pieces, lay.map(x => ({ id: +x.id, r: +x.r, c: +x.c, rot: +x.rot })));
+    const v = judge(game.puzzle.pieces, lay.map(x => ({ id: +x.id, x: +x.x, y: +x.y, a: +x.a }))).v;
     if (v === 'overlap' || v === 'apart') return; // 화면에서 미리 막지만 혹시 몰라 무시
     if (v === 'ok') { game.finished.push(seat); pl.status = 'done'; pl.place = game.finished.length; }
     else { pl.chances--; if (pl.chances <= 0) pl.status = 'out'; }
@@ -826,7 +985,7 @@
   }
   $('buzzer').addEventListener('click', () => {
     if (locked || !puzzle) return;
-    const v = judge(puzzle.pieces, layout());
+    const v = judge(puzzle.pieces, layout()).v;
     if (v === 'overlap') return toast('조각이 겹쳐 있습니다. 겹치지 않게 놓으세요.');
     if (v === 'apart') return toast('조각을 모두 맞닿게 붙여야 버저를 누를 수 있습니다.');
     send({ k: 'buzz', layout: layout() });
@@ -926,7 +1085,7 @@
   }
 
   // 시험용
-  window.Sym = { makePuzzle, judge, rotate, symmetric, connected, key, normalize };
+  window.Sym = { makePuzzle, judge, rotate, symmetric, connected, key, normalize, geomOf, get mine() { return mine; }, get pieces() { return puzzle && puzzle.pieces; }, get layout() { return layout(); } };
 })();
 </script>
 </body>
