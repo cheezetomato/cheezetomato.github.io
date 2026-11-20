@@ -79,7 +79,7 @@
     <p class="lobby-tag">말을 움직이고 벽을 세워, 나만 들어 있는 구역을 넓게 만드는 게임입니다. 데블스 플랜 시즌3의 벽바둑 규칙(돌과 차)을 따릅니다.</p>
     <ul class="rules">
       <li><b>7×7 판</b>에서 합니다. 2인전은 판에 미리 놓인 돌 2개에 더해 각자 차 2개를 직접 놓고, 3인전은 각자 돌 1개와 차 1개를 차례로 놓고 시작합니다.</li>
-      <li><b>돌</b>(동그란 말)은 상하좌우로 1칸이나 2칸 갑니다. 두 번째 칸은 방향을 꺾어도 됩니다.</li>
+      <li><b>돌</b>(동그란 말)은 상하좌우로 1칸 갑니다. 원하면 거기서 옆으로 꺾어 1칸 더 갈 수 있어서, 가장 멀리 가면 대각선 1칸입니다. 곧게 2칸은 안 됩니다.</li>
       <li><b>차</b>(네모 말)는 한 방향으로 곧게 1칸이나 2칸만 갑니다.</li>
       <li>내 차례에는 말 하나를 <b>반드시 움직이고</b>(제자리 안 됨), 그 말이 선 칸의 네 변 중 한 곳에 <b>벽을 하나</b> 세웁니다. 벽과 다른 말은 지나갈 수 없습니다.</li>
       <li>벽으로 막힌 구역 안에 <b>내 말만</b> 있으면 그 구역의 칸 수가 내 점수입니다. 3인전에서는 게임마다 한 번, 내 말 옆의 벽 하나를 <b>부술</b> 수 있습니다.</li>
@@ -137,7 +137,7 @@
         <button class="btn btn-quiet" type="button" id="btn-leave">나가기</button>
       </div>
       <ol class="mini-rules">
-        <li>말을 누르고 점 찍힌 칸으로 옮깁니다. 돌(동그라미)은 꺾어서 2칸까지, 차(네모)는 곧게만 갑니다.</li>
+        <li>말을 누르고 점 찍힌 칸으로 옮깁니다. 돌(동그라미)은 1칸 또는 꺾어서 대각선 1칸, 차(네모)는 곧게 1~2칸 갑니다.</li>
         <li>옮긴 말 둘레에 벽을 하나 세우면 차례가 넘어갑니다.</li>
         <li>내 말만 있는 막힌 구역은 내 색으로 칠해집니다.</li>
       </ol>
@@ -184,7 +184,7 @@
   const freeEdges = (s, r, c) => [0, 1, 2, 3].map(d => edgeOf(r, c, d)).filter(e => e && wallAt(s, e) < 0);
 
   // 0~2칸 이동으로 갈 수 있는 칸 (말과 벽은 못 지나감, 도착 칸에 세울 벽이 있어야 함)
-  // 돌: 1칸 또는 2칸 (두 번째 칸은 꺾어도 됨). 차: 한 방향으로 곧게 1칸 또는 2칸. 제자리는 안 됨
+  // 돌: 1칸, 또는 1칸 간 뒤 옆으로 꺾어 1칸(대각선 자리). 차: 한 방향으로 곧게 1칸 또는 2칸. 제자리는 안 됨
   function reachable(s, piece) {
     const ok = ([r, c]) => freeEdges(s, r, c).length > 0;
     if (piece.k === 'rook') {
@@ -200,20 +200,22 @@
       }
       return out.filter(ok);
     }
-    const seen = new Map([[piece.r * N + piece.c, 0]]);
-    let frontier = [[piece.r, piece.c]];
-    for (let step = 1; step <= 2; step++) {
-      const next = [];
-      for (const [r, c] of frontier) for (let d = 0; d < 4; d++) {
-        if (!open(s, r, c, d)) continue;
-        const nr = r + DIRS[d][0], nc = c + DIRS[d][1], k = nr * N + nc;
-        if (seen.has(k) || pieceAt(s, nr, nc)) continue;
-        seen.set(k, step); next.push([nr, nc]);
+    // 돌: 한 칸 가고, 원하면 옆으로 꺾어 한 칸 더 (가장 멀리 가면 대각선 한 칸)
+    const out = new Map();
+    for (let d = 0; d < 4; d++) {
+      if (!open(s, piece.r, piece.c, d)) continue;
+      const r1 = piece.r + DIRS[d][0], c1 = piece.c + DIRS[d][1];
+      if (pieceAt(s, r1, c1)) continue;
+      out.set(r1 * N + c1, [r1, c1]);
+      for (let e = 0; e < 4; e++) {
+        if (e === d || DIRS[e][0] === -DIRS[d][0] && DIRS[e][1] === -DIRS[d][1]) continue; // 옆으로 꺾을 때만
+        if (!open(s, r1, c1, e)) continue;
+        const r2 = r1 + DIRS[e][0], c2 = c1 + DIRS[e][1];
+        if (pieceAt(s, r2, c2)) continue;
+        out.set(r2 * N + c2, [r2, c2]);
       }
-      frontier = next;
     }
-    seen.delete(piece.r * N + piece.c);
-    return [...seen.keys()].map(k => [Math.floor(k / N), k % N]).filter(ok);
+    return [...out.values()].filter(ok);
   }
   // 움직일 수 있는 말이 있는가 (3인전은 벽을 부숴서 길이 생기는 경우도)
   // 부수면 갈 곳이 생기는 옆 벽들
@@ -499,7 +501,7 @@
     else if (state.phase === 'place') msg = `${who}: ${state.n === 2 || state.pieces.some(x => x.p === state.turn) ? '차(네모 말)' : '돌(동그란 말)'}를 놓을 칸을 고르세요`;
     else if (ui.breaking) msg = `${who}: 부술 벽을 고르세요`;
     else if (ui.sel == null) msg = `${who}: 움직일 말을 고르세요`;
-    else if (!ui.to) msg = `${who}: 갈 칸을 고르세요 (${(state.pieces.find(x => x.id === ui.sel) || {}).k === 'rook' ? '차: 곧게 1~2칸' : '돌: 1~2칸, 꺾기 가능'})`;
+    else if (!ui.to) msg = `${who}: 갈 칸을 고르세요 (${(state.pieces.find(x => x.id === ui.sel) || {}).k === 'rook' ? '차: 곧게 1~2칸' : '돌: 1칸 또는 꺾어서 대각선'})`;
     else msg = `${who}: 벽을 세울 곳을 고르세요`;
     say.className = `say p${state.turn}`;
     say.innerHTML = `<span class="dot"></span><span></span>`;

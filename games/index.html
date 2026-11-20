@@ -74,11 +74,11 @@
         </div>
       </a>
       <a class="tile" href="wallgo.html">
-        <div class="stage" style="--stage:#1d2126"><svg data-demo="wallgo" viewBox="0 0 400 250" role="img" aria-label="말을 두 칸 옮기고 벽을 세우는 장면"></svg></div>
+        <div class="stage" style="--stage:#1d2126"><svg data-demo="wallgo" viewBox="0 0 400 250" role="img" aria-label="차를 곧게 두 칸 옮기고 벽을 세우는 장면"></svg></div>
         <div class="tile-text">
           <h3>벽바둑</h3>
           <div class="meta"><span class="new">새 게임</span><span>2~3명</span></div>
-          <p class="desc">말을 0~2칸 옮기고 벽을 하나 세웁니다. 나만 들어 있는 구역을 가장 넓게 만든 사람이 이깁니다.</p>
+          <p class="desc">말을 옮기고 벽을 하나 세웁니다. 나만 들어 있는 구역을 가장 넓게 만든 사람이 이깁니다.</p>
         </div>
       </a>
     </div>
@@ -157,7 +157,7 @@
       // 빨강: (1,1) → (1,3)로 두 칸, 벽 (v,1,3)
       const rc = kf(t, [[1.3, 1], [1.8, 3]]);
       const showHints = t > 0.75 && t < 1.35;
-      if (showHints) [[1, 2], [1, 3], [2, 1], [0, 1], [3, 1], [2, 2]].forEach(([r, c]) => { o += `<circle cx="${X(c)}" cy="${Y(r)}" r="4.5" fill="${R}" opacity="0.6"/>`; });
+      if (showHints) [[1, 2], [1, 3], [2, 1], [3, 1]].forEach(([r, c]) => { o += `<circle cx="${X(c)}" cy="${Y(r)}" r="4.5" fill="${R}" opacity="0.6"/>`; });
       const ghosts = t > 1.9 && t < 2.55;
       if (ghosts) [['v', 1, 3], ['h', 0, 3], ['h', 1, 3]].forEach(([a, r, c]) => { o += `<g opacity="0.55">${wall(a, r, c, 'none')}</g>`; const w = wall(a, r, c, R); o += w.replace('fill="' + R + '"', `fill="none" stroke="${R}" stroke-dasharray="3 2"`); });
       o += wall('v', 1, 3, R, seg(t, 2.45, 2.75));
@@ -165,7 +165,8 @@
       const br = kf(t, [[3.9, 3], [4.3, 2]]);
       o += wall('h', 1, 4, B, seg(t, 4.75, 5.05));
       const stone = (x, y, col, sel) => `${sel ? `<circle cx="${x}" cy="${y}" r="16" fill="none" stroke="#f4efe6" stroke-width="2"/>` : ''}<circle cx="${x}" cy="${y}" r="12.5" fill="${col}"/><circle cx="${x}" cy="${y}" r="12" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="1.5"/><ellipse cx="${x - 4}" cy="${y - 5}" rx="4.5" ry="2.8" fill="rgba(255,255,255,0.25)"/>`;
-      o += stone(X(rc), Y(1), R, t > 0.6 && t < 2.7);
+      const rook = (x, y, col, sel) => `${sel ? `<rect x="${x - 16}" y="${y - 16}" width="32" height="32" rx="8" fill="none" stroke="#f4efe6" stroke-width="2"/>` : ''}<rect x="${x - 12}" y="${y - 12}" width="24" height="24" rx="5" fill="${col}"/><path d="M${x - 5} ${y}H${x + 5}M${x} ${y - 5}V${y + 5}" stroke="rgba(0,0,0,0.35)" stroke-width="2.2" stroke-linecap="round"/>`;
+      o += rook(X(rc), Y(1), R, t > 0.6 && t < 2.7);
       o += stone(X(0), Y(4), R);
       o += stone(X(4), Y(br), B, t > 3.5 && t < 5);
       o += stone(X(4), Y(0), B);
