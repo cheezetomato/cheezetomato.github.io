@@ -26,6 +26,7 @@
   .pc .stone { fill: var(--pc); }
   .pc .rim { fill: none; stroke: rgba(0,0,0,0.35); stroke-width: 2; }
   .pc .shine { fill: rgba(255,255,255,0.22); }
+  .pc .mark { stroke: rgba(0,0,0,0.35); stroke-width: 3; stroke-linecap: round; fill: none; }
   .pc.settled .stone { opacity: 0.78; }
   .pc.mine { cursor: pointer; }
   .pc.sel .ring { stroke: var(--g); stroke-width: 3; fill: none; }
@@ -75,14 +76,14 @@
 <main id="lobby" class="lobby">
   <section>
     <h1 class="lobby-title">벽바둑</h1>
-    <p class="lobby-tag">말을 움직이고 벽을 세워, 나만 들어 있는 구역을 넓게 만드는 게임입니다.</p>
+    <p class="lobby-tag">말을 움직이고 벽을 세워, 나만 들어 있는 구역을 넓게 만드는 게임입니다. 데블스 플랜 시즌3의 벽바둑 규칙(돌과 차)을 따릅니다.</p>
     <ul class="rules">
-      <li><b>7×7 판</b>에서 합니다. 2인전은 말 4개(2개는 정해진 자리), 3인전은 말 2개를 직접 놓고 시작합니다.</li>
-      <li>내 차례에는 말 하나를 <b>상하좌우로 0~2칸</b> 옮기고, 그 말이 선 칸의 네 변 중 한 곳에 <b>벽을 하나</b> 세웁니다.</li>
-      <li>벽과 다른 말은 지나갈 수 없습니다. 벽은 세운 사람에게도 똑같이 막힙니다.</li>
-      <li>벽으로 막힌 구역 안에 <b>내 말만</b> 있으면 그 구역의 칸 수가 내 점수입니다.</li>
-      <li>3인전에서는 게임마다 한 번, 내 말 옆의 벽 하나를 <b>부술</b> 수 있습니다.</li>
-      <li>모든 말이 각자의 구역에 갇히면 끝납니다. 칸이 가장 많은 사람이 이기고, 같으면 가장 큰 구역 하나로 가립니다.</li>
+      <li><b>7×7 판</b>에서 합니다. 2인전은 판에 미리 놓인 돌 2개에 더해 각자 차 2개를 직접 놓고, 3인전은 각자 돌 1개와 차 1개를 차례로 놓고 시작합니다.</li>
+      <li><b>돌</b>(동그란 말)은 상하좌우로 1칸이나 2칸 갑니다. 두 번째 칸은 방향을 꺾어도 됩니다.</li>
+      <li><b>차</b>(네모 말)는 한 방향으로 곧게 1칸이나 2칸만 갑니다.</li>
+      <li>내 차례에는 말 하나를 <b>반드시 움직이고</b>(제자리 안 됨), 그 말이 선 칸의 네 변 중 한 곳에 <b>벽을 하나</b> 세웁니다. 벽과 다른 말은 지나갈 수 없습니다.</li>
+      <li>벽으로 막힌 구역 안에 <b>내 말만</b> 있으면 그 구역의 칸 수가 내 점수입니다. 3인전에서는 게임마다 한 번, 내 말 옆의 벽 하나를 <b>부술</b> 수 있습니다.</li>
+      <li>모든 말이 갇히거나 아무도 움직일 수 없으면 끝납니다. 여러 사람 말이 같이 갇힌 구역은 말이 선 칸만 1점씩입니다. 칸이 같으면 가장 큰 구역 하나로 가립니다.</li>
     </ul>
   </section>
 
@@ -136,7 +137,7 @@
         <button class="btn btn-quiet" type="button" id="btn-leave">나가기</button>
       </div>
       <ol class="mini-rules">
-        <li>말을 누르고, 점으로 표시된 칸으로 옮깁니다. 제자리(점선 원)도 됩니다.</li>
+        <li>말을 누르고 점 찍힌 칸으로 옮깁니다. 돌(동그라미)은 꺾어서 2칸까지, 차(네모)는 곧게만 갑니다.</li>
         <li>옮긴 말 둘레에 벽을 하나 세우면 차례가 넘어갑니다.</li>
         <li>내 말만 있는 막힌 구역은 내 색으로 칠해집니다.</li>
       </ol>
@@ -159,7 +160,7 @@
   function newGame(n) {
     const s = { n, pieces: [], walls: { h: grid(N - 1, N, -1), v: grid(N, N - 1, -1) }, hammer: new Array(n).fill(false), phase: 'place', turn: 0, toPlace: [], last: null, moves: 0, scores: null };
     if (n === 2) {
-      [[1, 1, 0], [5, 5, 0], [1, 5, 1], [5, 1, 1]].forEach(([r, c, p], i) => s.pieces.push({ id: i, p, r, c }));
+      [[1, 1, 0], [5, 5, 0], [1, 5, 1], [5, 1, 1]].forEach(([r, c, p], i) => s.pieces.push({ id: i, p, r, c, k: 'stone' }));
       s.toPlace = [0, 1, 1, 0];
     } else {
       s.toPlace = [0, 1, 2, 2, 1, 0];
@@ -183,7 +184,22 @@
   const freeEdges = (s, r, c) => [0, 1, 2, 3].map(d => edgeOf(r, c, d)).filter(e => e && wallAt(s, e) < 0);
 
   // 0~2칸 이동으로 갈 수 있는 칸 (말과 벽은 못 지나감, 도착 칸에 세울 벽이 있어야 함)
+  // 돌: 1칸 또는 2칸 (두 번째 칸은 꺾어도 됨). 차: 한 방향으로 곧게 1칸 또는 2칸. 제자리는 안 됨
   function reachable(s, piece) {
+    const ok = ([r, c]) => freeEdges(s, r, c).length > 0;
+    if (piece.k === 'rook') {
+      const out = [];
+      for (let d = 0; d < 4; d++) {
+        let r = piece.r, c = piece.c;
+        for (let step = 1; step <= 2; step++) {
+          if (!open(s, r, c, d)) break;
+          r += DIRS[d][0]; c += DIRS[d][1];
+          if (pieceAt(s, r, c)) break;
+          out.push([r, c]);
+        }
+      }
+      return out.filter(ok);
+    }
     const seen = new Map([[piece.r * N + piece.c, 0]]);
     let frontier = [[piece.r, piece.c]];
     for (let step = 1; step <= 2; step++) {
@@ -196,7 +212,17 @@
       }
       frontier = next;
     }
-    return [...seen.keys()].map(k => [Math.floor(k / N), k % N]).filter(([r, c]) => freeEdges(s, r, c).length > 0);
+    seen.delete(piece.r * N + piece.c);
+    return [...seen.keys()].map(k => [Math.floor(k / N), k % N]).filter(ok);
+  }
+  // 움직일 수 있는 말이 있는가 (3인전은 벽을 부숴서 길이 생기는 경우도)
+  function canMove(s, player) {
+    return s.pieces.some(p => {
+      if (p.p !== player) return false;
+      if (reachable(s, p).length) return true;
+      if (s.n !== 3 || s.hammer[player]) return false;
+      return [0, 1, 2, 3].some(d => { const e = edgeOf(p.r, p.c, d); if (!e || wallAt(s, e) < 0) return false; const t = clone(s); t.walls[e[0]][e[1]][e[2]] = -1; return reachable(t, t.pieces.find(x => x.id === p.id)).length > 0; });
+    });
   }
 
   // 구역 나누기: 같은 구역 번호, 구역별 칸 수와 말 주인
@@ -222,7 +248,11 @@
   const settledOf = (s, R) => s.pieces.map(p => R.info[R.id[p.r][p.c]].owners.length === 1);
   function scoreOf(s, R) {
     const sc = new Array(s.n).fill(0), big = new Array(s.n).fill(0);
-    R.info.forEach(g => { if (g.owners.length === 1) { sc[g.owners[0]] += g.size; big[g.owners[0]] = Math.max(big[g.owners[0]], g.size); } });
+    R.info.forEach(g => {
+      if (g.owners.length === 1) { sc[g.owners[0]] += g.size; big[g.owners[0]] = Math.max(big[g.owners[0]], g.size); }
+      // 여러 사람 말이 같이 갇혀 아무도 못 움직이면, 말이 서 있는 칸만 점수
+      else if (s.phase === 'over' && g.owners.length > 1) g.cells.forEach(([r, c]) => { const pc = pieceAt(s, r, c); if (pc) { sc[pc.p] += 1; big[pc.p] = Math.max(big[pc.p], 1); } });
+    });
     return { sc, big };
   }
 
@@ -230,8 +260,10 @@
     const R = regions(s), set = settledOf(s, R);
     const active = new Array(s.n).fill(false);
     s.pieces.forEach((p, i) => { if (!set[i]) active[p.p] = true; });
+    for (let i = 0; i < s.n; i++) if (active[i] && !canMove(s, i)) active[i] = false;
     if (!active.some(Boolean)) {
       s.phase = 'over';
+      s.stuck = set.some(x => !x);
       s.scores = scoreOf(s, R);
       return;
     }
@@ -245,7 +277,9 @@
     const s = clone(prev);
     if (s.phase === 'place' && a.k === 'place') {
       if (seat !== s.toPlace[0] || !inside(a.r, a.c) || pieceAt(s, a.r, a.c)) return null;
-      s.pieces.push({ id: s.pieces.length, p: seat, r: a.r, c: a.c });
+      // 2인전: 놓는 말은 모두 차(직선 말). 3인전: 첫 번째로 놓는 말은 돌, 두 번째는 차
+      const k = s.n === 2 || s.pieces.some(x => x.p === seat) ? 'rook' : 'stone';
+      s.pieces.push({ id: s.pieces.length, p: seat, r: a.r, c: a.c, k });
       s.toPlace.shift();
       s.last = { place: [a.r, a.c] };
       if (s.toPlace.length) s.turn = s.toPlace[0];
@@ -354,10 +388,17 @@
       let g = layer.pieceEls.get(p.id);
       if (!g) {
         g = el('g', { class: `pc p${p.p}`, 'data-id': p.id }, layer.pieces);
-        el('circle', { class: 'ring', r: 26 }, g);
-        el('circle', { class: 'stone', r: 21 }, g);
-        el('circle', { class: 'rim', r: 20 }, g);
-        el('ellipse', { class: 'shine', cx: -6, cy: -8, rx: 8, ry: 5 }, g);
+        if (p.k === 'rook') {
+          el('rect', { class: 'ring', x: -27, y: -27, width: 54, height: 54, rx: 12 }, g);
+          el('rect', { class: 'stone', x: -20, y: -20, width: 40, height: 40, rx: 7 }, g);
+          el('rect', { class: 'rim', x: -19, y: -19, width: 38, height: 38, rx: 6 }, g);
+          el('path', { class: 'mark', d: 'M-8 0H8M0 -8V8' }, g);
+        } else {
+          el('circle', { class: 'ring', r: 26 }, g);
+          el('circle', { class: 'stone', r: 21 }, g);
+          el('circle', { class: 'rim', r: 20 }, g);
+          el('ellipse', { class: 'shine', cx: -6, cy: -8, rx: 8, ry: 5 }, g);
+        }
         g.addEventListener('click', () => onPiece(p.id));
         layer.pieceEls.set(p.id, g);
         g.style.transition = 'none';
@@ -421,8 +462,7 @@
       reachable(tmp, tmp.pieces.find(p => p.id === ui.sel)).forEach(([r, c]) => {
         const g = el('g', { class: cls }, H);
         const hit = el('rect', { class: 'hit', x: M + c * S, y: M + r * S, width: S, height: S, tabindex: 0, role: 'button', 'aria-label': `${r + 1}행 ${c + 1}열로 이동` }, g);
-        if (r === pc.r && c === pc.c) el('circle', { class: 'stay', cx: cx(c), cy: cy(r), r: 27 }, g);
-        else el('circle', { class: 'hint', cx: cx(c), cy: cy(r), r: 8 }, g);
+        el('circle', { class: 'hint', cx: cx(c), cy: cy(r), r: 8 }, g);
         const go = () => { ui.to = [r, c]; render(); };
         hit.addEventListener('click', go); hit.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
       });
@@ -454,10 +494,10 @@
     let msg;
     if (state.phase === 'over') msg = '게임이 끝났습니다';
     else if (!canAct()) msg = `${who} 차례를 기다리는 중`;
-    else if (state.phase === 'place') msg = `${who}: 말을 놓을 칸을 고르세요`;
+    else if (state.phase === 'place') msg = `${who}: ${state.n === 2 || state.pieces.some(x => x.p === state.turn) ? '차(네모 말)' : '돌(동그란 말)'}를 놓을 칸을 고르세요`;
     else if (ui.breaking) msg = `${who}: 부술 벽을 고르세요`;
     else if (ui.sel == null) msg = `${who}: 움직일 말을 고르세요`;
-    else if (!ui.to) msg = `${who}: 갈 칸을 고르세요`;
+    else if (!ui.to) msg = `${who}: 갈 칸을 고르세요 (${(state.pieces.find(x => x.id === ui.sel) || {}).k === 'rook' ? '차: 곧게 1~2칸' : '돌: 1~2칸, 꺾기 가능'})`;
     else msg = `${who}: 벽을 세울 곳을 고르세요`;
     say.className = `say p${state.turn}`;
     say.innerHTML = `<span class="dot"></span><span></span>`;
@@ -525,7 +565,11 @@
     if (mode !== 'guest') actions.push({ label: '다시 하기', main: true, onClick: () => commit(newGame(state.n)) });
     actions.push({ label: '판 보기' });
     actions.push({ label: '나가기', onClick: leave });
-    dialog({ title, text: tieByBig ? '칸 수가 같아 가장 큰 구역으로 가렸습니다.' : (mode === 'guest' ? '방장이 다시 하기를 누르면 새 판이 시작됩니다.' : ''), html: list, actions });
+    const notes = [];
+    if (state.stuck) notes.push('더 움직일 수 있는 말이 없어 끝났습니다. 함께 갇힌 구역은 말이 선 칸만 셌습니다.');
+    if (tieByBig) notes.push('칸 수가 같아 가장 큰 구역으로 가렸습니다.');
+    if (mode === 'guest') notes.push('방장이 다시 하기를 누르면 새 판이 시작됩니다.');
+    dialog({ title, text: notes.join(' '), html: list, actions });
   }
 
   /* ---------- 화면 전환 ---------- */
