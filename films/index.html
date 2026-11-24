@@ -1710,7 +1710,7 @@
             }
             const facts = [['국가', m.region || '기타']];
             if (genresOf(m).length) facts.push(['장르', genresOf(m).join(', ')]);
-            if (m.media_type === 'tv') facts.push(['형식', '시리즈']);
+            if (m.media_type === 'tv') facts.push(['형식', m.season ? `시리즈 · 시즌 ${m.season}` : '시리즈']);
             if (wish) facts.push(['상태', '보고 싶은 영화']);
             else {
                 facts.push([views.length > 1 ? '최근 관람' : '관람일', lastWatched(m) || '날짜 미상']);
@@ -1747,12 +1747,15 @@
             const type = m.media_type === 'tv' ? 'tv' : 'movie';
             const key = `${type}/${m.tmdb_id}`;
             try {
-                if (!tmdbCache.has(key)) tmdbCache.set(key, await fetch(`https://api.themoviedb.org/3/${key}?api_key=${TMDB_API_KEY}&language=${(window.I18N && window.I18N.tmdbLang) || 'ko-KR'}&append_to_response=credits`).then(res => res.json()));
-                const data = tmdbCache.get(key);
+                const lang = (window.I18N && window.I18N.tmdbLang) || 'ko-KR';
+                const load = k => tmdbCache.has(k) ? tmdbCache.get(k) : fetch(`https://api.themoviedb.org/3/${k}?api_key=${TMDB_API_KEY}&language=${lang}&append_to_response=credits`).then(res => res.json()).then(j => { tmdbCache.set(k, j); return j; });
+                const sKey = type === 'tv' && m.season ? `${key}/season/${m.season}` : null;
+                const [data, sData] = await Promise.all([load(key), sKey ? load(sKey).catch(() => ({})) : {}]);
                 if (currentDetailId !== id) return;
                 if (data.backdrop_path) $('detail-banner').style.backgroundImage = `url('${IMG}w1280${data.backdrop_path}')`;
-                if (data.overview) { $('detail-overview').textContent = data.overview; $('detail-overview-sec').hidden = false; }
-                const cast = (data.credits?.cast || []).slice(0, 8);
+                const overview = sData.overview || data.overview;
+                if (overview) { $('detail-overview').textContent = overview; $('detail-overview-sec').hidden = false; }
+                const cast = (sData.credits?.cast?.length ? sData.credits.cast : data.credits?.cast || []).slice(0, 8);
                 if (cast.length) {
                     $('detail-cast').innerHTML = cast.map(p => `<a class="cast-item" href="#/search/${enc(p.name || '')}">${p.profile_path ? `<img src="${IMG}w185${esc(p.profile_path)}" class="cast-photo" alt="" loading="lazy">` : `<div class="cast-photo cast-noimg">${esc((p.name || '?').charAt(0))}</div>`}<div class="cast-name">${esc(p.name)}</div><div class="cast-char">${esc(p.character)}</div></a>`).join('');
                     $('detail-cast-sec').hidden = false;
@@ -1991,7 +1994,7 @@
                 docs.forEach(m => {
                     const c = cache[keyOf(m)];
                     if (!c) return;
-                    if (c.t && m.title) map[m.title] = c.t;
+                    if (c.t && m.title) map[m.title] = m.season ? (LANG === 'ja' ? `${c.t} シーズン${m.season}` : `${c.t} Season ${m.season}`) : c.t;
                     const ko = directorsOf(m), loc = c.d || [];
                     if (!ko.length || !loc.length) return;
                     if (ko.length === loc.length) ko.forEach((k, i) => { map[k] = loc[i]; });
@@ -2045,8 +2048,8 @@
         }
         const closeForm = () => showModal('movie-modal', false);
 
-        function findDuplicate(title, year, tmdbId) {
-            return docs.find(m => m.id !== form.id && ((tmdbId && Number(m.tmdb_id) === Number(tmdbId)) || (norm(m.title) === norm(title) && (!year || !m.year || Number(m.year) === Number(year)))));
+        function findDuplicate(title, year, tmdbId, season = null) {
+            return docs.find(m => m.id !== form.id && ((tmdbId && Number(m.tmdb_id) === Number(tmdbId) && (m.season ?? null) === (season ?? null)) || (norm(m.title) === norm(title) && (!year || !m.year || Number(m.year) === Number(year)))));
         }
         async function saveFilm() {
             const title = $('input-title').value.trim();
@@ -2062,6 +2065,8 @@
                 media_type: form.pick.media_type ?? existing?.media_type ?? 'movie'
             };
             if (form.pick.cast) payload.cast = form.pick.cast;
+            if (form.pick.tmdb_id) payload.season = form.pick.season ?? null;
+            const season = form.pick.tmdb_id ? payload.season : (existing?.season ?? null);
             if (form.mode === 'watchlist') {
                 payload.status = 'watchlist';
                 if (!existing) payload.addedDate = today();
@@ -2075,7 +2080,7 @@
                 if (form.mode === 'convert') payload.status = 'watched';
             }
             if (!form.id) {
-                const dup = findDuplicate(title, payload.year, tmdbId);
+                const dup = findDuplicate(title, payload.year, tmdbId, season);
                 if (dup && form.mode === 'watchlist') { toast(isWatchlist(dup) ? '이미 보고 싶은 영화에 있습니다.' : '이미 본 영화로 기록되어 있습니다.'); return; }
                 if (dup && isWatchlist(dup)) { form.id = dup.id; form.mode = 'convert'; payload.status = 'watched'; }
                 else if (dup) {
@@ -2173,6 +2178,12 @@
             if (codes.includes('HK')) return '홍콩';
             return codes.some(c => WESTERN.includes(c)) ? '서양' : '기타';
         }
+        function tmdbItem(posterPath, title, meta) {
+            const item = document.createElement('button');
+            item.type = 'button'; item.className = 'tmdb-item'; item.style.cssText = 'width:100%;text-align:left;font:inherit;color:inherit;';
+            item.innerHTML = `<img src="${esc(poster(posterPath, 'w92'))}" alt="" class="tmdb-poster-small"><div class="tmdb-info-small"><span class="tmdb-item-title-small">${esc(title)}</span><span class="tmdb-item-meta-small">${esc(meta)}</span></div>`;
+            return item;
+        }
         const tmdbSearch = q => fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&language=ko-KR&query=${enc(q)}&page=1`).then(res => res.json());
         async function searchTMDB() {
             const query = $('search-title-input').value.trim();
@@ -2190,21 +2201,46 @@
                 detailed.forEach(movie => {
                     const isTv = movie.media_type === 'tv';
                     const title = isTv ? (movie.name || movie.title) : movie.title;
-                    const year = (isTv ? movie.first_air_date : movie.release_date || '').split('-')[0] || '-';
+                    const year = ((isTv ? movie.first_air_date : movie.release_date) || '').split('-')[0] || '-';
                     const director = isTv ? (movie.created_by || []).map(p => p.name).join(', ') || '-' : (movie.credits?.crew || []).find(p => p.job === 'Director')?.name || '-';
-                    const item = document.createElement('button');
-                    item.type = 'button'; item.className = 'tmdb-item'; item.style.cssText = 'width:100%;text-align:left;font:inherit;color:inherit;';
-                    item.innerHTML = `<img src="${esc(poster(movie.poster_path, 'w92'))}" alt="" class="tmdb-poster-small"><div class="tmdb-info-small"><span class="tmdb-item-title-small">${esc(title)}</span><span class="tmdb-item-meta-small">${esc(year)}, ${esc(director)}${isTv ? ', 시리즈' : ''}</span></div>`;
-                    item.addEventListener('click', () => {
+                    const seasons = isTv ? (movie.seasons || []).filter(s => s.season_number > 0).sort((a, b) => a.season_number - b.season_number) : [];
+                    const item = tmdbItem(movie.poster_path, title, `${year}, ${director}${isTv ? `, 시리즈${seasons.length > 1 ? ` · 시즌 ${seasons.length}개` : ''}` : ''}`);
+                    const apply = () => {
                         $('input-title').value = title;
                         if (year !== '-') $('input-year').value = year;
                         if (director !== '-') $('input-director').value = director;
                         if (movie.genres?.length) $('input-genre').value = movie.genres[0].name;
                         const region = mapCountryToRegion(movie);
                         if (region) $('input-region').value = region;
-                        form.pick = { poster_path: movie.poster_path || null, tmdb_id: movie.id, media_type: isTv ? 'tv' : 'movie', cast: (movie.credits?.cast || []).slice(0, 12).map(p => p.name).filter(Boolean) };
-                        $('search-title-input').value = '';
-                        $('search-result-overlay').style.display = 'none';
+                        form.pick = { poster_path: movie.poster_path || null, tmdb_id: movie.id, media_type: isTv ? 'tv' : 'movie', season: null, cast: (movie.credits?.cast || []).slice(0, 12).map(p => p.name).filter(Boolean) };
+                    };
+                    const done = () => { $('search-title-input').value = ''; $('search-result-overlay').style.display = 'none'; };
+                    item.addEventListener('click', () => {
+                        apply();
+                        if (seasons.length < 2) { done(); return; }
+                        // 시즌이 여러 개인 시리즈는 시즌을 한 번 더 고른다
+                        box.innerHTML = '<div style="color:var(--text-dim); font-size:0.9rem; margin-bottom:12px;">시즌을 골라주세요</div>';
+                        seasons.forEach(s => {
+                            const sy = (s.air_date || '').split('-')[0];
+                            const label = `${title} 시즌 ${s.season_number}`;
+                            const sub = [sy, s.name && !/^시즌\s*\d+$/.test(s.name) ? s.name : '', s.episode_count ? `${s.episode_count}화` : ''].filter(Boolean).join(', ');
+                            const btn = tmdbItem(s.poster_path || movie.poster_path, label, sub);
+                            btn.addEventListener('click', async () => {
+                                $('input-title').value = label;
+                                if (sy) $('input-year').value = sy;
+                                Object.assign(form.pick, { season: s.season_number, poster_path: s.poster_path || movie.poster_path || null });
+                                done();
+                                try {
+                                    const c = await fetch(`https://api.themoviedb.org/3/tv/${movie.id}/season/${s.season_number}/credits?api_key=${TMDB_API_KEY}&language=ko-KR`).then(res => res.json());
+                                    const cast = (c.cast || []).slice(0, 12).map(p => p.name).filter(Boolean);
+                                    if (cast.length && form.pick.season === s.season_number) form.pick.cast = cast;
+                                } catch (e) { /* 시리즈 전체 출연진 유지 */ }
+                            });
+                            box.appendChild(btn);
+                        });
+                        const whole = tmdbItem(movie.poster_path, `${title} (시즌 구분 없이)`, '시리즈 전체로 기록');
+                        whole.addEventListener('click', done);
+                        box.appendChild(whole);
                     });
                     box.appendChild(item);
                 });
