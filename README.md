@@ -29,3 +29,10 @@ Films는 맨 아래 Language에서 한국어, English, 日本語를 고를 수 �
 - 공용 스타일과 도우미는 [`games/common.css`](games/common.css), [`games/common.js`](games/common.js)에 있습니다.
 - 온라인 방(방 목록, 닉네임, 비공개, 강퇴, 채팅, 턴 시간)은 [`games/rooms.js`](games/rooms.js) 하나를 세 게임이 같이 씁니다. PeerJS로 브라우저끼리 직접 연결하고, 방을 만든 사람이 판을 관리합니다.
 - 기록(사과 게임, 지뢰찾기)과 공개 방 목록(`gameRooms`)은 Films와 같은 Firebase에 저장합니다.
+
+## 보안
+
+- 화면 코드에 있는 Firebase 설정값과 TMDB 키는 원래 공개되는 값입니다. 데이터를 지키는 것은 [`firestore.rules`](firestore.rules)입니다.
+- Films 기록은 누구나 읽고, 쓰기는 관리자 계정만 됩니다. 게임 기록과 방 목록은 로그인 없이 쓰므로 형식과 값의 범위를 규칙에서 검사합니다. 적지 않은 컬렉션은 모두 막혀 있습니다.
+- 규칙은 저장소에 올린다고 적용되지 않습니다. Firebase 콘솔의 Firestore 규칙 탭에 붙여넣어 게시하거나 `firebase deploy --only firestore:rules`로 올립니다. 컬렉션이나 저장하는 칸을 바꾸면 규칙도 같이 고칩니다.
+- 남이 보낸 값(공개 기록, 온라인 대전 메시지)은 HTML에 그대로 넣지 않습니다. 글자는 `Kit.esc`, 숫자는 `Kit.num`을 거치고, 대전 메시지는 받자마자 `clean()`으로 `< > "`를 전각 문자로 바꿉니다.

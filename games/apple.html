@@ -79,7 +79,7 @@
 <script>
 (() => {
   'use strict';
-  const { esc, dialog, db, savedName, saveName } = window.Kit;
+  const { esc, num, dialog, db, savedName, saveName } = window.Kit;
   const $ = id => document.getElementById(id);
   const ROWS = 10, COLS = 18, SIZE = 50, TOTAL = ROWS * COLS, LIMIT = 120;
   const COL = 'appleRecords';
@@ -92,7 +92,7 @@
     try {
       const rows = tab === 'top' ? await db.query(COL, 'score', 'DESCENDING', 10) : await db.query(COL, 'timestamp', 'DESCENDING', 10);
       if (!rows.length) { t.innerHTML = '<tbody><tr><td class="note">아직 기록이 없습니다. 첫 기록을 남겨 보세요.</td></tr></tbody>'; return; }
-      t.innerHTML = `<thead><tr><th>${tab === 'top' ? '순위' : ''}</th><th>이름</th><th>${tab === 'top' ? '날짜' : '날짜'}</th><th>점수</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${tab === 'top' && i < 3 ? 'top' : ''}"><td class="rank">${tab === 'top' ? i + 1 : ''}</td><td class="who">${esc(r.name || '익명')}</td><td class="when">${esc(r.date || '')}</td><td><b>${r.score}</b>${r.clearTime ? ` <span class="when">${r.clearTime}초</span>` : ''}</td></tr>`).join('')}</tbody>`;
+      t.innerHTML = `<thead><tr><th>${tab === 'top' ? '순위' : ''}</th><th>이름</th><th>${tab === 'top' ? '날짜' : '날짜'}</th><th>점수</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="${tab === 'top' && i < 3 ? 'top' : ''}"><td class="rank">${tab === 'top' ? i + 1 : ''}</td><td class="who">${esc(r.name || '익명')}</td><td class="when">${esc(r.date || '')}</td><td><b>${num(r.score)}</b>${r.clearTime ? ` <span class="when">${num(r.clearTime)}초</span>` : ''}</td></tr>`).join('')}</tbody>`;
     } catch (e) {
       t.innerHTML = '<tbody><tr><td class="note">기록을 불러오지 못했습니다.</td></tr></tbody>';
     }

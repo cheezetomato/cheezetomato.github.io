@@ -77,7 +77,7 @@
 <script>
 (() => {
   'use strict';
-  const { dialog, db, toast } = window.Kit;
+  const { num, dialog, db, toast } = window.Kit;
   const $ = id => document.getElementById(id);
   const DIFF = { '초급': { r: 9, c: 9, m: 10 }, '중급': { r: 16, c: 16, m: 40 }, '고급': { r: 16, c: 30, m: 99 }, '최상급': { r: 24, c: 30, m: 160 } };
   const NAMES = Object.keys(DIFF);
@@ -265,11 +265,11 @@
   function myBest() { try { return JSON.parse(localStorage.getItem('ms_my_best')) || {}; } catch (e) { return {}; } }
   async function showRecords() {
     const mb = myBest();
-    $('mine').innerHTML = `<tbody>${NAMES.map(n => `<tr><td>${n}</td><td>${mb[n] != null ? `<b>${mb[n]}초</b>` : '<span class="when">-</span>'}</td></tr>`).join('')}</tbody>`;
+    $('mine').innerHTML = `<tbody>${NAMES.map(n => `<tr><td>${n}</td><td>${mb[n] != null ? `<b>${num(mb[n])}초</b>` : '<span class="when">-</span>'}</td></tr>`).join('')}</tbody>`;
     try {
       const all = await db.list('minesweeper_records');
       const by = Object.fromEntries(all.map(d => [d.id, d.noguess]));
-      $('best').innerHTML = `<tbody>${NAMES.map(n => `<tr class="${n === diff ? 'top' : ''}"><td>${n}</td><td>${by[n] != null ? `<b>${by[n]}초</b>` : '<span class="when">아직 없음</span>'}</td></tr>`).join('')}</tbody>`;
+      $('best').innerHTML = `<tbody>${NAMES.map(n => `<tr class="${n === diff ? 'top' : ''}"><td>${n}</td><td>${by[n] != null ? `<b>${num(by[n])}초</b>` : '<span class="when">아직 없음</span>'}</td></tr>`).join('')}</tbody>`;
     } catch (e) { $('best').innerHTML = '<tbody><tr><td class="note">기록을 불러오지 못했습니다.</td></tr></tbody>'; }
   }
 

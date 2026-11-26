@@ -3,11 +3,32 @@
  * - Kit.toast / Kit.dialog: 알림 띠와 결과 창
  * - Kit.db: Firestore 기록 읽기/쓰기 (REST, SDK 없이)
  * - Kit.Room: 친구와 온라인 대전 (PeerJS, 방장이 판을 관리)
+ * - 보안: 남이 보낸 값(공개 기록, 온라인 대전 메시지)은 그대로 HTML에 넣지 않습니다.
+ *   숫자는 Kit.num으로, 글자는 Kit.esc로 넣고, 대전 메시지는 받자마자 clean()을 거칩니다.
  */
 (function () {
   'use strict';
   const T = s => (window.I18N ? window.I18N.t(s) : s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // 공개 DB에서 온 숫자 칸: 숫자가 아니면 0 (누가 글자를 넣어도 HTML이 되지 않게)
+  const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+
+  /* ---------- 대전 메시지 소독 ----------
+   * 상대가 보낸 메시지는 고친 코드로 보낸 것일 수 있습니다.
+   * 글자 속 < > " 를 비슷하게 생긴 전각 문자로 바꿔, 어느 화면에 그대로 들어가도 태그가 되지 않게 합니다.
+   * (이름·채팅에 이 글자를 쓰면 ＜ ＞ ＂ 로 보입니다.)
+   */
+  const ANGLE = { '<': '＜', '>': '＞', '"': '＂' };
+  function clean(v, depth = 0) {
+    if (typeof v === 'string') return v.replace(/[<>"]/g, c => ANGLE[c]);
+    if (!v || typeof v !== 'object') return v;
+    if (depth > 30) return null;
+    if (Array.isArray(v)) return v.map(x => clean(x, depth + 1));
+    if (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null) return null;
+    const out = {};
+    for (const k of Object.keys(v)) if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') out[clean(k)] = clean(v[k], depth + 1);
+    return out;
+  }
 
   /* ---------- 알림 띠 ---------- */
   let toastEl, toastTimer;
@@ -136,12 +157,12 @@
         c.on('open', () => {
           const seat = conns.findIndex((x, i) => i > 0 && !x);
           if (seat < 0) { c.send({ t: 'full' }); setTimeout(() => c.close(), 300); return; }
-          conns[seat] = c; names[seat] = String((c.metadata && c.metadata.name) || '').slice(0, 15);
+          conns[seat] = c; names[seat] = clean(String((c.metadata && c.metadata.name) || '').slice(0, 15));
           c.send({ t: 'seat', seat, seats });
           onJoin && onJoin(seat, names.slice(), conns.map((x, i) => i === 0 || !!x));
         });
-        c.on('data', msg => {
-          const seat = conns.indexOf(c);
+        c.on('data', raw => {
+          const seat = conns.indexOf(c), msg = clean(raw);
           if (seat > 0 && msg && msg.t === 'act') onAction && onAction(seat, msg.a);
         });
         c.on('close', () => {
@@ -158,7 +179,7 @@
       peer.on('open', () => {
         const c = peer.connect(id, { reliable: true, metadata: { name } });
         room.conn = c;
-        c.on('data', msg => onMessage && onMessage(msg));
+        c.on('data', msg => onMessage && onMessage(clean(msg)));
         c.on('close', () => onClose && onClose());
         c.on('error', e => onError && onError(e));
       });
@@ -174,5 +195,5 @@
 
   const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  window.Kit = { T, esc, toast, dialog, db, Room, copy, savedName, saveName, reduceMotion };
+  window.Kit = { T, esc, num, toast, dialog, db, Room, copy, savedName, saveName, reduceMotion };
 })();

@@ -18,7 +18,7 @@
  */
 (function () {
   'use strict';
-  const { esc, toast, dialog, db, Room, copy, savedName, saveName } = window.Kit;
+  const { esc, num, toast, dialog, db, Room, copy, savedName, saveName } = window.Kit;
   const COLL = 'gameRooms';
   const COLORS = ['빨강', '파랑', '노랑', '초록'];
   const EMOJI = ['👍', '😂', '😮', '😭', '🔥', '👏'];
@@ -96,7 +96,7 @@
         const live = all.filter(r => r.game === cfg.game && Date.now() - (r.ts || 0) < 45000).sort((a, b) => (a.playing - b.playing) || (b.ts - a.ts));
         ul.innerHTML = live.length ? live.map(r => {
           const full = r.count >= r.max;
-          return `<li><span class="rn">${esc(r.name)}</span><span class="rh">방장 ${esc(r.host)}${r.note ? `, ${esc(r.note)}` : ''}</span><span class="rc${r.playing ? ' playing' : ''}">${r.playing ? '게임 중' : `${r.count}/${r.max}`}</span><button class="btn" type="button" data-room="${esc(r.id)}"${full || r.playing ? ' disabled' : ''}>참가</button></li>`;
+          return `<li><span class="rn">${esc(r.name)}</span><span class="rh">방장 ${esc(r.host)}${r.note ? `, ${esc(r.note)}` : ''}</span><span class="rc${r.playing ? ' playing' : ''}">${r.playing ? '게임 중' : `${num(r.count)}/${num(r.max)}`}</span><button class="btn" type="button" data-room="${esc(r.id)}"${full || r.playing ? ' disabled' : ''}>참가</button></li>`;
         }).join('') : '<li class="empty" style="display:block;background:none">열린 방이 없습니다. 방을 만들어 보세요.</li>';
         ul.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => join(b.dataset.room)));
       } catch (e) {

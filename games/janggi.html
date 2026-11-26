@@ -129,7 +129,7 @@
 <script>
 (() => {
   'use strict';
-  const { toast, dialog, Room, copy } = window.Kit;
+  const { esc, toast, dialog, Room, copy } = window.Kit;
   const $ = id => document.getElementById(id);
 
   /* ---------- 규칙 (원래 십이장기 로직) ---------- */
@@ -270,7 +270,7 @@
       box.style.setProperty('--side', COLOR[owner]);
       const who = mode === 'ai' ? (owner === 'p1' ? '나' : 'AI') : mode === 'online' ? (owner === me ? '나' : opp || '상대') : NAME[owner];
       box.dataset.seat = mode === 'online' ? (owner === 'p1' ? 0 : 1) : 'x';
-      box.innerHTML = `<h2><span class="dot" style="background:${COLOR[owner]}"></span>${who} 손패</h2><div class="hand-row"></div>`;
+      box.innerHTML = `<h2><span class="dot" style="background:${COLOR[owner]}"></span>${esc(who)} 손패</h2><div class="hand-row"></div>`;
       const row = box.querySelector('.hand-row');
       const hand = pieces.filter(p => p.owner === owner && p.pos < 0);
       if (!hand.length) row.innerHTML = '<span class="empty">잡은 말 없음</span>';
