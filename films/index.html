@@ -767,6 +767,9 @@
         .ott-wait { color: var(--text-mute); font-weight: 500; }
         .ott-source { margin-left: 8px; font-size: 0.74rem; font-weight: 500; color: var(--text-mute); }
         .ott-source:hover { color: var(--text-dim); }
+        .ott-note { display: block; margin-top: 6px; font-size: 0.76rem; font-weight: 500; color: var(--text-mute); }
+        .ott-note a { color: var(--text-dim); text-decoration: underline; text-underline-offset: 2px; }
+        .ott-note a:hover { color: var(--text); }
         .detail-ott { flex-basis: 100%; }
 
         /* 첫 화면 리듬 */
@@ -1975,10 +1978,12 @@
             const d = await loadOtt(m);
             const el = document.querySelector(`[data-ott-detail="${m.id}"]`);
             if (!el) return;
-            if (!d) { el.textContent = '정보를 불러오지 못했습니다'; return; }
+            // JustWatch(TMDB)는 한국에서 쿠팡플레이를 추적하지 않아 항상 빠진다 → 키노라이츠 검색으로 안내
+            const note = `<span class="ott-note">쿠팡플레이는 자동으로 확인되지 않아요 · <a href="https://kinolights.com/search?keyword=${enc(m.title || '')}" target="_blank" rel="noopener">키노라이츠에서 확인</a></span>`;
+            if (!d) { el.innerHTML = `정보를 불러오지 못했습니다${note}`; return; }
             const body = d.flat.length ? `<span class="ott-list">${d.flat.map(p => `<span class="ott-item">${ottLogo(p)}${esc(p.name)}</span>`).join('')}</span>`
-                : (d.other ? '구독 서비스에는 없고 대여·구매만 가능' : '국내 서비스 없음');
-            el.innerHTML = `${body}${d.link ? ` <a class="ott-source" href="${esc(d.link)}" target="_blank" rel="noopener">JustWatch</a>` : ''}`;
+                : (d.other ? '구독 서비스에는 없고 대여·구매만 가능' : '확인된 국내 서비스 없음');
+            el.innerHTML = `${body}${d.link ? ` <a class="ott-source" href="${esc(d.link)}" target="_blank" rel="noopener">JustWatch</a>` : ''}${note}`;
         }
 
         /* ---------- 언어: TMDB에서 그 나라 제목과 감독 이름 받아오기 ---------- */
